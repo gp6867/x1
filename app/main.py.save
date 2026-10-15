@@ -1,0 +1,33 @@
+from brain.intent_detector import detect_intent
+from brain.task_classifier import task_weight
+from brain.usage_meter import check_usage
+from brain.model_router import select_model
+
+
+def monster_brain(user_id, message):
+
+    intent = detect_intent(message)
+    weight = task_weight(intent, message)
+
+    allowed = check_usage(user_id, weight)
+
+    if not allowed:
+        return "Free limit reached. Upgrade to Pro 🚀"
+
+    model = select_model(intent, weight)
+
+    return f"Using {model} for response..."
+
+if __name__ == "__main__":
+
+    user_id = "samrat_test"
+
+    while True:
+        msg = input("You: ")
+        if msg.lower() == "exit":
+            break
+
+        response = monster_brain(user_id, msg)
+        print("Monster AI:", response)
+
+

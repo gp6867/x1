@@ -1,0 +1,25 @@
+import requests
+import json
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL_NAME = "phi3"
+
+def stream_generate(prompt: str):
+    response = requests.post(
+        OLLAMA_URL,
+        json={
+            "model": MODEL_NAME,
+            "prompt": prompt,
+            "stream": True,
+            "options": {
+                "num_predict": 300,
+                "temperature": 0.4
+            }
+        },
+        stream=True
+    )
+
+    for line in response.iter_lines():
+llama3:8bllama3:8b        if line:
+            data = json.loads(line)
+            yield data.get("response", "")

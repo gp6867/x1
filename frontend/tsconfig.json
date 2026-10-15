@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    // ... other options
+  },
+  // ... other config
+}

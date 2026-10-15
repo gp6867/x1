@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OTP Verify Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>OTP Verify Test Page</h1>
+    <div id="emailDisplay"></div>
+    
+    <form id="otpForm">
+        <input type="text" id="otp" placeholder="Enter OTP" maxlength="6" pattern="\d*">
+        <button type="submit">Verify OTP</button>
+    </form>
+    
+    <div id="message"></div>
+
+    <script>
+        // Get email from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get('email');
+        
+        document.getElementById('emailDisplay').innerHTML = `<p>Email: <strong>${email || 'Not found'}</strong></p>`;
+        
+        if (!email) {
+            document.getElementById('message').innerHTML = '<p class="error">No email found. Please go back.</p>';
+        }
+
+        document.getElementById('otpForm').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const otp = document.getElementById('otp').value;
+            const messageDiv = document.getElementById('message');
+            
+            messageDiv.innerHTML = '<p>Verifying...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.innerHTML = '<p class="success">✅ OTP Verified! Redirecting...</p>';
+                    setTimeout(() => {
+                        window.location.href = `/reset-password?email=${encodeURIComponent(email)}`;
+                    }, 2000);
+                } else {
+                    messageDiv.innerHTML = `<p class="error">❌ ${data.message || 'Invalid OTP'}</p>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<p class="error">❌ Server error</p>';
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+# app/main.py
+from app.services.ollama_client import ask_ollama
+from fastapi import FastAPI
+from app.brain.intent_detector import detect_intent
+from app.brain.task_classifier import task_weight
+from app.brain.usage_meter import check_usage
+from app.brain.model_router import select_model
+from app.brain.memory_manager import save_message, get_context
+
+app = FastAPI()
+
+
+def monster_brain(user_id: str, message: str):
+
+    # ---- Save user message ----
+    save_message(user_id, "user", message)
+
+    # ---- Load conversation memory ----
+    context = get_context(user_id)
+
+    # ---- Brain processing ----
+    intent = detect_intent(message)
+    weight = task_weight(intent, message)
+
+    allowed = check_usage(user_id, weight)
+
+    if not allowed:
+        return {
+            "response": "Free limit reached. Upgrade to Pro 🚀"
+        }
+
+    # ---- Model selection ----
+    model = select_model(intent, weight)
+
+    # Model select
+model = select_model(intent, weight)
+
+# 🔥 REAL AI CALL
+ai_response = ask_ollama(model, message)
+
+return {
+    "intent": intent,
+    "model_used": model,
+    "memory": memory,
+    "response": ai_response
+}
+
+
+@app.get("/")
+def home():
+    return {"status": "Monster AI running 🚀"}
+
+
+@app.get("/chat")
+def chat(message: str, user_id: str = "demo_user"):
+    result = monster_brain(user_id, message)
+    return result
+@app.post("/chat")
+def chat(message: str, user_id: str = "demo_user"):
+
+    # 1️⃣ Intent detect
+    intent = detect_intent(message)
+
+    # 2️⃣ Task weight
+    weight = task_weight(intent, message)
+
+    # 3️⃣ Usage check
+    allowed = check_usage(user_id, weight)
+    if not allowed:
+        return {"error": "Usage limit reached"}
+
+    # 4️⃣ Model select
+    model = select_model(intent, weight)
+
+    # 5️⃣ Call Ollama
+    ai_response = ask_ollama(model, message)
+
+    return {
+        "intent": intent,
+        "model_used": model,
+        "response": ai_response
+    }
