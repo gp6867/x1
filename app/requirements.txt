@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-itsdangerous          ← Yeh missing tha
+itsdangerous
 python-multipart
 sqlalchemy
 psycopg2-binary
@@ -12,3 +12,4 @@ aiohttp
 openai
 groq
 razorpay
+httpx
