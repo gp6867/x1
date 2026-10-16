@@ -13,3 +13,4 @@ openai
 groq
 razorpay
 httpx
+psycopg[binary]
