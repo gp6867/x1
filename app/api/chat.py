@@ -24,7 +24,7 @@ client = AsyncOpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1"
 )
-MODEL_NAME = "llama-3.3-70b-versatile"
+MODEL_NAME = "openai/gpt-oss-120b"
 
 # ============= HELPER: Get Current User =============
 async def get_current_user(request: Request, db: Session = Depends(get_db)):
