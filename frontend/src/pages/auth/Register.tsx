@@ -12,17 +12,17 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [step, setStep] = useState<'register' | 'otp'>('register');
+  // const [step, setStep] = useState<'register' | 'otp'>('register'); // 👈 Commented
   
   // UI states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // OTP states
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(60);
-  const [canResend, setCanResend] = useState(false);
+  // OTP states - COMMENTED
+  // const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  // const [timer, setTimer] = useState(60);
+  // const [canResend, setCanResend] = useState(false);
 
   // Password validation
   const [passwordChecks, setPasswordChecks] = useState({
@@ -69,9 +69,10 @@ const Register = () => {
       const response = await authAPI.register(email, password);
       
       if (response.data.success) {
-        setSuccess('OTP sent to your email!');
-        setStep('otp');
-        startTimer();
+        setSuccess('Registration successful! Redirecting to login...');
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
       } else {
         setError(response.data.message || 'Registration failed');
       }
@@ -82,80 +83,72 @@ const Register = () => {
     }
   };
 
-  // Timer for OTP resend
-  const startTimer = () => {
-    setCanResend(false);
-    setTimer(60);
-    const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setCanResend(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  // Handle OTP change
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-    
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  // Handle OTP submit
-  const handleVerifyOTP = async () => {
-    const otpString = otp.join('');
-    if (otpString.length !== 6) {
-      setError('Please enter complete OTP');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await authAPI.verifyOTP(email, otpString);
-      
-      if (response.data.success) {
-        setSuccess('Email verified successfully!');
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
-      } else {
-        setError(response.data.message || 'Invalid OTP');
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Verification failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle resend OTP
-  const handleResendOTP = async () => {
-    if (!canResend) return;
-
-    setLoading(true);
-    try {
-      await authAPI.resendOTP(email);
-      setSuccess('OTP resent successfully!');
-      startTimer();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to resend OTP');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ===== OTP FUNCTIONS COMMENTED =====
+  // const startTimer = () => {
+  //   setCanResend(false);
+  //   setTimer(60);
+  //   const interval = setInterval(() => {
+  //     setTimer((prev) => {
+  //       if (prev <= 1) {
+  //         clearInterval(interval);
+  //         setCanResend(true);
+  //         return 0;
+  //       }
+  //       return prev - 1;
+  //     });
+  //   }, 1000);
+  // };
+  //
+  // const handleOtpChange = (index: number, value: string) => {
+  //   if (value.length > 1) return;
+  //   const newOtp = [...otp];
+  //   newOtp[index] = value;
+  //   setOtp(newOtp);
+  //   if (value && index < 5) {
+  //     const nextInput = document.getElementById(`otp-${index + 1}`);
+  //     nextInput?.focus();
+  //   }
+  // };
+  //
+  // const handleVerifyOTP = async () => {
+  //   const otpString = otp.join('');
+  //   if (otpString.length !== 6) {
+  //     setError('Please enter complete OTP');
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   setError('');
+  //   try {
+  //     const response = await authAPI.verifyOTP(email, otpString);
+  //     if (response.data.success) {
+  //       setSuccess('Email verified successfully!');
+  //       setTimeout(() => {
+  //         navigate('/login');
+  //       }, 2000);
+  //     } else {
+  //       setError(response.data.message || 'Invalid OTP');
+  //     }
+  //   } catch (err: any) {
+  //     setError(err.response?.data?.message || 'Verification failed');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  //
+  // const handleResendOTP = async () => {
+  //   if (!canResend) return;
+  //   setLoading(true);
+  //   try {
+  //     await authAPI.resendOTP(email);
+  //     setSuccess('OTP resent successfully!');
+  //     startTimer();
+  //   } catch (err: any) {
+  //     setError(err.response?.data?.message || 'Failed to resend OTP');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  // ===== OTP FUNCTIONS COMMENTED =====
 
   // Handle Google Login
   const handleGoogleLogin = () => {
@@ -192,76 +185,77 @@ const Register = () => {
           </div>
         )}
 
-        {step === 'register' ? (
-          /* Registration Form */
-          <form onSubmit={handleRegister} className="auth-form">
-            <div className="form-group">
-              <label htmlFor="email">
-                <Mail size={16} />
-                Email
-              </label>
+        {/* Registration Form - Always show, no OTP step */}
+        <form onSubmit={handleRegister} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="email">
+              <Mail size={16} />
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              disabled={loading}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">
+              <Lock size={16} />
+              Password
+            </label>
+            <div className="password-input">
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                value={password}
+                onChange={(e) => handlePasswordChange(e.target.value)}
+                placeholder="Create a password"
                 disabled={loading}
                 required
               />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
-
-            <div className="form-group">
-              <label htmlFor="password">
-                <Lock size={16} />
-                Password
-              </label>
-              <div className="password-input">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  value={password}
-                  onChange={(e) => handlePasswordChange(e.target.value)}
-                  placeholder="Create a password"
-                  disabled={loading}
-                  required
-                />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+            
+            {/* Password requirements */}
+            <div className="password-checks">
+              <div className={passwordChecks.length ? 'valid' : 'invalid'}>
+                • At least 6 characters
               </div>
-              
-              {/* Password requirements */}
-              <div className="password-checks">
-                <div className={passwordChecks.length ? 'valid' : 'invalid'}>
-                  • At least 6 characters
-                </div>
-                <div className={passwordChecks.number ? 'valid' : 'invalid'}>
-                  • Contains number
-                </div>
-                <div className={passwordChecks.uppercase ? 'valid' : 'invalid'}>
-                  • Contains uppercase letter
-                </div>
-                <div className={passwordChecks.special ? 'valid' : 'invalid'}>
-                  • Contains special character
-                </div>
+              <div className={passwordChecks.number ? 'valid' : 'invalid'}>
+                • Contains number
+              </div>
+              <div className={passwordChecks.uppercase ? 'valid' : 'invalid'}>
+                • Contains uppercase letter
+              </div>
+              <div className={passwordChecks.special ? 'valid' : 'invalid'}>
+                • Contains special character
               </div>
             </div>
+          </div>
 
-            <button 
-              type="submit" 
-              className="auth-button"
-              disabled={loading || !isPasswordValid()}
-            >
-              {loading ? <Loader size={16} className="spin" /> : 'Create Account'}
-            </button>
-          </form>
-        ) : (
-          /* OTP Verification Form */
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={loading || !isPasswordValid()}
+          >
+            {loading ? <Loader size={16} className="spin" /> : 'Create Account'}
+          </button>
+        </form>
+
+        {/* ===== OTP VERIFICATION FORM COMMENTED ===== */}
+        {/* 
+        {step === 'otp' && (
           <div className="otp-verification">
             <h3>Verify Your Email</h3>
             <p>We've sent a 6-digit OTP to <strong>{email}</strong></p>
@@ -301,8 +295,10 @@ const Register = () => {
             </div>
           </div>
         )}
+        */}
+        {/* ===== OTP VERIFICATION FORM COMMENTED ===== */}
 
-        {/* 🔥 SOCIAL BUTTONS - YAHAN लाए (form के बाद) */}
+        {/* Social Buttons */}
         <div className="auth-divider">
           <span>Or continue with</span>
         </div>
