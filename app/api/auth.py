@@ -44,7 +44,7 @@ def get_utc_now():
     """Get current UTC datetime without timezone"""
     return datetime.utcnow()
 
-# ============= REGISTER =============
+# ============= REGISTER (OTP COMMENTED) =============
 @router.post("/register")
 async def register(request: Request, db: Session = Depends(get_db)):
     try:
@@ -68,37 +68,39 @@ async def register(request: Request, db: Session = Depends(get_db)):
             email=email,
             password=hashed_password,
             name=name,
-            is_verified=False
+            is_verified=True  # 👈 Seedha verified, OTP nahi
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
 
-        otp = generate_otp()
-        now = get_utc_now()
-        expires_at = now + timedelta(minutes=OTP_EXPIRY_MINUTES)
-
-        print(f"\n{'='*50}")
-        print(f"🔐 REGISTER - OTP for {email}: {otp}")
-        print(f"⏰ Expires: {expires_at}")
-
-        otp_record = OTP(
-            email=email,
-            otp=otp,
-            type="verification",
-            expires_at=expires_at,
-            attempts=0,
-            max_attempts=MAX_OTP_ATTEMPTS,
-            used=False
-        )
-        db.add(otp_record)
-        db.commit()
-
-        await send_otp_email(email, otp, "verification")
+        # ===== OTP PART COMMENTED =====
+        # otp = generate_otp()
+        # now = get_utc_now()
+        # expires_at = now + timedelta(minutes=OTP_EXPIRY_MINUTES)
+        #
+        # print(f"\n{'='*50}")
+        # print(f"🔐 REGISTER - OTP for {email}: {otp}")
+        # print(f"⏰ Expires: {expires_at}")
+        #
+        # otp_record = OTP(
+        #     email=email,
+        #     otp=otp,
+        #     type="verification",
+        #     expires_at=expires_at,
+        #     attempts=0,
+        #     max_attempts=MAX_OTP_ATTEMPTS,
+        #     used=False
+        # )
+        # db.add(otp_record)
+        # db.commit()
+        #
+        # await send_otp_email(email, otp, "verification")
+        # ===== OTP PART COMMENTED =====
 
         return {
             "success": True,
-            "message": "Registration successful. Please verify email with OTP.",
+            "message": "Registration successful. You can login now.",
             "user": {"id": new_user.id, "email": new_user.email, "name": new_user.name}
         }
 
@@ -107,51 +109,47 @@ async def register(request: Request, db: Session = Depends(get_db)):
         traceback.print_exc()
         return {"success": False, "message": "Server error"}
 
-# ============= VERIFY OTP =============
-@router.post("/verify-otp")
-async def verify_otp(request: Request, db: Session = Depends(get_db)):
-    try:
-        data = await request.json()
-        email = data.get("email")
-        otp = data.get("otp")
-
-        now = get_utc_now()
-        
-        print(f"\n{'='*50}")
-        print(f"🔍 VERIFY OTP - Email: {email}, OTP: {otp}")
-
-        otp_record = db.query(OTP).filter(
-            OTP.email == email,
-            OTP.used == False,
-            OTP.otp == otp
-        ).first()
-
-        if not otp_record:
-            return {"success": False, "message": "Invalid OTP"}
-
-        if now > otp_record.expires_at:
-            db.delete(otp_record)
-            db.commit()
-            return {"success": False, "message": "OTP expired"}
-
-        # Agar verification type hai to user verify karo
-        if otp_record.type == "verification":
-            user = db.query(User).filter(User.email == email).first()
-            if user:
-                user.is_verified = True
-                db.commit()
-            # Verification OTP ko used mark karo
-            otp_record.used = True
-            db.commit()
-        
-        # Reset type ke liye used flag mat lagao - reset-password use karega
-
-        return {"success": True, "message": "OTP verified successfully"}
-
-    except Exception as e:
-        logging.error(f"Verify OTP error: {e}")
-        traceback.print_exc()
-        return {"success": False, "message": "Server error"}
+# ============= VERIFY OTP (COMMENTED) =============
+# @router.post("/verify-otp")
+# async def verify_otp(request: Request, db: Session = Depends(get_db)):
+#     try:
+#         data = await request.json()
+#         email = data.get("email")
+#         otp = data.get("otp")
+#
+#         now = get_utc_now()
+#         
+#         print(f"\n{'='*50}")
+#         print(f"🔍 VERIFY OTP - Email: {email}, OTP: {otp}")
+#
+#         otp_record = db.query(OTP).filter(
+#             OTP.email == email,
+#             OTP.used == False,
+#             OTP.otp == otp
+#         ).first()
+#
+#         if not otp_record:
+#             return {"success": False, "message": "Invalid OTP"}
+#
+#         if now > otp_record.expires_at:
+#             db.delete(otp_record)
+#             db.commit()
+#             return {"success": False, "message": "OTP expired"}
+#
+#         if otp_record.type == "verification":
+#             user = db.query(User).filter(User.email == email).first()
+#             if user:
+#                 user.is_verified = True
+#                 db.commit()
+#             otp_record.used = True
+#             db.commit()
+#
+#         return {"success": True, "message": "OTP verified successfully"}
+#
+#     except Exception as e:
+#         logging.error(f"Verify OTP error: {e}")
+#         traceback.print_exc()
+#         return {"success": False, "message": "Server error"}
 
 # ============= LOGIN =============
 @router.post("/login")
@@ -223,7 +221,6 @@ async def forgot_password(request: Request, db: Session = Depends(get_db)):
                 }
             user.forgot_password_attempts = 0
 
-        # Delete old unused OTPs
         db.query(OTP).filter(OTP.email == email, OTP.type == "reset", OTP.used == False).delete()
         db.commit()
 
@@ -271,8 +268,6 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
 
         now = get_utc_now()
         
-        # Reset type ke liye used=False wala OTP dhundho
-        # Verify OTP ne used flag nahi lagaya reset type ke liye
         otp_record = db.query(OTP).filter(
             OTP.email == email,
             OTP.type == "reset",
@@ -292,7 +287,6 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
             db.commit()
             return {"success": False, "message": "OTP expired"}
 
-        # Update password
         user = db.query(User).filter(User.email == email).first()
         if not user:
             return {"success": False, "message": "User not found"}
@@ -302,11 +296,9 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
         db.commit()
         print(f"✅ Password updated for {email}")
 
-        # Mark OTP as used
         otp_record.used = True
         db.commit()
 
-        # Delete all sessions
         db.query(UserSession).filter(UserSession.user_id == user.id).delete()
         db.commit()
 
