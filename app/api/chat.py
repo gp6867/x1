@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import aiohttp
 import logging
 import json
+import os
+from openai import AsyncOpenAI
 
 from ..database.db import get_db
 from ..models.user import User
@@ -13,8 +15,16 @@ from ..utils.jwt_handler import verify_token
 
 router = APIRouter()
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "deepseek-r1:7b"  # instead of "phi3"
+# ===== PURANA OLLAMA SETUP (COMMENTED) =====
+# OLLAMA_URL = "http://localhost:11434/api/generate"
+# MODEL_NAME = "deepseek-r1:7b"
+
+# ===== NAYA GROQ SETUP =====
+client = AsyncOpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1"
+)
+MODEL_NAME = "llama-3.3-70b-versatile"
 
 # ============= HELPER: Get Current User =============
 async def get_current_user(request: Request, db: Session = Depends(get_db)):
@@ -191,15 +201,15 @@ async def get_chat(
             content={"success": False, "message": "Server error"}
         )
 
-# ============= SEND MESSAGE =============
+# ============= SEND MESSAGE (GROQ) =============
 @router.post("/send")
 async def send_message(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Send message"""
+    """Send message - GROQ API"""
     try:
-        print("\n📨 ===== SEND MESSAGE =====")
+        print("\n📨 ===== SEND MESSAGE (GROQ) =====")
         data = await request.json()
         user_message = data.get("message", "")
         chat_id = data.get("chat_id")
@@ -220,7 +230,6 @@ async def send_message(
                 content={"success": True, "message": "Hello!"}
             )
         
-        # Find or create chat
         chat = None
         if chat_id:
             chat = db.query(Chat).filter(
@@ -242,7 +251,6 @@ async def send_message(
             db.refresh(chat)
             print(f"✅ Created chat: {chat.id}")
         
-        # Save user message
         messages = chat.messages or []
         messages.append({
             "role": "user",
@@ -252,36 +260,52 @@ async def send_message(
         chat.updated_at = datetime.utcnow()
         db.commit()
         
-        # Call Ollama
-        async with aiohttp.ClientSession() as session:
-            payload = {
-                "model": MODEL_NAME,
-                "prompt": user_message,
-                "stream": False
+        # ===== PURANA OLLAMA CODE (COMMENTED) =====
+        # async with aiohttp.ClientSession() as session:
+        #     payload = {
+        #         "model": MODEL_NAME,
+        #         "prompt": user_message,
+        #         "stream": False
+        #     }
+        #     async with session.post(OLLAMA_URL, json=payload) as response:
+        #         if response.status == 200:
+        #             result = await response.json()
+        #             ai_response = result.get("response", "Hello!")
+        #         else:
+        #             ai_response = "Hello! I'm here to help."
+        # ===== PURANA OLLAMA CODE (COMMENTED) =====
+        
+        # ===== NAYA GROQ API CALL =====
+        try:
+            response = await client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role": "user", "content": user_message}],
+                max_tokens=500,
+                temperature=0.7
+            )
+            ai_response = response.choices[0].message.content
+            print(f"✅ Groq response received")
+        except Exception as e:
+            logging.error(f"Groq API error: {e}")
+            print(f"❌ Groq error: {e}")
+            ai_response = "Sorry, I'm having trouble connecting. Please try again."
+        # ===== NAYA GROQ API CALL =====
+        
+        messages.append({
+            "role": "assistant",
+            "content": ai_response
+        })
+        chat.messages = messages
+        chat.updated_at = datetime.utcnow()
+        db.commit()
+        
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": ai_response,
+                "chat_id": chat.id
             }
-            
-            async with session.post(OLLAMA_URL, json=payload) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    ai_response = result.get("response", "Hello!")
-                else:
-                    ai_response = "Hello! I'm here to help."
-                
-                messages.append({
-                    "role": "assistant",
-                    "content": ai_response
-                })
-                chat.messages = messages
-                chat.updated_at = datetime.utcnow()
-                db.commit()
-                
-                return JSONResponse(
-                    content={
-                        "success": True,
-                        "message": ai_response,
-                        "chat_id": chat.id
-                    }
-                )
+        )
                 
     except Exception as e:
         logging.error(f"Chat error: {e}")
@@ -334,5 +358,5 @@ async def delete_chat(
 @router.get("/test")
 async def test():
     return JSONResponse(
-        content={"success": True, "message": "Chat API is working"}
+        content={"success": True, "message": "Chat API with Groq is working"}
     )
