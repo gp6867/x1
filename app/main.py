@@ -33,12 +33,12 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
+        "https://xoneai.in",
+        "http://xoneai.in",
         "http://127.0.0.1:5173",
-        "http://localhost:5000",
-        "https://xone.ai",  # Production
-        "https://www.xone.ai",
+        "https://x1-2j5f.onrender.com",
+        "https://xoneai.in",  # Production
+        "https://www.xoneai.in",
     ],
     allow_credentials=True,
     allow_methods=["*"],
