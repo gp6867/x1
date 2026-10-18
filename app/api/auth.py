@@ -377,7 +377,11 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
 # ============= GOOGLE OAUTH =============
 @router.get('/google')
 async def google_login(request: Request):
-    redirect_uri = request.url_for('google_callback')
+    # ✅ FIX: Environment variable se redirect URI lo, localhost nahi
+    redirect_uri = os.getenv(
+        "GOOGLE_REDIRECT_URI",
+        "https://x1-2j5f.onrender.com/api/auth/google/callback"
+    )
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @router.get('/google/callback')
@@ -425,12 +429,15 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
             'is_verified': user.is_verified
         }
 
-        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        # ✅ FIX: Production frontend URL, localhost nahi
+        frontend_url = os.getenv('FRONTEND_URL', 'https://xoneai.in')
         redirect_url = f"{frontend_url}/oauth-callback?token={tokens['access_token']}&user={json.dumps(user_data)}"
         
         return RedirectResponse(url=redirect_url)
 
     except Exception as e:
+        print(f"❌ Google callback error: {e}")
+        traceback.print_exc()
         return JSONResponse({'success': False, 'message': 'Google login failed'})
 
 # ============= APPLE OAUTH (Placeholder) =============
