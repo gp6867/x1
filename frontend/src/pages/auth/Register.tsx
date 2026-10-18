@@ -16,16 +16,19 @@ const Register = () => {
   const [success, setSuccess] = useState('');
 
   const [passwordChecks, setPasswordChecks] = useState({
-    length: false, number: false, uppercase: false, special: false
+    length: false,
+    // number: false,
+    // uppercase: false,
+    // special: false
   });
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
     setPasswordChecks({
       length: value.length >= 6,
-      number: /\d/.test(value),
-      uppercase: /[A-Z]/.test(value),
-      special: /[!@#$%^&*(),.?":{}|<>]/.test(value)
+      // number: /\d/.test(value),
+      // uppercase: /[A-Z]/.test(value),
+      // special: /[!@#$%^&*(),.?":{}|<>]/.test(value)
     });
   };
 
@@ -90,9 +93,9 @@ const Register = () => {
             </div>
             <div className="password-checks">
               <div className={passwordChecks.length ? 'valid' : 'invalid'}>• At least 6 characters</div>
-              <div className={passwordChecks.number ? 'valid' : 'invalid'}>• Contains number</div>
-              <div className={passwordChecks.uppercase ? 'valid' : 'invalid'}>• Contains uppercase letter</div>
-              <div className={passwordChecks.special ? 'valid' : 'invalid'}>• Contains special character</div>
+              {/* <div className={passwordChecks.number ? 'valid' : 'invalid'}>• Contains number</div> */}
+              {/* <div className={passwordChecks.uppercase ? 'valid' : 'invalid'}>• Contains uppercase letter</div> */}
+              {/* <div className={passwordChecks.special ? 'valid' : 'invalid'}>• Contains special character</div> */}
             </div>
           </div>
           <button type="submit" className="auth-button" disabled={loading || !isPasswordValid()}>
