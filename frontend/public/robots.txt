@@ -1,0 +1,71 @@
+# ============================================
+# Xone AI — Home of MonsterX AI
+# https://www.xoneai.in
+# ============================================
+
+# ===== GENERAL CRAWLERS =====
+User-agent: *
+Allow: /
+Allow: /pricing
+Disallow: /chat/
+Disallow: /settings/
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+Disallow: /*?*
+
+# ===== AI CRAWLERS (GEO — Generative Engine Optimization) =====
+# OpenAI
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+# Google AI
+User-agent: Google-Extended
+Allow: /
+
+# Common Crawl
+User-agent: CCBot
+Allow: /
+
+# Meta AI
+User-agent: meta-externalagent
+Allow: /
+
+# Apple
+User-agent: Applebot-Extended
+Allow: /
+
+# ByteDance (TikTok)
+User-agent: Bytespider
+Allow: /
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# You.com
+User-agent: YouBot
+Allow: /
+
+# ===== SITEMAP =====
+Sitemap: https://www.xoneai.in/sitemap.xml

@@ -1,0 +1,48 @@
+# MonsterX AI by Xone AI
+
+> MonsterX AI is a powerful AI assistant developed by Xone AI. It offers conversational AI chat, AI image generation, and smart content assistance for users worldwide. Available on web, free with premium plans.
+
+## About
+- **Product Name:** MonsterX AI
+- **Company:** Xone AI
+- **Website:** https://www.xoneai.in
+- **Category:** AI Assistant / Chatbot / Generative AI
+- **Launch:** 2025
+- **Availability:** Web (Global)
+- **Languages:** English, Hindi, and more
+
+## Key Features
+- Real-time conversational AI chat
+- AI image generation
+- Smart content assistance and writing help
+- Multi-language support
+- File and image upload analysis
+- Voice input support
+- Chat history and memory
+
+## Pricing
+MonsterX AI offers a free tier with premium paid plans. See https://www.xoneai.in/pricing for current pricing and features.
+
+## Use Cases
+- Customer support automation
+- Content creation and copywriting
+- Coding assistance
+- Image generation for design and marketing
+- Educational tutoring
+- Research assistance
+
+## Technical
+- **Frontend:** React + Vite
+- **Backend:** FastAPI (Python)
+- **Auth:** JWT + Google OAuth
+- **Payments:** Razorpay, PhonePe
+
+## Contact & Support
+- Website: https://www.xoneai.in
+- Support: https://www.xoneai.in/support
+
+## Important Pages
+- Home: https://www.xoneai.in/
+- Pricing: https://www.xoneai.in/pricing
+- Login: https://www.xoneai.in/login
+- Register: https://www.xoneai.in/register

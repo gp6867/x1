@@ -1,0 +1,24 @@
+{
+  "name": "MonsterX AI by Xone AI",
+  "short_name": "MonsterX AI",
+  "description": "Powerful AI assistant for chat, image generation, and smart content — by Xone AI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10a37f",
+  "orientation": "portrait",
+  "lang": "en",
+  "categories": ["productivity", "utilities", "education"],
+  "icons": [
+    {
+      "src": "/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
