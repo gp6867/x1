@@ -5,21 +5,27 @@ const SITE_NAME = 'Xone AI';
 const PRODUCT_NAME = 'MonsterX AI';
 const BASE_URL = 'https://www.xoneai.in';
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
-const TWITTER_HANDLE = '@xoneai'; // apna handle daalein
+const TWITTER_HANDLE = '@xoneai';
 
-// ===== DEFAULT SCHEMAS (Organization + Website + SoftwareApp) =====
+// ===== DEFAULT KEYWORDS (har page par apply honge) =====
+const DEFAULT_KEYWORDS = [
+  'AI chat', 'AI assistant', 'conversational AI', 'generative AI',
+  'coding agent', 'AI coding assistant', 'AI code generator', 'code debugger',
+  'deep search', 'AI deep research', 'AI research assistant',
+  'AI skills', 'AI tools', 'AI skill platform',
+  'Claude alternative', 'Gemini alternative', 'ChatGPT alternative',
+  'large language model', 'LLM', 'artificial intelligence',
+  'MonsterX AI', 'Xone AI',
+].join(', ');
+
+// ===== DEFAULT SCHEMAS =====
 const organizationSchema = {
   '@type': 'Organization',
   '@id': `${BASE_URL}/#organization`,
   name: SITE_NAME,
   url: BASE_URL,
   logo: { '@type': 'ImageObject', url: DEFAULT_IMAGE },
-  description: `${SITE_NAME} is the company behind ${PRODUCT_NAME}, a powerful AI assistant.`,
-  sameAs: [
-    'https://twitter.com/xoneai',
-    'https://www.linkedin.com/company/xoneai',
-    'https://github.com/xoneai',
-  ],
+  description: `${SITE_NAME} is the company behind ${PRODUCT_NAME}, an advanced AI assistant with coding agent, deep search, and AI skills.`,
 };
 
 const websiteSchema = {
@@ -28,31 +34,6 @@ const websiteSchema = {
   url: BASE_URL,
   name: PRODUCT_NAME,
   publisher: { '@id': `${BASE_URL}/#organization` },
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: {
-      '@type': 'EntryPoint',
-      urlTemplate: `${BASE_URL}/search?q={search_term_string}`,
-    },
-    'query-input': 'required name=search_term_string',
-  },
-};
-
-const softwareAppSchema = {
-  '@type': 'SoftwareApplication',
-  name: PRODUCT_NAME,
-  applicationCategory: 'AIApplication',
-  operatingSystem: 'Web',
-  url: BASE_URL,
-  image: DEFAULT_IMAGE,
-  description: `${PRODUCT_NAME} is a powerful AI assistant by ${SITE_NAME} for chat, image generation, and smart content.`,
-  publisher: { '@id': `${BASE_URL}/#organization` },
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    ratingCount: '1250',
-  },
 };
 
 interface SEOProps {
@@ -66,7 +47,6 @@ interface SEOProps {
   author?: string;
   publishedTime?: string;
   modifiedTime?: string;
-  /** Custom schema(s) — FAQPage, Article, Product, BreadcrumbList etc. */
   schema?: Record<string, any> | Record<string, any>[];
   noindex?: boolean;
 }
@@ -79,7 +59,7 @@ export default function SEO({
   robots,
   type = 'website',
   keywords,
-  author,
+  author = 'Xone AI',
   publishedTime,
   modifiedTime,
   schema,
@@ -90,12 +70,12 @@ export default function SEO({
   const robotsContent = noindex
     ? 'noindex, nofollow'
     : robots || 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1';
+  const finalKeywords = keywords ? `${keywords}, ${DEFAULT_KEYWORDS}` : DEFAULT_KEYWORDS;
 
-  // Combine default schemas + custom schema(s)
   const customSchemas = Array.isArray(schema) ? schema : schema ? [schema] : [];
   const graphSchema = {
     '@context': 'https://schema.org',
-    '@graph': [organizationSchema, websiteSchema, softwareAppSchema, ...customSchemas],
+    '@graph': [organizationSchema, websiteSchema, ...customSchemas],
   };
 
   return (
@@ -103,8 +83,8 @@ export default function SEO({
       {/* ===== PRIMARY ===== */}
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
-      {keywords && <meta name="keywords" content={keywords} />}
-      {author && <meta name="author" content={author} />}
+      <meta name="keywords" content={finalKeywords} />
+      <meta name="author" content={author} />
       <meta name="robots" content={robotsContent} />
       <meta name="googlebot" content={robotsContent} />
       <meta name="bingbot" content={robotsContent} />
@@ -130,10 +110,6 @@ export default function SEO({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
-
-      {/* ===== PERF HINTS ===== */}
-      <link rel="preconnect" href="https://www.xoneai.in" />
-      <link rel="dns-prefetch" href="https://www.xoneai.in" />
 
       {/* ===== STRUCTURED DATA (JSON-LD) ===== */}
       <script type="application/ld+json">{JSON.stringify(graphSchema)}</script>

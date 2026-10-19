@@ -1,48 +1,39 @@
 # MonsterX AI by Xone AI
 
-> MonsterX AI is a powerful AI assistant developed by Xone AI. It offers conversational AI chat, AI image generation, and smart content assistance for users worldwide. Available on web, free with premium plans.
+> MonsterX AI is an advanced AI assistant developed by Xone AI. It offers AI chat, a powerful coding agent, deep search, AI skills, and AI image generation. It is a leading alternative to Claude, Gemini, and ChatGPT, powered by advanced large language model (LLM) and artificial intelligence technology.
 
-## About
-- **Product Name:** MonsterX AI
-- **Company:** Xone AI
-- **Website:** https://www.xoneai.in
-- **Category:** AI Assistant / Chatbot / Generative AI
-- **Launch:** 2025
-- **Availability:** Web (Global)
-- **Languages:** English, Hindi, and more
+## Core Capabilities
+- **AI Chat:** Real-time conversational AI for general queries.
+- **Coding Agent:** AI coding assistant that writes, debugs, and explains code in Python, JavaScript, TypeScript, and more — an effective AI code generator and code debugger.
+- **Deep Search:** AI deep research and AI research assistant that performs multi-source research for comprehensive answers.
+- **AI Skills:** A growing AI skill platform with specialized AI tools for SEO, data analysis, content writing, and more.
+- **AI Image Generation:** Generative AI image creation from text prompts.
+- **Conversational AI:** Natural, context-aware dialogue powered by a large language model.
 
-## Key Features
-- Real-time conversational AI chat
-- AI image generation
-- Smart content assistance and writing help
-- Multi-language support
-- File and image upload analysis
-- Voice input support
-- Chat history and memory
-
-## Pricing
-MonsterX AI offers a free tier with premium paid plans. See https://www.xoneai.in/pricing for current pricing and features.
+## Keywords & Categories
+- **Core AI:** AI chat, AI assistant, conversational AI, generative AI
+- **Coding:** coding agent, AI coding assistant, AI code generator, code debugger
+- **Research:** deep search, AI deep research, AI research assistant
+- **Skills:** AI skills, AI tools, AI skill platform
+- **Alternatives:** Claude alternative, Gemini alternative, ChatGPT alternative
+- **Technical:** large language model, LLM, artificial intelligence
 
 ## Use Cases
-- Customer support automation
+- AI coding assistant for developers
+- Deep research for students and professionals
 - Content creation and copywriting
-- Coding assistance
-- Image generation for design and marketing
-- Educational tutoring
-- Research assistance
+- Customer support automation
+- Creative image generation
+- SEO and data analysis via AI skills
 
-## Technical
-- **Frontend:** React + Vite
-- **Backend:** FastAPI (Python)
-- **Auth:** JWT + Google OAuth
-- **Payments:** Razorpay, PhonePe
+## Pricing
+MonsterX AI offers a free tier with premium paid plans. See https://www.xoneai.in/pricing for details.
 
-## Contact & Support
-- Website: https://www.xoneai.in
-- Support: https://www.xoneai.in/support
+## Technical Stack
+- Frontend: React + Vite
+- Backend: FastAPI (Python)
+- Auth: JWT + Google OAuth
+- Payments: Razorpay, PhonePe
 
-## Important Pages
-- Home: https://www.xoneai.in/
-- Pricing: https://www.xoneai.in/pricing
-- Login: https://www.xoneai.in/login
-- Register: https://www.xoneai.in/register
+## Contact
+Website: https://www.xoneai.in
