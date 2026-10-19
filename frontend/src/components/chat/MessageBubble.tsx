@@ -140,7 +140,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               backgroundColor: '#f3f4f6',
               borderRadius: '12px',
               color: '#6b7280',
- fontSize: '14px',
+              fontSize: '14px',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
@@ -157,9 +157,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           
-          {/* Actions - Exactly like ChatGPT */}
+          {/* Actions - LEFT side (ChatGPT style) */}
           {role === 'assistant' && (
-            <div className={`absolute -bottom-8 right-0 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`absolute -bottom-8 left-0 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
               <MessageActions
                 text={content}
                 onLike={onLike}
