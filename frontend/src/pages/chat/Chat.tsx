@@ -140,6 +140,70 @@ const Chat: React.FC = () => {
     }
   };
 
+  // ============= HANDLE REGENERATE =============
+  const handleRegenerate = async () => {
+    // Find the last user message
+    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+    
+    if (!lastUserMessage) {
+      console.warn('No user message to regenerate from');
+      return;
+    }
+
+    // Remove the last assistant message (the one we're regenerating)
+    const lastAssistantIndex = [...messages].reverse().findIndex(m => m.role === 'assistant');
+    let messagesWithoutLastAssistant = messages;
+    if (lastAssistantIndex !== -1) {
+      const actualIndex = messages.length - 1 - lastAssistantIndex;
+      messagesWithoutLastAssistant = messages.filter((_, idx) => idx !== actualIndex);
+    }
+    
+    setMessages(messagesWithoutLastAssistant);
+    setIsLoading(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/chat/send`, 
+        { 
+          message: lastUserMessage.content,
+          chat_id: currentChatId 
+        },
+        { 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          } 
+        }
+      );
+
+      if (response.data.success) {
+        if (response.data.chat_id) {
+          setCurrentChatId(response.data.chat_id);
+        }
+
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: response.data.message,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        throw new Error('Failed to regenerate');
+      }
+    } catch (error: any) {
+      console.error('Regenerate error:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Failed to regenerate response. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleFileUpload = async (file: File) => {
     console.log('File selected:', file);
     
@@ -198,6 +262,7 @@ const Chat: React.FC = () => {
               content={message.content}
               role={message.role}
               timestamp={message.timestamp}
+              onRegenerate={message.role === 'assistant' ? handleRegenerate : undefined}
             />
           ))}
           {isLoading && (
