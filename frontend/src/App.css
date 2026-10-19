@@ -1977,3 +1977,15 @@ body {
 .dark .ai-video-btn:hover {
   background: #1f2937;
 }
+
+/* ============= MESSAGE BOX 3MM UPAR (FIX) ============= */
+.input-area {
+  margin-bottom: 3mm;
+}
+
+@media (max-width: 768px) {
+  .input-area {
+    margin-bottom: 3mm;
+    padding-bottom: calc(12px + 3mm);
+  }
+}
