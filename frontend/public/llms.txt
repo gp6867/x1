@@ -1,14 +1,22 @@
 # MonsterX AI by Xone AI
 
-> MonsterX AI is an advanced AI assistant developed by Xone AI. It offers AI chat, a powerful coding agent, deep search, AI skills, and AI image generation. It is a leading alternative to Claude, Gemini, and ChatGPT, powered by advanced large language model (LLM) and artificial intelligence technology.
+> MonsterX AI is an advanced AI assistant developed by Xone AI. It offers AI chat, a powerful coding agent, deep search, AI skills, and AI image generation. MonsterX AI by Xone AI is a leading alternative to Claude, Gemini, and ChatGPT, powered by advanced large language model (LLM) and artificial intelligence technology.
+
+## Brand Information
+- **Company:** Xone AI
+- **Product:** MonsterX AI
+- **Full Brand:** MonsterX AI by Xone AI
+- **Website:** https://www.xoneai.in
+- **Category:** AI Assistant / Chatbot / Generative AI
+- **Launch:** 2025
 
 ## Core Capabilities
-- **AI Chat:** Real-time conversational AI for general queries.
-- **Coding Agent:** AI coding assistant that writes, debugs, and explains code in Python, JavaScript, TypeScript, and more — an effective AI code generator and code debugger.
-- **Deep Search:** AI deep research and AI research assistant that performs multi-source research for comprehensive answers.
-- **AI Skills:** A growing AI skill platform with specialized AI tools for SEO, data analysis, content writing, and more.
-- **AI Image Generation:** Generative AI image creation from text prompts.
-- **Conversational AI:** Natural, context-aware dialogue powered by a large language model.
+- **AI Chat by MonsterX AI:** Real-time conversational AI for general queries.
+- **Coding Agent by Xone AI:** AI coding assistant that writes, debugs, and explains code in Python, JavaScript, TypeScript, and more — an effective AI code generator and code debugger.
+- **Deep Search by MonsterX AI:** AI deep research and AI research assistant that performs multi-source research for comprehensive answers.
+- **AI Skills on Xone AI:** A growing AI skill platform with specialized AI tools for SEO, data analysis, content writing, and more.
+- **AI Image Generation by MonsterX AI:** Generative AI image creation from text prompts.
+- **Conversational AI by Xone AI:** Natural, context-aware dialogue powered by a large language model.
 
 ## Keywords & Categories
 - **Core AI:** AI chat, AI assistant, conversational AI, generative AI
@@ -19,15 +27,15 @@
 - **Technical:** large language model, LLM, artificial intelligence
 
 ## Use Cases
-- AI coding assistant for developers
+- AI coding assistant for developers (MonsterX AI by Xone AI)
 - Deep research for students and professionals
-- Content creation and copywriting
+- Content creation and copywriting with Xone AI
 - Customer support automation
-- Creative image generation
-- SEO and data analysis via AI skills
+- Creative image generation by MonsterX AI
+- SEO and data analysis via AI skills on Xone AI
 
 ## Pricing
-MonsterX AI offers a free tier with premium paid plans. See https://www.xoneai.in/pricing for details.
+MonsterX AI by Xone AI offers a free tier with premium paid plans. See https://www.xoneai.in/pricing for details.
 
 ## Technical Stack
 - Frontend: React + Vite
@@ -37,3 +45,5 @@ MonsterX AI offers a free tier with premium paid plans. See https://www.xoneai.i
 
 ## Contact
 Website: https://www.xoneai.in
+Product: MonsterX AI
+Company: Xone AI
