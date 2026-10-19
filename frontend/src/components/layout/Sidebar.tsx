@@ -234,7 +234,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         )}
       </div>
 
-      {/* ===== AI IMAGES BUTTON ===== */}
+      {/* ===== AI IMAGES BUTTON - COMMENTED (baad mein kaam aa sakta hai) ===== */}
+      {/* 
       <button 
         className="ai-images-btn" 
         onClick={handleAIImages}
@@ -243,8 +244,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         <Image size={18} />
         <span>AI Images</span>
       </button>
+      */}
 
-      {/* ===== AI VIDEO BUTTON - NEW ===== */}
+      {/* ===== AI VIDEO BUTTON - COMMENTED (baad mein kaam aa sakta hai) ===== */}
+      {/* 
       <button 
         className="ai-video-btn" 
         onClick={handleAIVideo}
@@ -253,6 +256,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         <Video size={18} />
         <span>AI Video</span>
       </button>
+      */}
 
       {/* ===== RECENT CHATS SECTION ===== */}
       <div className="chat-history">
