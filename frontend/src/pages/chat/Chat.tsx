@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import ChatHeader from '../../components/chat/ChatHeader';
 import MessageBubble from '../../components/chat/MessageBubble';
 import ChatInput from '../../components/chat/ChatInput';
@@ -15,97 +16,113 @@ interface Message {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+const createWelcomeMessage = (): Message => ({
+  id: 'welcome',
+  role: 'assistant',
+  content: 'Hello! How can I help you today?',
+  timestamp: new Date(),
+});
+
 const Chat: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([createWelcomeMessage()]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
   const { user, token } = useAuthStore();
+  const location = useLocation();
 
-  useEffect(() => {
-    // Add welcome message
-    setMessages([{
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! How can I help you today?',
-      timestamp: new Date()
-    }]);
-  }, []);
+  // ✅ Extract chatId from URL (reactive to navigation)
+  const chatIdFromUrl = (() => {
+    const match = location.pathname.match(/\/chat\/(\d+)/);
+    return match ? Number(match[1]) : null;
+  })();
 
-  // Load chat from URL if exists
+  // ✅ Reload chat whenever URL or token changes
   useEffect(() => {
-    const pathParts = window.location.pathname.split('/');
-    const chatId = pathParts[pathParts.length - 1];
-    if (chatId && !isNaN(Number(chatId))) {
-      loadChat(Number(chatId));
+    if (!token) return; // wait for auth hydration
+
+    if (!chatIdFromUrl) {
+      // /chat or /chat/new — fresh conversation
+      setCurrentChatId(null);
+      setMessages([createWelcomeMessage()]);
+      return;
     }
-  }, []);
+
+    loadChat(chatIdFromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatIdFromUrl, token]);
 
   const loadChat = async (chatId: number) => {
     try {
       const response = await axios.get(`${API_URL}/chat/${chatId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` },
       });
-      
-      if (response.data.success) {
+
+      const chatMessages = response.data?.chat?.messages;
+
+      if (response.data?.success && Array.isArray(chatMessages) && chatMessages.length > 0) {
         setCurrentChatId(chatId);
-        const loadedMessages = response.data.chat.messages.map((msg: any, index: number) => ({
+        const loadedMessages: Message[] = chatMessages.map((msg: any, index: number) => ({
           id: `${chatId}-${index}`,
-          role: msg.role,
-          content: msg.content,
-          timestamp: new Date(msg.timestamp || Date.now())
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: typeof msg.content === 'string' ? msg.content : '',
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
         }));
         setMessages(loadedMessages);
+      } else {
+        // Chat exists but empty, OR chat not found — show welcome
+        setCurrentChatId(chatId);
+        setMessages([createWelcomeMessage()]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load chat:', error);
+      // ✅ Never blank the page — keep a friendly message
+      setCurrentChatId(chatId);
+      setMessages([{
+        id: 'error',
+        role: 'assistant',
+        content: 'Could not load previous messages. You can still start a new conversation below.',
+        timestamp: new Date(),
+      }]);
     }
   };
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
     try {
-      // Call backend API with token
-      const response = await axios.post(`${API_URL}/chat/send`, 
-        { 
-          message: content,
-          chat_id: currentChatId 
-        },
-        { 
-          headers: { 
+      const response = await axios.post(
+        `${API_URL}/chat/send`,
+        { message: content, chat_id: currentChatId },
+        {
+          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`  // ✅ Token added
-          } 
+            'Authorization': `Bearer ${token}`,
+          },
         }
       );
 
       if (response.data.success) {
-        // Save chat ID for future messages
         if (response.data.chat_id) {
           setCurrentChatId(response.data.chat_id);
         }
 
-        // Add AI response
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: response.data.message,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
         setMessages(prev => [...prev, aiMessage]);
       } else {
@@ -113,26 +130,23 @@ const Chat: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Chat error:', error);
-      
-      // Show specific error message
+
       let errorText = 'Sorry, I encountered an error. Please try again.';
-      
+
       if (error.response?.status === 401) {
         errorText = 'Session expired. Please login again.';
-        // Redirect to login after 2 seconds
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
       } else if (error.response?.data?.message) {
         errorText = error.response.data.message;
       }
-      
-      // Error message
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: errorText,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -140,38 +154,33 @@ const Chat: React.FC = () => {
     }
   };
 
-  // ============= HANDLE REGENERATE =============
   const handleRegenerate = async () => {
-    // Find the last user message
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-    
+
     if (!lastUserMessage) {
       console.warn('No user message to regenerate from');
       return;
     }
 
-    // Remove the last assistant message (the one we're regenerating)
     const lastAssistantIndex = [...messages].reverse().findIndex(m => m.role === 'assistant');
     let messagesWithoutLastAssistant = messages;
     if (lastAssistantIndex !== -1) {
       const actualIndex = messages.length - 1 - lastAssistantIndex;
       messagesWithoutLastAssistant = messages.filter((_, idx) => idx !== actualIndex);
     }
-    
+
     setMessages(messagesWithoutLastAssistant);
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/chat/send`, 
-        { 
-          message: lastUserMessage.content,
-          chat_id: currentChatId 
-        },
-        { 
-          headers: { 
+      const response = await axios.post(
+        `${API_URL}/chat/send`,
+        { message: lastUserMessage.content, chat_id: currentChatId },
+        {
+          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          } 
+            'Authorization': `Bearer ${token}`,
+          },
         }
       );
 
@@ -184,7 +193,7 @@ const Chat: React.FC = () => {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: response.data.message,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
         setMessages(prev => [...prev, aiMessage]);
       } else {
@@ -196,7 +205,7 @@ const Chat: React.FC = () => {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: 'Failed to regenerate response. Please try again.',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -206,7 +215,7 @@ const Chat: React.FC = () => {
 
   const handleFileUpload = async (file: File) => {
     console.log('File selected:', file);
-    
+
     const formData = new FormData();
     formData.append('file', file);
 
@@ -214,17 +223,16 @@ const Chat: React.FC = () => {
       const response = await axios.post(`${API_URL}/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`  // ✅ Token for upload too
-        }
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (response.data.success) {
-        // Add image message
         const imageMessage: Message = {
           id: Date.now().toString(),
           role: 'user',
           content: `📎 Image: ${file.name}`,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
         setMessages(prev => [...prev, imageMessage]);
       }
@@ -235,7 +243,6 @@ const Chat: React.FC = () => {
 
   const handleVoiceInput = (audioBlob: Blob) => {
     console.log('Voice input received:', audioBlob);
-    // You can implement voice-to-text here
   };
 
   const toggleTheme = () => {
@@ -246,15 +253,15 @@ const Chat: React.FC = () => {
   return (
     <div className={`app ${isDarkMode ? 'dark' : ''}`}>
       <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
-      
+
       <div className="main-content">
-        <ChatHeader 
+        <ChatHeader
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           onThemeToggle={toggleTheme}
           isDarkMode={isDarkMode}
           userName={user?.name}
         />
-        
+
         <div className="messages-container">
           {messages.map((message) => (
             <MessageBubble
@@ -283,7 +290,7 @@ const Chat: React.FC = () => {
           )}
         </div>
 
-        <ChatInput 
+        <ChatInput
           onSendMessage={handleSendMessage}
           onFileUpload={handleFileUpload}
           onVoiceInput={handleVoiceInput}
