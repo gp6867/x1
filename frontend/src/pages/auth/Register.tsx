@@ -49,7 +49,7 @@ const Register = () => {
 
         setSuccess('Registration successful! Welcome to Xone AI...');
         // ✅ Direct chat par bhejein (login skip)
-        setTimeout(() => { navigate('/chat'); }, 1000);
+        setTimeout(() => { window.location.href = '/chat'; }, 1000);
       } else if (response.data.success) {
         // Fallback: agar token na mile (backend purana ho), login par bhejein
         setSuccess('Registration successful! Redirecting to login...');
