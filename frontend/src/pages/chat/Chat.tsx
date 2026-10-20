@@ -16,20 +16,13 @@ interface Message {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const createWelcomeMessage = (): Message => ({
-  id: 'welcome',
-  role: 'assistant',
-  content: 'Hello! How can I help you today?',
-  timestamp: new Date(),
-});
-
 const Chat: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([createWelcomeMessage()]);
+  // ✅ FIX: Initial state khali — welcome message render-only hoga
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  // ✅ NEW: user's feedback map (message_index -> 'like'|'dislike')
   const [feedbackMap, setFeedbackMap] = useState<Record<number, 'like' | 'dislike'>>({});
   const { user, token } = useAuthStore();
   const location = useLocation();
@@ -44,7 +37,7 @@ const Chat: React.FC = () => {
 
     if (!chatIdFromUrl) {
       setCurrentChatId(null);
-      setMessages([createWelcomeMessage()]);
+      setMessages([]);         // ✅ khali — welcome render-only
       setFeedbackMap({});
       return;
     }
@@ -71,7 +64,7 @@ const Chat: React.FC = () => {
         }));
         setMessages(loadedMessages);
 
-        // ✅ NEW: is chat ke liye user ka feedback fetch karein
+        // ✅ Feedback fetch — index ab backend ke messages array se match karega
         try {
           const fbRes = await axios.get(`${API_URL}/chat/feedback/${chatId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
@@ -85,18 +78,13 @@ const Chat: React.FC = () => {
         }
       } else {
         setCurrentChatId(chatId);
-        setMessages([createWelcomeMessage()]);
+        setMessages([]);         // ✅ khali — welcome render-only
         setFeedbackMap({});
       }
     } catch (error: any) {
       console.error('Failed to load chat:', error);
       setCurrentChatId(chatId);
-      setMessages([{
-        id: 'error',
-        role: 'assistant',
-        content: 'Could not load previous messages. You can still start a new conversation below.',
-        timestamp: new Date(),
-      }]);
+      setMessages([]);
       setFeedbackMap({});
     }
   };
@@ -274,18 +262,31 @@ const Chat: React.FC = () => {
         />
 
         <div className="messages-container">
+          {/* ✅ Welcome message — render-only, state mein count nahi hota */}
+          {messages.length === 0 && !isLoading && (
+            <MessageBubble
+              content="Hello! How can I help you today?"
+              role="assistant"
+              timestamp={new Date()}
+              chatId={null}
+              messageIndex={undefined}
+              initialFeedback={null}
+            />
+          )}
+
           {messages.map((message, index) => (
             <MessageBubble
               key={message.id}
               content={message.content}
               role={message.role}
               timestamp={message.timestamp}
-              chatId={currentChatId}                                         /* ✅ NEW */
-              messageIndex={message.role === 'assistant' ? index : undefined} /* ✅ NEW */
-              initialFeedback={feedbackMap[index] || null}                    /* ✅ NEW */
+              chatId={currentChatId}
+              messageIndex={message.role === 'assistant' ? index : undefined}
+              initialFeedback={feedbackMap[index] || null}
               onRegenerate={message.role === 'assistant' ? handleRegenerate : undefined}
             />
           ))}
+
           {isLoading && (
             <div className="message-wrapper assistant">
               <div className="message-content">
