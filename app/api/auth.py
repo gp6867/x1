@@ -44,7 +44,7 @@ def get_utc_now():
     """Get current UTC datetime without timezone"""
     return datetime.utcnow()
 
-# ============= REGISTER (OTP COMMENTED) =============
+# ============= REGISTER (AUTO-LOGIN) =============
 @router.post("/register")
 async def register(request: Request, db: Session = Depends(get_db)):
     try:
@@ -68,88 +68,41 @@ async def register(request: Request, db: Session = Depends(get_db)):
             email=email,
             password=hashed_password,
             name=name,
-            is_verified=True  # 👈 Seedha verified, OTP nahi
+            is_verified=True
         )
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
 
-        # ===== OTP PART COMMENTED =====
-        # otp = generate_otp()
-        # now = get_utc_now()
-        # expires_at = now + timedelta(minutes=OTP_EXPIRY_MINUTES)
-        #
-        # print(f"\n{'='*50}")
-        # print(f"🔐 REGISTER - OTP for {email}: {otp}")
-        # print(f"⏰ Expires: {expires_at}")
-        #
-        # otp_record = OTP(
-        #     email=email,
-        #     otp=otp,
-        #     type="verification",
-        #     expires_at=expires_at,
-        #     attempts=0,
-        #     max_attempts=MAX_OTP_ATTEMPTS,
-        #     used=False
-        # )
-        # db.add(otp_record)
-        # db.commit()
-        #
-        # await send_otp_email(email, otp, "verification")
-        # ===== OTP PART COMMENTED =====
+        # ✅ AUTO-LOGIN: token create karke session save karein
+        tokens = create_tokens(new_user.id, new_user.email)
+        expires_at = get_utc_now() + timedelta(days=7)
+        session = UserSession(
+            user_id=new_user.id,
+            token=tokens["access_token"],
+            refresh_token=tokens["refresh_token"],
+            expires_at=expires_at
+        )
+        db.add(session)
+        db.commit()
 
         return {
             "success": True,
-            "message": "Registration successful. You can login now.",
-            "user": {"id": new_user.id, "email": new_user.email, "name": new_user.name}
+            "message": "Registration successful.",
+            "token": tokens["access_token"],
+            "refreshToken": tokens["refresh_token"],
+            "user": {
+                "id": new_user.id,
+                "email": new_user.email,
+                "name": new_user.name,
+                "is_verified": new_user.is_verified
+            }
         }
 
     except Exception as e:
         logging.error(f"Register error: {e}")
         traceback.print_exc()
         return {"success": False, "message": "Server error"}
-
-# ============= VERIFY OTP (COMMENTED) =============
-# @router.post("/verify-otp")
-# async def verify_otp(request: Request, db: Session = Depends(get_db)):
-#     try:
-#         data = await request.json()
-#         email = data.get("email")
-#         otp = data.get("otp")
-#
-#         now = get_utc_now()
-#         
-#         print(f"\n{'='*50}")
-#         print(f"🔍 VERIFY OTP - Email: {email}, OTP: {otp}")
-#
-#         otp_record = db.query(OTP).filter(
-#             OTP.email == email,
-#             OTP.used == False,
-#             OTP.otp == otp
-#         ).first()
-#
-#         if not otp_record:
-#             return {"success": False, "message": "Invalid OTP"}
-#
-#         if now > otp_record.expires_at:
-#             db.delete(otp_record)
-#             db.commit()
-#             return {"success": False, "message": "OTP expired"}
-#
-#         if otp_record.type == "verification":
-#             user = db.query(User).filter(User.email == email).first()
-#             if user:
-#                 user.is_verified = True
-#                 db.commit()
-#             otp_record.used = True
-#             db.commit()
-#
-#         return {"success": True, "message": "OTP verified successfully"}
-#
-#     except Exception as e:
-#         logging.error(f"Verify OTP error: {e}")
-#         traceback.print_exc()
-#         return {"success": False, "message": "Server error"}
 
 # ============= LOGIN =============
 @router.post("/login")
@@ -263,9 +216,6 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
         otp = data.get("otp")
         new_password = data.get("newPassword")
 
-        print(f"\n{'='*50}")
-        print(f"🔐 RESET PASSWORD - Email: {email}, OTP: {otp}")
-
         now = get_utc_now()
         
         otp_record = db.query(OTP).filter(
@@ -276,13 +226,9 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
         ).first()
 
         if not otp_record:
-            print(f"❌ Invalid OTP - No record found")
             return {"success": False, "message": "Invalid OTP"}
 
-        print(f"✅ OTP found - Expires: {otp_record.expires_at}")
-
         if now > otp_record.expires_at:
-            print(f"❌ OTP expired")
             db.delete(otp_record)
             db.commit()
             return {"success": False, "message": "OTP expired"}
@@ -294,15 +240,12 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
         user.password = get_password_hash(new_password)
         user.forgot_password_attempts = 0
         db.commit()
-        print(f"✅ Password updated for {email}")
 
         otp_record.used = True
         db.commit()
 
         db.query(UserSession).filter(UserSession.user_id == user.id).delete()
         db.commit()
-
-        print(f"✅ Password reset successful")
         
         return {
             "success": True, 
@@ -377,7 +320,6 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
 # ============= GOOGLE OAUTH =============
 @router.get('/google')
 async def google_login(request: Request):
-    # ✅ FIX: Environment variable se redirect URI lo, localhost nahi
     redirect_uri = os.getenv(
         "GOOGLE_REDIRECT_URI",
         "https://x1-2j5f.onrender.com/api/auth/google/callback"
@@ -429,7 +371,6 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
             'is_verified': user.is_verified
         }
 
-        # ✅ FIX: Production frontend URL, localhost nahi
         frontend_url = os.getenv('FRONTEND_URL', 'https://xoneai.in')
         redirect_url = f"{frontend_url}/oauth-callback?token={tokens['access_token']}&user={json.dumps(user_data)}"
         
