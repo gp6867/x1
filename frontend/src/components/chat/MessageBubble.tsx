@@ -7,9 +7,9 @@ interface MessageBubbleProps {
   role: 'user' | 'assistant';
   timestamp: Date;
   imageUrl?: string;
-  chatId?: string | null;         // ✅ NEW
-  messageIndex?: number;           // ✅ NEW
-  initialFeedback?: 'like' | 'dislike' | null;  // ✅ NEW
+  chatId?: string | null;
+  messageIndex?: number;
+  initialFeedback?: 'like' | 'dislike' | null;
   onLike?: () => void;
   onDislike?: () => void;
   onCopy?: () => void;
@@ -123,9 +123,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             <div className={`absolute -bottom-8 left-0 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
               <MessageActions
                 text={content}
-                chatId={chatId}                              /* ✅ NEW */
-                messageIndex={messageIndex}                  /* ✅ NEW */
-                initialFeedback={initialFeedback}            /* ✅ NEW */
+                chatId={chatId}
+                messageIndex={messageIndex}
+                initialFeedback={initialFeedback}
                 onLike={onLike}
                 onDislike={onDislike}
                 onCopy={onCopy}
