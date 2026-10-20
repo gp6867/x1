@@ -28,24 +28,24 @@ const Chat: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // ✅ string type — UUID ya integer dono handle karega
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  // ✅ NEW: user's feedback map (message_index -> 'like'|'dislike')
+  const [feedbackMap, setFeedbackMap] = useState<Record<number, 'like' | 'dislike'>>({});
   const { user, token } = useAuthStore();
   const location = useLocation();
 
-  // ✅ UUID (36 chars) ya integer — dono match karega
   const chatIdFromUrl = (() => {
     const match = location.pathname.match(/\/chat\/([a-f0-9-]{36}|\d+)/i);
     return match ? match[1] : null;
   })();
 
-  // ✅ Reload chat whenever URL or token changes
   useEffect(() => {
     if (!token) return;
 
     if (!chatIdFromUrl) {
       setCurrentChatId(null);
       setMessages([createWelcomeMessage()]);
+      setFeedbackMap({});
       return;
     }
 
@@ -70,9 +70,23 @@ const Chat: React.FC = () => {
           timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
         }));
         setMessages(loadedMessages);
+
+        // ✅ NEW: is chat ke liye user ka feedback fetch karein
+        try {
+          const fbRes = await axios.get(`${API_URL}/chat/feedback/${chatId}`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          if (fbRes.data?.success) {
+            setFeedbackMap(fbRes.data.feedback || {});
+          }
+        } catch (fbErr) {
+          console.warn('Feedback load failed:', fbErr);
+          setFeedbackMap({});
+        }
       } else {
         setCurrentChatId(chatId);
         setMessages([createWelcomeMessage()]);
+        setFeedbackMap({});
       }
     } catch (error: any) {
       console.error('Failed to load chat:', error);
@@ -83,6 +97,7 @@ const Chat: React.FC = () => {
         content: 'Could not load previous messages. You can still start a new conversation below.',
         timestamp: new Date(),
       }]);
+      setFeedbackMap({});
     }
   };
 
@@ -212,8 +227,6 @@ const Chat: React.FC = () => {
   };
 
   const handleFileUpload = async (file: File) => {
-    console.log('File selected:', file);
-
     const formData = new FormData();
     formData.append('file', file);
 
@@ -261,12 +274,15 @@ const Chat: React.FC = () => {
         />
 
         <div className="messages-container">
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <MessageBubble
               key={message.id}
               content={message.content}
               role={message.role}
               timestamp={message.timestamp}
+              chatId={currentChatId}                                         /* ✅ NEW */
+              messageIndex={message.role === 'assistant' ? index : undefined} /* ✅ NEW */
+              initialFeedback={feedbackMap[index] || null}                    /* ✅ NEW */
               onRegenerate={message.role === 'assistant' ? handleRegenerate : undefined}
             />
           ))}

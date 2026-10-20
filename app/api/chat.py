@@ -11,6 +11,7 @@ from openai import AsyncOpenAI
 from ..database.db import get_db
 from ..models.user import User
 from ..models.chat import Chat
+from ..models.message_feedback import MessageFeedback
 from ..utils.jwt_handler import verify_token
 
 router = APIRouter()
@@ -105,7 +106,7 @@ async def get_chat_history(
             content={
                 "success": True,
                 "chats": [{
-                    "id": str(chat.uuid_id),   # ✅ UUID string return
+                    "id": str(chat.uuid_id),
                     "title": chat.title
                 } for chat in chats]
             }
@@ -151,7 +152,7 @@ async def create_chat(
         return JSONResponse(
             content={
                 "success": True,
-                "chat_id": str(new_chat.uuid_id),   # ✅ UUID
+                "chat_id": str(new_chat.uuid_id),
                 "title": new_chat.title
             }
         )
@@ -162,43 +163,89 @@ async def create_chat(
             content={"success": False, "message": "Server error"}
         )
 
-# ============= GET SINGLE CHAT =============
-@router.get("/{chat_id}")
-async def get_chat(
-    chat_id: str,
+# ============= LIKE/DISLIKE FEEDBACK (SAVE) =============
+# ⚠️ IMPORTANT: Ye route /{chat_id} se PEHLE hona chahiye
+@router.post("/feedback")
+async def submit_feedback(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Get specific chat by UUID or integer ID"""
+    """Save or update user's like/dislike for a message"""
     try:
+        data = await request.json()
+        chat_id = data.get("chat_id")
+        message_index = data.get("message_index")
+        feedback = data.get("feedback")  # 'like' | 'dislike' | None
+
         user = await get_current_user(request, db)
-        
         if not user:
             return JSONResponse(
                 status_code=401,
                 content={"success": False, "message": "Not authenticated"}
             )
-        
-        chat = find_chat(db, chat_id, user.id)
-        
-        if not chat:
+
+        if chat_id is None or message_index is None:
             return JSONResponse(
-                status_code=404,
-                content={"success": False, "message": "Chat not found"}
+                status_code=400,
+                content={"success": False, "message": "chat_id and message_index required"}
             )
-        
-        return JSONResponse(
-            content={
-                "success": True,
-                "chat": {
-                    "id": str(chat.uuid_id),
-                    "title": chat.title,
-                    "messages": chat.messages or []
-                }
-            }
-        )
+
+        # Purana feedback delete (toggle ke liye)
+        db.query(MessageFeedback).filter(
+            MessageFeedback.chat_id == str(chat_id),
+            MessageFeedback.message_index == int(message_index),
+            MessageFeedback.user_id == user.id
+        ).delete()
+
+        # Naya feedback add (agar valid hai)
+        if feedback in ("like", "dislike"):
+            db.add(MessageFeedback(
+                chat_id=str(chat_id),
+                message_index=int(message_index),
+                user_id=user.id,
+                feedback=feedback
+            ))
+
+        db.commit()
+        return JSONResponse(content={"success": True, "feedback": feedback})
+
     except Exception as e:
-        logging.error(f"Get chat error: {e}")
+        logging.error(f"Feedback error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": "Server error"}
+        )
+
+# ============= LIKE/DISLIKE FEEDBACK (FETCH) =============
+@router.get("/feedback/{chat_id}")
+async def get_feedback(
+    chat_id: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Get current user's feedback for all messages in a chat"""
+    try:
+        user = await get_current_user(request, db)
+        if not user:
+            return JSONResponse(
+                status_code=401,
+                content={"success": False, "message": "Not authenticated"}
+            )
+
+        rows = db.query(MessageFeedback).filter(
+            MessageFeedback.chat_id == str(chat_id),
+            MessageFeedback.user_id == user.id
+        ).all()
+
+        feedback_map = {row.message_index: row.feedback for row in rows}
+
+        return JSONResponse(content={
+            "success": True,
+            "feedback": feedback_map
+        })
+
+    except Exception as e:
+        logging.error(f"Get feedback error: {e}")
         return JSONResponse(
             status_code=500,
             content={"success": False, "message": "Server error"}
@@ -277,12 +324,63 @@ async def send_message(
             content={
                 "success": True,
                 "message": ai_response,
-                "chat_id": str(chat.uuid_id)   # ✅ UUID
+                "chat_id": str(chat.uuid_id)
             }
         )
                 
     except Exception as e:
         logging.error(f"Chat error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": "Server error"}
+        )
+
+# ============= TEST ENDPOINT =============
+# ⚠️ /{chat_id} se PEHLE hona chahiye
+@router.get("/test")
+async def test():
+    return JSONResponse(
+        content={"success": True, "message": "Chat API with Groq is working"}
+    )
+
+# ============= GET SINGLE CHAT =============
+# ⚠️ CATCH-ALL — ise LAST mein rakhein (specific routes pehle match ho)
+@router.get("/{chat_id}")
+async def get_chat(
+    chat_id: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Get specific chat by UUID or integer ID"""
+    try:
+        user = await get_current_user(request, db)
+        
+        if not user:
+            return JSONResponse(
+                status_code=401,
+                content={"success": False, "message": "Not authenticated"}
+            )
+        
+        chat = find_chat(db, chat_id, user.id)
+        
+        if not chat:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "Chat not found"}
+            )
+        
+        return JSONResponse(
+            content={
+                "success": True,
+                "chat": {
+                    "id": str(chat.uuid_id),
+                    "title": chat.title,
+                    "messages": chat.messages or []
+                }
+            }
+        )
+    except Exception as e:
+        logging.error(f"Get chat error: {e}")
         return JSONResponse(
             status_code=500,
             content={"success": False, "message": "Server error"}
@@ -324,10 +422,3 @@ async def delete_chat(
             status_code=500,
             content={"success": False, "message": "Server error"}
         )
-
-# ============= TEST ENDPOINT =============
-@router.get("/test")
-async def test():
-    return JSONResponse(
-        content={"success": True, "message": "Chat API with Groq is working"}
-    )

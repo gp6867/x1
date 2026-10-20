@@ -7,6 +7,9 @@ interface MessageBubbleProps {
   role: 'user' | 'assistant';
   timestamp: Date;
   imageUrl?: string;
+  chatId?: string | null;         // ✅ NEW
+  messageIndex?: number;           // ✅ NEW
+  initialFeedback?: 'like' | 'dislike' | null;  // ✅ NEW
   onLike?: () => void;
   onDislike?: () => void;
   onCopy?: () => void;
@@ -18,6 +21,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   role, 
   timestamp,
   imageUrl,
+  chatId,
+  messageIndex,
+  initialFeedback,
   onLike,
   onDislike,
   onCopy,
@@ -27,10 +33,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Handle image click to open in new tab
   const handleImageClick = () => {
     if (imageUrl) {
-      console.log('🖼️ Opening image:', imageUrl);
       window.open(imageUrl, '_blank', 'noopener,noreferrer');
     }
   };
@@ -53,14 +57,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
         <div className="message-bubble relative">
-          {/* Message Text */}
           {content && content !== '📎 Image' && content !== '📎 Sent an image' && (
             <p className="text-[15px] leading-relaxed text-token-text-primary">
               {content}
             </p>
           )}
           
-          {/* Image Display - with click to open */}
           {imageUrl && !imageError && (
             <div className="mt-2 mb-1">
               <div 
@@ -87,53 +89,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     display: 'block',
                     transition: 'transform 0.2s'
                   }}
-                  onLoad={() => {
-                    console.log('✅ Image loaded successfully:', imageUrl);
-                    setImageLoaded(true);
-                  }}
-                  onError={(e) => {
-                    console.error('❌ Image failed to load:', imageUrl);
-                    setImageError(true);
-                  }}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => setImageError(true)}
                   loading="lazy"
                 />
-                
-                {/* Hover effect indicator */}
-                <div style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                  color: 'white',
-                  padding: '4px 8px',
-                  borderRadius: '16px',
-                  fontSize: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  opacity: 0,
-                  transition: 'opacity 0.2s',
-                  pointerEvents: 'none'
-                }}
-                className="image-open-indicator">
-                  <ExternalLink size={12} />
-                  <span>Open</span>
-                </div>
               </div>
-              
-              {/* Style for hover effect */}
-              <style>{`
-                .message-bubble div:hover .image-open-indicator {
-                  opacity: 1 !important;
-                }
-                .message-bubble img:hover {
-                  transform: scale(1.02);
-                }
-              `}</style>
             </div>
           )}
           
-          {/* Image Error Fallback */}
           {imageError && (
             <div style={{
               padding: '16px',
@@ -152,16 +115,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           )}
           
-          {/* Timestamp */}
           <span className="timestamp">
             {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           
-          {/* Actions - LEFT side (ChatGPT style) */}
           {role === 'assistant' && (
             <div className={`absolute -bottom-8 left-0 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
               <MessageActions
                 text={content}
+                chatId={chatId}                              /* ✅ NEW */
+                messageIndex={messageIndex}                  /* ✅ NEW */
+                initialFeedback={initialFeedback}            /* ✅ NEW */
                 onLike={onLike}
                 onDislike={onDislike}
                 onCopy={onCopy}
