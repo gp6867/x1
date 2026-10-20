@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { Sparkles, Image as ImageIcon } from 'lucide-react';
 import MessageActions from './MessageActions';
 
 interface MessageBubbleProps {
@@ -112,7 +112,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           
-          {/* ✅ FIX: Buttons ALWAYS visible (no hover-based hiding) */}
+          {/* ✅ FIX: Buttons ALWAYS visible — koi hover logic nahi */}
           {role === 'assistant' && (
             <div className="mt-2">
               <MessageActions
