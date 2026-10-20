@@ -18,13 +18,17 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/chat" element={<Chat />} />
+        {/* ✅ NEW: chat with specific ID — ye missing tha */}
+        <Route path="/chat/:id" element={<Chat />} />
         <Route path="/chat/new" element={<ChatNew />} />
         <Route path="/ai-video" element={<AIVideo />} />
         <Route path="/ai-images" element={<AIImages />} />
-        <Route path="/pricing" element={<Pricing />} />       
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/oauth-callback" element={<OAuthCallback />} />
         <Route path="/" element={<Navigate to="/chat" replace />} />
+        {/* ✅ NEW: 404 fallback — galat URL par blank ke bajaye chat par bhejo */}
+        <Route path="*" element={<Navigate to="/chat" replace />} />
       </Routes>
     </Router>
   );
