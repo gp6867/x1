@@ -28,22 +28,22 @@ const Chat: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentChatId, setCurrentChatId] = useState<number | null>(null);
+  // ✅ string type — UUID ya integer dono handle karega
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const { user, token } = useAuthStore();
   const location = useLocation();
 
-  // ✅ Extract chatId from URL (reactive to navigation)
+  // ✅ UUID (36 chars) ya integer — dono match karega
   const chatIdFromUrl = (() => {
-    const match = location.pathname.match(/\/chat\/(\d+)/);
-    return match ? Number(match[1]) : null;
+    const match = location.pathname.match(/\/chat\/([a-f0-9-]{36}|\d+)/i);
+    return match ? match[1] : null;
   })();
 
   // ✅ Reload chat whenever URL or token changes
   useEffect(() => {
-    if (!token) return; // wait for auth hydration
+    if (!token) return;
 
     if (!chatIdFromUrl) {
-      // /chat or /chat/new — fresh conversation
       setCurrentChatId(null);
       setMessages([createWelcomeMessage()]);
       return;
@@ -53,7 +53,7 @@ const Chat: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatIdFromUrl, token]);
 
-  const loadChat = async (chatId: number) => {
+  const loadChat = async (chatId: string) => {
     try {
       const response = await axios.get(`${API_URL}/chat/${chatId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -71,13 +71,11 @@ const Chat: React.FC = () => {
         }));
         setMessages(loadedMessages);
       } else {
-        // Chat exists but empty, OR chat not found — show welcome
         setCurrentChatId(chatId);
         setMessages([createWelcomeMessage()]);
       }
     } catch (error: any) {
       console.error('Failed to load chat:', error);
-      // ✅ Never blank the page — keep a friendly message
       setCurrentChatId(chatId);
       setMessages([{
         id: 'error',

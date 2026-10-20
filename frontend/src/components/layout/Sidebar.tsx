@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 interface Chat {
-  id: number;
+  id: string;   // ✅ UUID string
   title: string;
   updated_at: string;
   created_at: string;
@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const { logout, isAuthenticated, token } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeChat, setActiveChat] = useState<number | null>(null);
+  const [activeChat, setActiveChat] = useState<string | null>(null);   // ✅ string
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,15 +35,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     }
   }, [isAuthenticated, token]);
 
-  // ============= SET ACTIVE CHAT FROM URL =============
+  // ============= SET ACTIVE CHAT FROM URL (UUID ya integer) =============
   useEffect(() => {
-    const pathParts = location.pathname.split('/');
-    const chatId = pathParts[pathParts.length - 1];
-    if (chatId && !isNaN(Number(chatId))) {
-      setActiveChat(Number(chatId));
-    } else {
-      setActiveChat(null);
-    }
+    const match = location.pathname.match(/\/chat\/([a-f0-9-]{36}|\d+)/i);
+    setActiveChat(match ? match[1] : null);
   }, [location.pathname]);
 
   // ============= LOAD CHAT HISTORY FROM API =============
@@ -151,8 +146,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     navigate('/settings');
   };
 
-  // ============= HANDLE CHAT SELECT =============
-  const handleChatSelect = (chatId: number) => {
+  // ============= HANDLE CHAT SELECT (string - UUID ya integer) =============
+  const handleChatSelect = (chatId: string) => {
     console.log(`💬 Selecting chat: ${chatId}`);
     setActiveChat(chatId);
     navigate(`/chat/${chatId}`);
