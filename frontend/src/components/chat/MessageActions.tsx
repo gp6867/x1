@@ -32,35 +32,33 @@ export default function MessageActions({
   const [feedback, setFeedback] = useState<Feedback>(initialFeedback);
   const [copied, setCopied] = useState(false);
 
-  // ✅ Debug — har render par
-  console.log('[MessageActions] render:', {
-    chatId,
-    messageIndex,
-    initialFeedback,
-    currentFeedback: feedback,
-    hasToken: !!token,
-    tokenPreview: token ? token.slice(0, 20) + '...' : null,
-  });
-
   useEffect(() => {
     setFeedback(initialFeedback);
   }, [initialFeedback]);
 
+  // ✅ Fallback: URL se chatId extract karo agar prop missing ho
+  const getChatId = (): string | null => {
+    if (chatId) return chatId;
+    const match = window.location.pathname.match(/\/chat\/([a-f0-9-]{36}|\d+)/i);
+    return match ? match[1] : null;
+  };
+
   const saveFeedback = async (newFeedback: Feedback) => {
-    console.log('[FEEDBACK] saveFeedback called:', {
-      chatId,
+    const effectiveChatId = getChatId();
+
+    console.log('[FEEDBACK] save called:', {
+      propChatId: chatId,
+      effectiveChatId,
       messageIndex,
       hasToken: !!token,
       newFeedback,
     });
 
-    // Optimistic update
     setFeedback(newFeedback);
 
-    // Guard
-    if (!chatId || messageIndex === undefined || !token) {
+    if (!effectiveChatId || messageIndex === undefined || !token) {
       console.warn('[FEEDBACK] Guard failed — missing:', {
-        chatIdMissing: !chatId,
+        chatIdMissing: !effectiveChatId,
         messageIndexMissing: messageIndex === undefined,
         tokenMissing: !token,
       });
@@ -68,24 +66,22 @@ export default function MessageActions({
     }
 
     try {
-      console.log('[FEEDBACK] POSTing...');
       const res = await axios.post(
         `${API_URL}/chat/feedback`,
         { 
-          chat_id: chatId, 
+          chat_id: effectiveChatId, 
           message_index: messageIndex, 
           feedback: newFeedback 
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('[FEEDBACK] Success:', res.status, res.data);
+      console.log('[FEEDBACK] Saved:', res.status, res.data);
     } catch (err: any) {
       console.error('[FEEDBACK] Failed:', {
         status: err?.response?.status,
         data: err?.response?.data,
         message: err?.message,
       });
-      // Revert on failure
       setFeedback(initialFeedback);
     }
   };

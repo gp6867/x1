@@ -29,9 +29,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   onCopy,
   onRegenerate 
 }) => {
-  const [showActions, setShowActions] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   const handleImageClick = () => {
     if (imageUrl) {
@@ -40,11 +38,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   };
 
   return (
-    <div 
-      className={`group message-wrapper ${role}`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-    >
+    <div className={`group message-wrapper ${role}`}>
       <div className="message-content">
         {role === 'assistant' && (
           <div className="avatar assistant">
@@ -89,7 +83,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     display: 'block',
                     transition: 'transform 0.2s'
                   }}
-                  onLoad={() => setImageLoaded(true)}
                   onError={() => setImageError(true)}
                   loading="lazy"
                 />
@@ -119,8 +112,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           
+          {/* ✅ FIX: Buttons ALWAYS visible (no hover-based hiding) */}
           {role === 'assistant' && (
-            <div className={`absolute -bottom-8 left-0 transition-opacity duration-200 ${showActions ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="mt-2">
               <MessageActions
                 text={content}
                 chatId={chatId}
