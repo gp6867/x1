@@ -47,3 +47,4 @@ test_wan.py
 .env.*
 **/.env
 **/.env.*
+.backup-logos/
