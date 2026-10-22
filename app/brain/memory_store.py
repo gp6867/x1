@@ -1,13 +1,12 @@
 # app/brain/memory_store.py
-# DB CRUD operations for user memory
-
 import logging
 from sqlalchemy.orm import Session
 from ..models.user_memory import UserMemory
+from ..models.chat_summary import ChatSummary
 
 
+# ===== FACTS =====
 def save_fact(db: Session, user_id: int, category: str, key: str, value: str, context: str = None):
-    """Upsert a fact — naya save ya existing update"""
     try:
         key = (key or "").strip()[:100]
         value = (value or "").strip()
@@ -26,19 +25,16 @@ def save_fact(db: Session, user_id: int, category: str, key: str, value: str, co
             if context:
                 existing.context = context
             db.commit()
-            logging.info(f"💾 Memory updated: [{category}] {key} = {value}")
+            logging.info(f"💾 Memory updated: [{category}] {key} = {value[:60]}")
             return existing
 
         new = UserMemory(
-            user_id=user_id,
-            category=category,
-            mem_key=key,
-            mem_value=value,
-            context=context
+            user_id=user_id, category=category,
+            mem_key=key, mem_value=value, context=context
         )
         db.add(new)
         db.commit()
-        logging.info(f"💾 Memory saved: [{category}] {key} = {value}")
+        logging.info(f"💾 Memory saved: [{category}] {key} = {value[:60]}")
         return new
     except Exception as e:
         logging.error(f"save_fact error: {e}")
@@ -46,8 +42,7 @@ def save_fact(db: Session, user_id: int, category: str, key: str, value: str, co
         return None
 
 
-def get_all_facts(db: Session, user_id: int, limit: int = 50):
-    """User ke saare facts — latest first"""
+def get_all_facts(db: Session, user_id: int, limit: int = 100):
     try:
         return db.query(UserMemory).filter(
             UserMemory.user_id == user_id
@@ -58,28 +53,66 @@ def get_all_facts(db: Session, user_id: int, limit: int = 50):
 
 
 def delete_fact(db: Session, user_id: int, key: str):
-    """Ek specific fact delete"""
     try:
-        count = db.query(UserMemory).filter(
+        n = db.query(UserMemory).filter(
             UserMemory.user_id == user_id,
             UserMemory.mem_key == key
         ).delete()
         db.commit()
-        return count
+        return n
     except Exception as e:
-        logging.error(f"delete_fact error: {e}")
         db.rollback()
         return 0
 
 
 def delete_all(db: Session, user_id: int):
-    """Poori memory clear"""
     try:
-        count = db.query(UserMemory).filter(UserMemory.user_id == user_id).delete()
+        n = db.query(UserMemory).filter(UserMemory.user_id == user_id).delete()
+        db.query(ChatSummary).filter(ChatSummary.user_id == user_id).delete()
         db.commit()
-        logging.info(f"🗑️ All memory deleted for user {user_id}: {count} rows")
-        return count
+        return n
     except Exception as e:
-        logging.error(f"delete_all error: {e}")
         db.rollback()
         return 0
+
+
+# ===== CHAT SUMMARY =====
+def save_summary(db: Session, user_id: int, chat_id: str, summary: str, messages_covered: int = 0):
+    try:
+        if not summary or not summary.strip():
+            return None
+        existing = db.query(ChatSummary).filter(ChatSummary.chat_id == str(chat_id)).first()
+        if existing:
+            existing.summary = summary
+            existing.messages_covered = messages_covered
+            db.commit()
+            logging.info(f"📝 Summary updated for chat {str(chat_id)[:8]}")
+            return existing
+        new = ChatSummary(
+            chat_id=str(chat_id), user_id=user_id,
+            summary=summary, messages_covered=messages_covered
+        )
+        db.add(new)
+        db.commit()
+        logging.info(f"📝 Summary saved for chat {str(chat_id)[:8]}")
+        return new
+    except Exception as e:
+        logging.error(f"save_summary error: {e}")
+        db.rollback()
+        return None
+
+
+def get_summary(db: Session, chat_id: str):
+    try:
+        return db.query(ChatSummary).filter(ChatSummary.chat_id == str(chat_id)).first()
+    except Exception as e:
+        logging.error(f"get_summary error: {e}")
+        return None
+
+
+def delete_chat_summary(db: Session, chat_id: str):
+    try:
+        db.query(ChatSummary).filter(ChatSummary.chat_id == str(chat_id)).delete()
+        db.commit()
+    except Exception as e:
+        db.rollback()

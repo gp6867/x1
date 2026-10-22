@@ -1,11 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import UUID as PyUUID
-import aiohttp
 import logging
-import json
 import os
 import httpx
 from openai import AsyncOpenAI
@@ -14,17 +12,14 @@ from ..database.db import get_db
 from ..models.user import User
 from ..models.chat import Chat
 from ..models.message_feedback import MessageFeedback
-from ..brain.memory_manager import build_memory_context, extract_and_save_facts
-from ..brain.memory_filter import needs_extraction, needs_context_resolution
-from ..brain.memory_store import get_all_facts, delete_fact, delete_all
+from ..brain.memory_manager import build_memory_context, extract_and_save
+from ..brain.memory_filter import should_extract, has_pronoun
+from ..brain.memory_store import get_all_facts, delete_fact, delete_all, get_summary, delete_chat_summary
 from ..utils.jwt_handler import verify_token
 
 router = APIRouter()
 
-# =====================================================================
-# ===== AI PROVIDERS =====
-# =====================================================================
-
+# ===== PROVIDERS =====
 groq_client = AsyncOpenAI(
     api_key=os.getenv("GROQ_API_KEY", "").strip(),
     base_url="https://api.groq.com/openai/v1"
@@ -42,42 +37,36 @@ gemini_client = AsyncOpenAI(
 )
 GEMINI_MODEL = "gemini-3.8-flash"
 
-# =====================================================================
 # ===== MEMORY CONFIG =====
-# =====================================================================
 MAX_CONTEXT_MESSAGES = 12
 MAX_MESSAGE_CHARS = 1500
-MAX_TOTAL_CONTEXT_CHARS = 6000
+MAX_TOTAL_CONTEXT_CHARS = 6500
 
 BASE_SYSTEM_PROMPT = (
-    "You are MonsterX AI by Xone AI, a helpful and intelligent AI assistant. "
-    "You maintain full conversation context and remember facts about the user. "
-    "When the user uses pronouns (vo, woh, uska, he, she) or vague references, "
-    "resolve them using known facts and recent conversation. Never ask 'which person?' "
-    "if the person is already established in known facts. "
+    "You are MonsterX AI by Xone AI, a helpful, intelligent AI assistant. "
+    "You have persistent memory of the user across all chats — personal facts, projects, "
+    "tech stack, business plans, decisions, and ongoing tasks. "
+    "CRITICAL: When the user uses pronouns (vo, woh, uska, he, she, him, her) or vague references "
+    "('the project', 'the app', 'that person'), resolve them using KNOWN FACTS below. "
+    "Never ask 'which person?' or 'which project?' if it's already in known facts. "
+    "Maintain continuity — reference past decisions and ongoing work naturally. "
     "Reply in the same language the user is using (English, Hindi, or Hinglish)."
 )
 
 
-# =====================================================================
 # ===== HELPERS =====
-# =====================================================================
-
-async def get_current_user(request: Request, db: Session = Depends(get_db)):
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
+async def get_current_user(request: Request, db: Session):
+    auth = request.headers.get("Authorization")
+    if not auth or not auth.startswith("Bearer "):
         return None
     try:
-        token = auth_header.replace("Bearer ", "")
-        payload = verify_token(token)
+        payload = verify_token(auth.replace("Bearer ", ""))
         if not payload:
             return None
-        user_id = payload.get("id")
-        if not user_id:
-            return None
-        return db.query(User).filter(User.id == user_id).first()
+        uid = payload.get("id")
+        return db.query(User).filter(User.id == uid).first() if uid else None
     except Exception as e:
-        print(f"❌ Auth error: {e}")
+        logging.warning(f"auth error: {e}")
         return None
 
 
@@ -85,312 +74,243 @@ def find_chat(db: Session, chat_id, user_id: int):
     if not chat_id:
         return None
     try:
-        chat = db.query(Chat).filter(
-            Chat.uuid_id == str(chat_id),
-            Chat.user_id == user_id
-        ).first()
-        if chat:
-            return chat
+        c = db.query(Chat).filter(Chat.uuid_id == str(chat_id), Chat.user_id == user_id).first()
+        if c:
+            return c
     except Exception:
         pass
     try:
-        return db.query(Chat).filter(
-            Chat.id == int(chat_id),
-            Chat.user_id == user_id
-        ).first()
+        return db.query(Chat).filter(Chat.id == int(chat_id), Chat.user_id == user_id).first()
     except (ValueError, TypeError):
         return None
 
 
-def generate_title(message: str) -> str:
-    if not message:
+def generate_title(msg: str) -> str:
+    if not msg:
         return "New Chat"
-    title = message.strip()[:30]
-    if len(message) > 30:
-        title += "..."
-    return title
+    t = msg.strip()[:30]
+    return t + "..." if len(msg) > 30 else t
 
 
-def extract_content(response) -> str:
+def extract_content(resp) -> str:
     try:
-        if response and response.choices and len(response.choices) > 0:
-            choice = response.choices[0]
-            if choice and choice.message:
-                content = choice.message.content
-                if content and isinstance(content, str):
-                    return content.strip()
-    except Exception as e:
-        logging.warning(f"Content extraction error: {e}")
+        if resp and resp.choices and resp.choices[0].message:
+            c = resp.choices[0].message.content
+            if c and isinstance(c, str):
+                return c.strip()
+    except Exception:
+        pass
     return ""
 
 
-def is_rate_limit_error(error: Exception) -> bool:
-    err_str = str(error).lower()
-    if "429" in err_str or "rate limit" in err_str or "rate_limit" in err_str:
+def is_rate_limit(e: Exception) -> bool:
+    s = str(e).lower()
+    if "429" in s or "rate limit" in s or "quota" in s or "exceeded" in s:
         return True
-    if "quota" in err_str or "exceeded" in err_str:
+    if getattr(e, "status_code", None) == 429:
         return True
-    status = getattr(error, "status_code", None)
-    if status == 429:
-        return True
-    response = getattr(error, "response", None)
-    if response is not None and getattr(response, "status_code", None) == 429:
-        return True
-    return False
+    r = getattr(e, "response", None)
+    return r is not None and getattr(r, "status_code", None) == 429
 
 
-def build_context_messages(messages_history: list, system_prompt: str) -> list:
-    """Token-safe context build with dynamic system prompt"""
-    context = [{"role": "system", "content": system_prompt}]
-
-    valid = []
-    for msg in messages_history:
-        if not isinstance(msg, dict):
-            continue
-        role = msg.get("role")
-        content = msg.get("content", "")
-        if role in ("user", "assistant") and content and isinstance(content, str):
-            valid.append({"role": role, "content": content})
-
+def build_context(messages_history: list, system_prompt: str) -> list:
+    ctx = [{"role": "system", "content": system_prompt}]
+    valid = [
+        {"role": m["role"], "content": m["content"]}
+        for m in messages_history
+        if isinstance(m, dict) and m.get("role") in ("user", "assistant")
+        and isinstance(m.get("content"), str) and m["content"]
+    ]
     recent = valid[-MAX_CONTEXT_MESSAGES:]
-
     total = len(system_prompt)
     for msg in recent:
-        content = msg["content"]
-        if len(content) > MAX_MESSAGE_CHARS:
-            content = content[:MAX_MESSAGE_CHARS] + "...[truncated]"
-        if total + len(content) > MAX_TOTAL_CONTEXT_CHARS:
+        c = msg["content"]
+        if len(c) > MAX_MESSAGE_CHARS:
+            c = c[:MAX_MESSAGE_CHARS] + "...[truncated]"
+        if total + len(c) > MAX_TOTAL_CONTEXT_CHARS:
             break
-        context.append({"role": msg["role"], "content": content})
-        total += len(content)
-
-    logging.info(f"📚 Context: {len(context) - 1} msgs, ~{total} chars")
-    return context
+        ctx.append({"role": msg["role"], "content": c})
+        total += len(c)
+    logging.info(f"📚 Context: {len(ctx) - 1} msgs, ~{total} chars")
+    return ctx
 
 
 async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
-    """Groq primary → Gemini fallback, both receive same context"""
-    context = build_context_messages(messages_history, system_prompt)
-
-    # ===== GROQ =====
+    ctx = build_context(messages_history, system_prompt)
+    # Groq primary
     try:
-        logging.info("🔄 Trying Groq (primary)...")
-        response = await groq_client.chat.completions.create(
-            model=GROQ_MODEL,
-            messages=context,
-            max_tokens=800,
-            temperature=0.7
+        logging.info("🔄 Groq (primary)...")
+        r = await groq_client.chat.completions.create(
+            model=GROQ_MODEL, messages=ctx, max_tokens=800, temperature=0.7
         )
-        text = extract_content(response)
-        if text:
+        t = extract_content(r)
+        if t:
             logging.info("✅ Groq responded")
-            return (text, "Groq")
+            return (t, "Groq")
     except Exception as e:
-        if is_rate_limit_error(e):
-            logging.warning(f"🚫 Groq RATE LIMIT → Gemini: {e}")
-        else:
-            logging.warning(f"⚠️ Groq failed → Gemini: {e}")
-
-    # ===== GEMINI =====
+        logging.warning(f"⚠️ Groq failed ({'rate-limit' if is_rate_limit(e) else 'error'}) → Gemini: {e}")
+    # Gemini fallback
     try:
-        logging.info("🔄 Trying Gemini (fallback)...")
-        response = await gemini_client.chat.completions.create(
-            model=GEMINI_MODEL,
-            messages=context,
-            max_tokens=800,
-            temperature=0.7
+        logging.info("🔄 Gemini (fallback)...")
+        r = await gemini_client.chat.completions.create(
+            model=GEMINI_MODEL, messages=ctx, max_tokens=800, temperature=0.7
         )
-        text = extract_content(response)
-        if text:
+        t = extract_content(r)
+        if t:
             logging.info("✅ Gemini responded")
-            return (text, "Gemini")
+            return (t, "Gemini")
     except Exception as e:
         logging.error(f"❌ Gemini failed: {e}")
-
     return ("Sorry, I'm having trouble connecting. Please try again.", "None")
 
 
-# =====================================================================
-# ===== CHAT ENDPOINTS =====
-# =====================================================================
-
-@router.get("/history")
-async def get_chat_history(request: Request, db: Session = Depends(get_db)):
+# ===== BACKGROUND EXTRACTION =====
+async def _run_extraction_bg(user_id: int, chat_id: str, messages_snapshot: list, prev_summary: str):
+    """Background extraction — fresh DB session, fire and forget"""
     try:
-        user = await get_current_user(request, db)
-        if not user:
-            return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-        chats = db.query(Chat).filter(
-            Chat.user_id == user.id
-        ).order_by(Chat.updated_at.desc()).limit(20).all()
-        return JSONResponse(content={
-            "success": True,
-            "chats": [{"id": str(c.uuid_id), "title": c.title} for c in chats]
-        })
+        from ..database.db import SessionLocal
+        db = SessionLocal()
+        try:
+            await extract_and_save(
+                db=db, user_id=user_id, chat_id=chat_id,
+                messages_history=messages_snapshot,
+                previous_summary=prev_summary,
+                primary_client=gemini_client, primary_model=GEMINI_MODEL,
+                fallback_client=groq_client, fallback_model=GROQ_MODEL,
+            )
+        finally:
+            db.close()
     except Exception as e:
-        logging.error(f"History error: {e}")
+        logging.warning(f"Background extraction error: {e}")
+
+
+# ===== ENDPOINTS =====
+@router.get("/history")
+async def get_history(request: Request, db: Session = Depends(get_db)):
+    try:
+        u = await get_current_user(request, db)
+        if not u:
+            return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
+        chats = db.query(Chat).filter(Chat.user_id == u.id).order_by(Chat.updated_at.desc()).limit(20).all()
+        return JSONResponse(content={"success": True, "chats": [{"id": str(c.uuid_id), "title": c.title} for c in chats]})
+    except Exception as e:
+        logging.error(f"history error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
 @router.post("/new")
-async def create_chat(request: Request, db: Session = Depends(get_db)):
+async def new_chat(request: Request, db: Session = Depends(get_db)):
     try:
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
         data = await request.json()
-        message = data.get("message", "New chat")
-        new_chat = Chat(
-            user_id=user.id,
-            title=generate_title(message),
-            messages=[],
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        )
-        db.add(new_chat)
-        db.commit()
-        db.refresh(new_chat)
-        return JSONResponse(content={
-            "success": True,
-            "chat_id": str(new_chat.uuid_id),
-            "title": new_chat.title
-        })
+        c = Chat(user_id=u.id, title=generate_title(data.get("message", "New chat")),
+                 messages=[], created_at=datetime.utcnow(), updated_at=datetime.utcnow())
+        db.add(c); db.commit(); db.refresh(c)
+        return JSONResponse(content={"success": True, "chat_id": str(c.uuid_id), "title": c.title})
     except Exception as e:
-        logging.error(f"Create chat error: {e}")
+        logging.error(f"new chat error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
 @router.post("/feedback")
-async def submit_feedback(request: Request, db: Session = Depends(get_db)):
+async def feedback(request: Request, db: Session = Depends(get_db)):
     try:
         data = await request.json()
-        chat_id = data.get("chat_id")
-        message_index = data.get("message_index")
-        feedback = data.get("feedback")
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-        if chat_id is None or message_index is None:
+        cid, idx, fb = data.get("chat_id"), data.get("message_index"), data.get("feedback")
+        if cid is None or idx is None:
             return JSONResponse(status_code=400, content={"success": False, "message": "chat_id and message_index required"})
         try:
-            chat_uuid = PyUUID(str(chat_id))
-        except (ValueError, AttributeError):
+            cu = PyUUID(str(cid))
+        except Exception:
             return JSONResponse(status_code=400, content={"success": False, "message": "Invalid chat_id"})
         db.query(MessageFeedback).filter(
-            MessageFeedback.chat_id == chat_uuid,
-            MessageFeedback.message_index == int(message_index),
-            MessageFeedback.user_id == user.id
+            MessageFeedback.chat_id == cu,
+            MessageFeedback.message_index == int(idx),
+            MessageFeedback.user_id == u.id
         ).delete()
-        if feedback in ("like", "dislike"):
-            db.add(MessageFeedback(
-                chat_id=chat_uuid,
-                message_index=int(message_index),
-                user_id=user.id,
-                feedback=feedback
-            ))
+        if fb in ("like", "dislike"):
+            db.add(MessageFeedback(chat_id=cu, message_index=int(idx), user_id=u.id, feedback=fb))
         db.commit()
-        return JSONResponse(content={"success": True, "feedback": feedback})
+        return JSONResponse(content={"success": True, "feedback": fb})
     except Exception as e:
-        logging.error(f"Feedback error: {e}")
+        logging.error(f"feedback error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
 @router.get("/feedback/{chat_id}")
 async def get_feedback(chat_id: str, request: Request, db: Session = Depends(get_db)):
     try:
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
         try:
-            chat_uuid = PyUUID(str(chat_id))
-        except (ValueError, AttributeError):
+            cu = PyUUID(str(chat_id))
+        except Exception:
             return JSONResponse(status_code=400, content={"success": False, "message": "Invalid chat_id"})
         rows = db.query(MessageFeedback).filter(
-            MessageFeedback.chat_id == chat_uuid,
-            MessageFeedback.user_id == user.id
+            MessageFeedback.chat_id == cu, MessageFeedback.user_id == u.id
         ).all()
-        return JSONResponse(content={
-            "success": True,
-            "feedback": {r.message_index: r.feedback for r in rows}
-        })
+        return JSONResponse(content={"success": True, "feedback": {r.message_index: r.feedback for r in rows}})
     except Exception as e:
-        logging.error(f"Get feedback error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
-# ============= SEND MESSAGE (WITH MEMORY) =============
 @router.post("/send")
-async def send_message(request: Request, db: Session = Depends(get_db)):
+async def send_message(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         data = await request.json()
-        user_message = data.get("message", "")
+        user_msg = data.get("message", "")
         chat_id = data.get("chat_id")
 
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-
-        if not user_message:
+        if not user_msg:
             return JSONResponse(content={"success": True, "message": "Hello!"})
 
-        chat = find_chat(db, chat_id, user.id) if chat_id else None
+        chat = find_chat(db, chat_id, u.id) if chat_id else None
         if not chat:
-            chat = Chat(
-                user_id=user.id,
-                title=generate_title(user_message),
-                messages=[],
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
-            )
-            db.add(chat)
-            db.commit()
-            db.refresh(chat)
+            chat = Chat(user_id=u.id, title=generate_title(user_msg), messages=[],
+                        created_at=datetime.utcnow(), updated_at=datetime.utcnow())
+            db.add(chat); db.commit(); db.refresh(chat)
 
         messages = chat.messages or []
 
-        # ===== MEMORY EXTRACTION (before response) =====
-        try:
-            recent = messages[-5:] if messages else []
-            should_extract = needs_extraction(user_message)
-            should_resolve = needs_context_resolution(user_message)
+        # Build memory context (facts + summary)
+        summary_row = get_summary(db, str(chat.uuid_id))
+        memory_ctx = build_memory_context(db, u.id, str(chat.uuid_id))
+        system_prompt = BASE_SYSTEM_PROMPT + ("\n\n" + memory_ctx if memory_ctx else "")
 
-            if should_extract or should_resolve:
-                logging.info(f"🧠 Memory extraction triggered (extract={should_extract}, resolve={should_resolve})")
-                # Gemini primary for extraction (saves Groq quota), Groq fallback
-                await extract_and_save_facts(
-                    db=db,
-                    user_id=user.id,
-                    user_message=user_message,
-                    recent_context=recent,
-                    primary_client=gemini_client,
-                    primary_model=GEMINI_MODEL,
-                    fallback_client=groq_client,
-                    fallback_model=GROQ_MODEL,
-                )
-        except Exception as e:
-            logging.warning(f"Memory extraction skipped: {e}")
-
-        # ===== BUILD SYSTEM PROMPT WITH MEMORY =====
-        memory_ctx = build_memory_context(db, user.id)
-        system_prompt = BASE_SYSTEM_PROMPT
-        if memory_ctx:
-            system_prompt = BASE_SYSTEM_PROMPT + "\n\n" + memory_ctx
-
-        # ===== SAVE USER MESSAGE =====
-        messages.append({"role": "user", "content": user_message})
+        # Save user message
+        messages.append({"role": "user", "content": user_msg})
         chat.messages = messages
         chat.updated_at = datetime.utcnow()
         db.commit()
 
-        # ===== GET AI RESPONSE =====
+        # Get AI response
         ai_response, provider = await get_ai_response(messages, system_prompt)
         logging.info(f"🤖 Response from: {provider}")
 
-        # ===== SAVE ASSISTANT MESSAGE =====
+        # Save assistant message
         messages.append({"role": "assistant", "content": ai_response})
         chat.messages = messages
         chat.updated_at = datetime.utcnow()
         db.commit()
+
+        # Background extraction — fire and forget
+        if should_extract(user_msg) or has_pronoun(user_msg) or len(messages) % 6 == 0:
+            background_tasks.add_task(
+                _run_extraction_bg,
+                u.id,
+                str(chat.uuid_id),
+                list(messages),  # snapshot
+                summary_row.summary if summary_row else ""
+            )
 
         return JSONResponse(content={
             "success": True,
@@ -399,153 +319,117 @@ async def send_message(request: Request, db: Session = Depends(get_db)):
             "provider": provider
         })
     except Exception as e:
-        logging.error(f"Chat error: {e}")
-        import traceback
-        traceback.print_exc()
+        logging.error(f"send error: {e}")
+        import traceback; traceback.print_exc()
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
-# =====================================================================
-# ===== MEMORY MANAGEMENT ENDPOINTS =====
-# =====================================================================
-
+# ===== MEMORY MANAGEMENT =====
 @router.get("/memory")
-async def get_memory(request: Request, db: Session = Depends(get_db)):
-    """User ki saari saved memory dekhne ke liye"""
+async def view_memory(request: Request, db: Session = Depends(get_db)):
     try:
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-        facts = get_all_facts(db, user.id)
+        facts = get_all_facts(db, u.id)
         return JSONResponse(content={
             "success": True,
             "count": len(facts),
-            "facts": [
-                {
-                    "category": f.category,
-                    "key": f.mem_key,
-                    "value": f.mem_value,
-                    "context": f.context,
-                    "updated_at": f.updated_at.isoformat() if f.updated_at else None
-                }
-                for f in facts
-            ]
+            "facts": [{
+                "category": f.category, "key": f.mem_key, "value": f.mem_value,
+                "context": f.context,
+                "updated_at": f.updated_at.isoformat() if f.updated_at else None
+            } for f in facts]
         })
     except Exception as e:
-        logging.error(f"Get memory error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
 @router.delete("/memory/{key}")
-async def remove_memory_key(key: str, request: Request, db: Session = Depends(get_db)):
-    """Ek specific fact delete"""
+async def forget_key(key: str, request: Request, db: Session = Depends(get_db)):
     try:
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-        count = delete_fact(db, user.id, key)
-        return JSONResponse(content={"success": True, "deleted": count})
+        return JSONResponse(content={"success": True, "deleted": delete_fact(db, u.id, key)})
     except Exception as e:
-        logging.error(f"Delete memory error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
 @router.delete("/memory")
-async def clear_memory(request: Request, db: Session = Depends(get_db)):
-    """Poori memory clear (forget me)"""
+async def forget_all(request: Request, db: Session = Depends(get_db)):
     try:
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-        count = delete_all(db, user.id)
-        return JSONResponse(content={"success": True, "deleted": count})
+        return JSONResponse(content={"success": True, "deleted": delete_all(db, u.id)})
     except Exception as e:
-        logging.error(f"Clear memory error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
-# =====================================================================
-# ===== TEST ENDPOINTS =====
-# =====================================================================
-
+# ===== TEST =====
 @router.get("/test-groq")
 async def test_groq():
     try:
-        if not os.getenv("GROQ_API_KEY", "").strip():
-            return JSONResponse(status_code=500, content={"success": False, "provider": "Groq", "error": "GROQ_API_KEY not set"})
-        response = await groq_client.chat.completions.create(
+        r = await groq_client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[{"role": "user", "content": "Say 'Groq working' in 3 words"}],
-            max_tokens=20,
-            temperature=0.5
+            max_tokens=20, temperature=0.5
         )
-        return JSONResponse(content={"success": True, "provider": "Groq", "response": extract_content(response)})
+        return JSONResponse(content={"success": True, "provider": "Groq", "response": extract_content(r)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "provider": "Groq", "error": str(e)})
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 
 @router.get("/test-gemini")
 async def test_gemini():
     try:
-        if not os.getenv("GEMINI_API_KEY", "").strip():
-            return JSONResponse(status_code=500, content={"success": False, "provider": "Gemini", "error": "GEMINI_API_KEY not set"})
-        response = await gemini_client.chat.completions.create(
+        r = await gemini_client.chat.completions.create(
             model=GEMINI_MODEL,
             messages=[{"role": "user", "content": "Say 'Gemini working' in 3 words"}],
-            max_tokens=20,
-            temperature=0.5
+            max_tokens=20, temperature=0.5
         )
-        return JSONResponse(content={"success": True, "provider": "Gemini", "response": extract_content(response)})
+        return JSONResponse(content={"success": True, "provider": "Gemini", "response": extract_content(r)})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "provider": "Gemini", "error": str(e)})
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 
 @router.get("/test")
 async def test():
-    return JSONResponse(content={
-        "success": True,
-        "message": "Chat API with Groq + Gemini + Advanced Memory is working"
-    })
+    return JSONResponse(content={"success": True, "message": "MonsterX AI with full memory is running"})
 
 
-# =====================================================================
-# ===== CATCH-ALL ROUTES (LAST) =====
-# =====================================================================
-
+# ===== CATCH-ALL =====
 @router.get("/{chat_id}")
 async def get_chat(chat_id: str, request: Request, db: Session = Depends(get_db)):
     try:
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-        chat = find_chat(db, chat_id, user.id)
-        if not chat:
+        c = find_chat(db, chat_id, u.id)
+        if not c:
             return JSONResponse(status_code=404, content={"success": False, "message": "Chat not found"})
         return JSONResponse(content={
             "success": True,
-            "chat": {
-                "id": str(chat.uuid_id),
-                "title": chat.title,
-                "messages": chat.messages or []
-            }
+            "chat": {"id": str(c.uuid_id), "title": c.title, "messages": c.messages or []}
         })
     except Exception as e:
-        logging.error(f"Get chat error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
 @router.delete("/{chat_id}")
 async def delete_chat(chat_id: str, request: Request, db: Session = Depends(get_db)):
     try:
-        user = await get_current_user(request, db)
-        if not user:
+        u = await get_current_user(request, db)
+        if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-        chat = find_chat(db, chat_id, user.id)
-        if not chat:
+        c = find_chat(db, chat_id, u.id)
+        if not c:
             return JSONResponse(status_code=404, content={"success": False, "message": "Chat not found"})
-        db.delete(chat)
+        cid_str = str(c.uuid_id)
+        db.delete(c)
+        delete_chat_summary(db, cid_str)
         db.commit()
         return JSONResponse(content={"success": True, "message": "Chat deleted"})
     except Exception as e:
-        logging.error(f"Delete chat error: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
