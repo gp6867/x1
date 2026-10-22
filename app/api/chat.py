@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from uuid import UUID as PyUUID
 import aiohttp
 import logging
 import json
@@ -16,12 +17,19 @@ from ..utils.jwt_handler import verify_token
 
 router = APIRouter()
 
-# ===== GROQ SETUP =====
-client = AsyncOpenAI(
+# ===== GROQ SETUP (PRIMARY) =====
+groq_client = AsyncOpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1"
 )
-MODEL_NAME = "openai/gpt-oss-120b"
+GROQ_MODEL = "openai/gpt-oss-120b"
+
+# ===== GEMINI SETUP (FALLBACK) =====
+gemini_client = AsyncOpenAI(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
+GEMINI_MODEL = "gemini-2.0-flash"
 
 # ============= HELPER: Get Current User =============
 async def get_current_user(request: Request, db: Session = Depends(get_db)):
@@ -47,12 +55,10 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
 def find_chat(db: Session, chat_id, user_id: int):
     """
     Chat lookup — pehle UUID try karega, phir integer (backward compat).
-    Isse purane links /chat/29 bhi kaam karenge, naye /chat/<uuid> bhi.
     """
     if not chat_id:
         return None
 
-    # Try UUID first
     try:
         chat = db.query(Chat).filter(
             Chat.uuid_id == str(chat_id),
@@ -63,7 +69,6 @@ def find_chat(db: Session, chat_id, user_id: int):
     except Exception:
         pass
 
-    # Fallback to integer ID
     try:
         chat = db.query(Chat).filter(
             Chat.id == int(chat_id),
@@ -81,6 +86,48 @@ def generate_title(message: str) -> str:
     if len(message) > 30:
         title += "..."
     return title
+
+# ============= AI HELPER: Get response with fallback =============
+async def get_ai_response(user_message: str) -> tuple:
+    """
+    Try Groq first, fallback to Gemini.
+    Returns: (response_text, provider_name)
+    """
+    # ===== TRY GROQ (PRIMARY) =====
+    try:
+        logging.info("🔄 Trying Groq (primary)...")
+        response = await groq_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": user_message}],
+            max_tokens=500,
+            temperature=0.7
+        )
+        text = response.choices[0].message.content
+        if text:
+            logging.info("✅ Groq responded successfully")
+            return (text, "Groq")
+    except Exception as e:
+        logging.warning(f"⚠️ Groq failed: {e}")
+
+    # ===== TRY GEMINI (FALLBACK) =====
+    try:
+        logging.info("🔄 Trying Gemini (fallback)...")
+        response = await gemini_client.chat.completions.create(
+            model=GEMINI_MODEL,
+            messages=[{"role": "user", "content": user_message}],
+            max_tokens=500,
+            temperature=0.7
+        )
+        text = response.choices[0].message.content
+        if text:
+            logging.info("✅ Gemini responded successfully")
+            return (text, "Gemini")
+    except Exception as e:
+        logging.error(f"❌ Gemini failed: {e}")
+
+    # ===== BOTH FAILED =====
+    logging.error("❌ Both Groq and Gemini failed")
+    return ("Sorry, I'm having trouble connecting right now. Please try again in a moment.", "None")
 
 # ============= GET CHAT HISTORY =============
 @router.get("/history")
@@ -164,7 +211,6 @@ async def create_chat(
         )
 
 # ============= LIKE/DISLIKE FEEDBACK (SAVE) =============
-# ⚠️ IMPORTANT: Ye route /{chat_id} se PEHLE hona chahiye
 @router.post("/feedback")
 async def submit_feedback(
     request: Request,
@@ -175,7 +221,7 @@ async def submit_feedback(
         data = await request.json()
         chat_id = data.get("chat_id")
         message_index = data.get("message_index")
-        feedback = data.get("feedback")  # 'like' | 'dislike' | None
+        feedback = data.get("feedback")
 
         user = await get_current_user(request, db)
         if not user:
@@ -190,17 +236,26 @@ async def submit_feedback(
                 content={"success": False, "message": "chat_id and message_index required"}
             )
 
-        # Purana feedback delete (toggle ke liye)
+        # UUID conversion
+        try:
+            chat_uuid = PyUUID(str(chat_id))
+        except (ValueError, AttributeError):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "Invalid chat_id format"}
+            )
+
+        # Purana feedback delete
         db.query(MessageFeedback).filter(
-            MessageFeedback.chat_id == str(chat_id),
+            MessageFeedback.chat_id == chat_uuid,
             MessageFeedback.message_index == int(message_index),
             MessageFeedback.user_id == user.id
         ).delete()
 
-        # Naya feedback add (agar valid hai)
+        # Naya feedback add
         if feedback in ("like", "dislike"):
             db.add(MessageFeedback(
-                chat_id=str(chat_id),
+                chat_id=chat_uuid,
                 message_index=int(message_index),
                 user_id=user.id,
                 feedback=feedback
@@ -211,9 +266,11 @@ async def submit_feedback(
 
     except Exception as e:
         logging.error(f"Feedback error: {e}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             status_code=500,
-            content={"success": False, "message": "Server error"}
+            content={"success": False, "message": f"Server error: {str(e)}"}
         )
 
 # ============= LIKE/DISLIKE FEEDBACK (FETCH) =============
@@ -232,8 +289,16 @@ async def get_feedback(
                 content={"success": False, "message": "Not authenticated"}
             )
 
+        try:
+            chat_uuid = PyUUID(str(chat_id))
+        except (ValueError, AttributeError):
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "Invalid chat_id"}
+            )
+
         rows = db.query(MessageFeedback).filter(
-            MessageFeedback.chat_id == str(chat_id),
+            MessageFeedback.chat_id == chat_uuid,
             MessageFeedback.user_id == user.id
         ).all()
 
@@ -251,13 +316,13 @@ async def get_feedback(
             content={"success": False, "message": "Server error"}
         )
 
-# ============= SEND MESSAGE (GROQ) =============
+# ============= SEND MESSAGE (GROQ + GEMINI FALLBACK) =============
 @router.post("/send")
 async def send_message(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Send message - GROQ API"""
+    """Send message - Groq primary, Gemini fallback"""
     try:
         data = await request.json()
         user_message = data.get("message", "")
@@ -299,18 +364,9 @@ async def send_message(
         chat.updated_at = datetime.utcnow()
         db.commit()
         
-        # ===== GROQ API CALL =====
-        try:
-            response = await client.chat.completions.create(
-                model=MODEL_NAME,
-                messages=[{"role": "user", "content": user_message}],
-                max_tokens=500,
-                temperature=0.7
-            )
-            ai_response = response.choices[0].message.content
-        except Exception as e:
-            logging.error(f"Groq API error: {e}")
-            ai_response = "Sorry, I'm having trouble connecting. Please try again."
+        # ===== GET AI RESPONSE (with fallback) =====
+        ai_response, provider = await get_ai_response(user_message)
+        logging.info(f"🤖 Response from: {provider}")
         
         messages.append({
             "role": "assistant",
@@ -324,7 +380,8 @@ async def send_message(
             content={
                 "success": True,
                 "message": ai_response,
-                "chat_id": str(chat.uuid_id)
+                "chat_id": str(chat.uuid_id),
+                "provider": provider  # debug ke liye — frontend ignore kar sakta hai
             }
         )
                 
@@ -335,16 +392,74 @@ async def send_message(
             content={"success": False, "message": "Server error"}
         )
 
-# ============= TEST ENDPOINT =============
-# ⚠️ /{chat_id} se PEHLE hona chahiye
+# ============= TEST: GROQ =============
+@router.get("/test-groq")
+async def test_groq():
+    """Test Groq API key"""
+    try:
+        if not os.getenv("GROQ_API_KEY"):
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "provider": "Groq", "error": "GROQ_API_KEY not set"}
+            )
+        
+        response = await groq_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": "Say 'Groq working' in 3 words"}],
+            max_tokens=20,
+            temperature=0.5
+        )
+        return JSONResponse(content={
+            "success": True,
+            "provider": "Groq",
+            "model": GROQ_MODEL,
+            "response": response.choices[0].message.content
+        })
+    except Exception as e:
+        logging.error(f"Groq test error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "provider": "Groq", "error": str(e)}
+        )
+
+# ============= TEST: GEMINI =============
+@router.get("/test-gemini")
+async def test_gemini():
+    """Test Gemini API key"""
+    try:
+        if not os.getenv("GEMINI_API_KEY"):
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "provider": "Gemini", "error": "GEMINI_API_KEY not set in environment"}
+            )
+        
+        response = await gemini_client.chat.completions.create(
+            model=GEMINI_MODEL,
+            messages=[{"role": "user", "content": "Say 'Gemini working' in 3 words"}],
+            max_tokens=20,
+            temperature=0.5
+        )
+        return JSONResponse(content={
+            "success": True,
+            "provider": "Gemini",
+            "model": GEMINI_MODEL,
+            "response": response.choices[0].message.content
+        })
+    except Exception as e:
+        logging.error(f"Gemini test error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "provider": "Gemini", "error": str(e)}
+        )
+
+# ============= TEST: BASIC =============
 @router.get("/test")
 async def test():
     return JSONResponse(
-        content={"success": True, "message": "Chat API with Groq is working"}
+        content={"success": True, "message": "Chat API with Groq + Gemini fallback is working"}
     )
 
-# ============= GET SINGLE CHAT =============
-# ⚠️ CATCH-ALL — ise LAST mein rakhein (specific routes pehle match ho)
+# ============= GET SINGLE CHAT (CATCH-ALL — LAST) =============
 @router.get("/{chat_id}")
 async def get_chat(
     chat_id: str,
