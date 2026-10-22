@@ -48,3 +48,6 @@ test_wan.py
 **/.env
 **/.env.*
 .backup-logos/
+requirements.txt.kali-backup
+requirements.txt.backup
+.backup-logos/

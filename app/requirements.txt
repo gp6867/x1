@@ -4,6 +4,7 @@ itsdangerous
 python-multipart
 sqlalchemy
 psycopg2-binary
+psycopg[binary]
 python-dotenv
 python-jose[cryptography]
 passlib[bcrypt]
@@ -13,4 +14,8 @@ openai
 groq
 razorpay
 httpx
-psycopg[binary]
+resend
+python-multipart
+email-validator
+pydantic
+pydantic-settings
