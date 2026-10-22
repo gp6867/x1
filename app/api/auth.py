@@ -44,6 +44,14 @@ def get_utc_now():
     """Get current UTC datetime without timezone"""
     return datetime.utcnow()
 
+def _naive_dt(dt):
+    """Safe helper — timezone-aware datetime ko naive banao"""
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.replace(tzinfo=None)
+    return dt
+
 # ============= REGISTER (AUTO-LOGIN) =============
 @router.post("/register")
 async def register(request: Request, db: Session = Depends(get_db)):
@@ -153,7 +161,7 @@ async def login(request: Request, db: Session = Depends(get_db)):
         traceback.print_exc()
         return {"success": False, "message": "Server error"}
 
-# ============= FORGOT PASSWORD =============
+# ============= FORGOT PASSWORD (FIXED) =============
 @router.post("/forgot-password")
 async def forgot_password(request: Request, db: Session = Depends(get_db)):
     try:
@@ -162,27 +170,37 @@ async def forgot_password(request: Request, db: Session = Depends(get_db)):
 
         user = db.query(User).filter(User.email == email).first()
         if not user:
+            # Security: don't reveal if email exists
             return {"success": True, "message": "If email exists, OTP sent"}
 
         now = get_utc_now()
-        
-        if user.forgot_password_attempts >= MAX_FORGOT_ATTEMPTS:
-            if user.last_forgot_password and (now - user.last_forgot_password) < timedelta(hours=24):
+
+        # ✅ FIX 1: Safe None handling — naye user par crash nahi hoga
+        attempts = user.forgot_password_attempts or 0
+
+        if attempts >= MAX_FORGOT_ATTEMPTS:
+            # ✅ FIX 2: Timezone-safe comparison
+            last_time = _naive_dt(user.last_forgot_password)
+            if last_time and (now - last_time) < timedelta(hours=24):
                 return {
                     "success": False,
                     "message": "Too many attempts. Try after 24 hours."
                 }
             user.forgot_password_attempts = 0
 
-        db.query(OTP).filter(OTP.email == email, OTP.type == "reset", OTP.used == False).delete()
+        # Purane unused reset OTPs delete karein
+        db.query(OTP).filter(
+            OTP.email == email,
+            OTP.type == "reset",
+            OTP.used == False
+        ).delete()
         db.commit()
 
         otp = generate_otp()
         expires_at = now + timedelta(minutes=OTP_EXPIRY_MINUTES)
 
-        print(f"\n{'='*50}")
-        print(f"🔐 FORGOT PASSWORD - OTP for {email}: {otp}")
-        print(f"⏰ Expires: {expires_at}")
+        logging.info(f"🔐 FORGOT PASSWORD — generating OTP for {email}")
+        logging.info(f"⏰ Expires at: {expires_at} UTC")
 
         otp_record = OTP(
             email=email,
@@ -194,11 +212,32 @@ async def forgot_password(request: Request, db: Session = Depends(get_db)):
             used=False
         )
         db.add(otp_record)
-        user.forgot_password_attempts += 1
+        user.forgot_password_attempts = attempts + 1
         user.last_forgot_password = now
         db.commit()
+        db.refresh(otp_record)
 
-        await send_otp_email(email, otp, "reset")
+        # ✅ FIX 3: Email send ka result actually check karein
+        email_sent = await send_otp_email(email, otp, "reset")
+
+        if not email_sent:
+            logging.error(f"❌ OTP email delivery FAILED for {email}")
+            # ✅ FIX 4: Email fail hone par attempt rollback — user unjustly blocked na ho
+            try:
+                db.delete(otp_record)
+                user.forgot_password_attempts = max(0, attempts)  # rollback to original
+                user.last_forgot_password = None if attempts == 0 else user.last_forgot_password
+                db.commit()
+            except Exception as rollback_err:
+                logging.error(f"Rollback error: {rollback_err}")
+                db.rollback()
+
+            return {
+                "success": False,
+                "message": "Unable to send OTP email right now. Please try again in a moment."
+            }
+
+        logging.info(f"✅ OTP sent successfully to {email}")
 
         return {"success": True, "message": "OTP sent successfully"}
 
@@ -207,7 +246,7 @@ async def forgot_password(request: Request, db: Session = Depends(get_db)):
         traceback.print_exc()
         return {"success": False, "message": "Server error"}
 
-# ============= RESET PASSWORD =============
+# ============= RESET PASSWORD (FIXED) =============
 @router.post("/reset-password")
 async def reset_password(request: Request, db: Session = Depends(get_db)):
     try:
@@ -215,6 +254,13 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
         email = data.get("email")
         otp = data.get("otp")
         new_password = data.get("newPassword")
+
+        # ✅ FIX 5: Password validation
+        if not new_password or len(new_password) < 6:
+            return {
+                "success": False,
+                "message": "Password must be at least 6 characters"
+            }
 
         now = get_utc_now()
         
@@ -228,7 +274,9 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
         if not otp_record:
             return {"success": False, "message": "Invalid OTP"}
 
-        if now > otp_record.expires_at:
+        # ✅ FIX 6: Timezone-safe expiry check
+        expires = _naive_dt(otp_record.expires_at)
+        if expires is None or now > expires:
             db.delete(otp_record)
             db.commit()
             return {"success": False, "message": "OTP expired"}
@@ -239,14 +287,18 @@ async def reset_password(request: Request, db: Session = Depends(get_db)):
 
         user.password = get_password_hash(new_password)
         user.forgot_password_attempts = 0
+        user.last_forgot_password = None  # ✅ FIX 7: Reset timestamp too
         db.commit()
 
         otp_record.used = True
         db.commit()
 
+        # Security: invalidate all sessions
         db.query(UserSession).filter(UserSession.user_id == user.id).delete()
         db.commit()
-        
+
+        logging.info(f"✅ Password reset successful for {email}")
+
         return {
             "success": True, 
             "message": "Password reset successfully! Please login with your new password."
