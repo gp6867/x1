@@ -7,6 +7,7 @@ import aiohttp
 import logging
 import json
 import os
+import httpx
 from openai import AsyncOpenAI
 
 from ..database.db import get_db
@@ -24,10 +25,17 @@ groq_client = AsyncOpenAI(
 )
 GROQ_MODEL = "openai/gpt-oss-120b"
 
-# ===== GEMINI SETUP (FALLBACK) =====
+# ===== GEMINI SETUP (FALLBACK) — WITH EXPLICIT HTTPX CLIENT =====
+# Render par httpx2 ke saath connection error fix
+_gemini_http_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(60.0, connect=15.0),
+    limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
+)
+
 gemini_client = AsyncOpenAI(
     api_key=os.getenv("GEMINI_API_KEY"),
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    http_client=_gemini_http_client,
 )
 GEMINI_MODEL = "gemini-2.0-flash"
 
@@ -381,7 +389,7 @@ async def send_message(
                 "success": True,
                 "message": ai_response,
                 "chat_id": str(chat.uuid_id),
-                "provider": provider  # debug ke liye — frontend ignore kar sakta hai
+                "provider": provider
             }
         )
                 
@@ -425,13 +433,16 @@ async def test_groq():
 # ============= TEST: GEMINI =============
 @router.get("/test-gemini")
 async def test_gemini():
-    """Test Gemini API key"""
+    """Test Gemini API key with detailed error reporting"""
     try:
-        if not os.getenv("GEMINI_API_KEY"):
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
             return JSONResponse(
                 status_code=500,
                 content={"success": False, "provider": "Gemini", "error": "GEMINI_API_KEY not set in environment"}
             )
+        
+        logging.info(f"Testing Gemini — key length: {len(api_key)}, prefix: {api_key[:8]}...")
         
         response = await gemini_client.chat.completions.create(
             model=GEMINI_MODEL,
@@ -446,10 +457,16 @@ async def test_gemini():
             "response": response.choices[0].message.content
         })
     except Exception as e:
-        logging.error(f"Gemini test error: {e}")
+        logging.error(f"Gemini test error: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             status_code=500,
-            content={"success": False, "provider": "Gemini", "error": str(e)}
+            content={
+                "success": False,
+                "provider": "Gemini",
+                "error": f"{type(e).__name__}: {str(e)}"
+            }
         )
 
 # ============= TEST: BASIC =============
