@@ -157,6 +157,15 @@ async def root():
         }
     )
 
+# ============= PING ENDPOINT (UptimeRobot keep-alive) =============
+@app.api_route("/ping", methods=["GET", "HEAD"])
+async def ping():
+    """Ultra-light endpoint for uptime monitors — supports GET and HEAD"""
+    return JSONResponse(
+        status_code=200,
+        content={"status": "alive", "timestamp": datetime.utcnow().isoformat()}
+    )
+
 @app.get("/health")
 async def health():
     """Health check endpoint"""
