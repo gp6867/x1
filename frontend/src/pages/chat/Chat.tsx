@@ -186,7 +186,7 @@ const Chat: React.FC = () => {
       const chatRes = await axios.post(
         `${API_URL}/chat/send`,
         {
-          message: text || 'What is in this image? Describe it in detail.',
+          message: text || '',
           image_url: imageUrl,
           chat_id: currentChatId,
         },

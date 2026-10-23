@@ -41,6 +41,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
   };
 
+  const hasText = content && content.trim() && content !== '📎 Image' && content !== '📎 Sent an image';
+
   return (
     <div className={`group message-wrapper ${role}`}>
       <div className="message-content">
@@ -55,7 +57,61 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
         )}
         <div className="message-bubble relative">
-          {content && content !== '📎 Image' && content !== '📎 Sent an image' && (
+
+          {/* ✅ IMAGE FIRST */}
+          {imageUrl && !imageError && (
+            <div className="mb-2">
+              <div 
+                onClick={handleImageClick}
+                style={{
+                  position: 'relative',
+                  display: 'inline-block',
+                  cursor: 'pointer',
+                  maxWidth: '320px',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  border: '1px solid #e5e7eb'
+                }}
+                title="Click to open full size"
+              >
+                <img 
+                  src={imageUrl}
+                  alt="Uploaded content"
+                  style={{
+                    maxWidth: '320px',
+                    maxHeight: '320px',
+                    width: 'auto',
+                    height: 'auto',
+                    display: 'block',
+                    transition: 'transform 0.2s'
+                  }}
+                  onError={() => setImageError(true)}
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          )}
+
+          {imageError && (
+            <div style={{
+              padding: '16px',
+              backgroundColor: '#f3f4f6',
+              borderRadius: '12px',
+              color: '#6b7280',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '8px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <ImageIcon size={18} />
+              <span>Image failed to load</span>
+            </div>
+          )}
+
+          {/* ✅ TEXT BELOW IMAGE */}
+          {hasText && (
             role === 'assistant' ? (
               <div className="markdown-content">
                 <ReactMarkdown
@@ -68,7 +124,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                       const hasLang = !!match;
                       const hasNewlines = codeString.includes('\n');
 
-                      // Multi-line block OR has language tag → code block
                       if (!inline && (hasLang || hasNewlines)) {
                         return (
                           <CodeBlock
@@ -77,17 +132,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                           />
                         );
                       }
-
-                      // Inline code
                       return <code className="inline-code">{children}</code>;
                     },
                     a(props: any) {
                       return (
-                        <a
-                          href={props.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        <a href={props.href} target="_blank" rel="noopener noreferrer">
                           {props.children}
                         </a>
                       );
@@ -103,62 +152,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               </p>
             )
           )}
-          
-          {imageUrl && !imageError && (
-            <div className="mt-2 mb-1">
-              <div 
-                onClick={handleImageClick}
-                style={{
-                  position: 'relative',
-                  display: 'inline-block',
-                  cursor: 'pointer',
-                  maxWidth: '300px',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  border: '1px solid #e5e7eb'
-                }}
-                title="Click to open full size"
-              >
-                <img 
-                  src={imageUrl}
-                  alt="Uploaded content"
-                  style={{
-                    maxWidth: '300px',
-                    maxHeight: '300px',
-                    width: 'auto',
-                    height: 'auto',
-                    display: 'block',
-                    transition: 'transform 0.2s'
-                  }}
-                  onError={() => setImageError(true)}
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          )}
-          
-          {imageError && (
-            <div style={{
-              padding: '16px',
-              backgroundColor: '#f3f4f6',
-              borderRadius: '12px',
-              color: '#6b7280',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginTop: '8px',
-              border: '1px solid #e5e7eb'
-            }}>
-              <ImageIcon size={18} />
-              <span>Image failed to load</span>
-            </div>
-          )}
-          
+
           <span className="timestamp">
             {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
-          
+
           {role === 'assistant' && (
             <div className="mt-2">
               <MessageActions

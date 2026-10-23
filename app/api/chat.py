@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
 from uuid import UUID as PyUUID
+import asyncio
 import logging
 import os
 import httpx
@@ -171,44 +172,84 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
     return ("Sorry, I'm having trouble connecting. Please try again.", "None")
 
 
-# ===== GEMINI VISION (for images) =====
+# ===== GEMINI VISION (with retry + Groq vision fallback) =====
 async def get_gemini_vision_response(
     user_msg: str,
     image_url: str,
     chat_messages: list,
     system_prompt: str,
 ) -> tuple:
-    """Groq doesn't support vision — image messages go straight to Gemini."""
+    """Vision: Gemini primary (with 3 retries), Groq Llama 4 Scout fallback."""
+
+    ctx = [{"role": "system", "content": system_prompt}]
+
+    for m in chat_messages[-5:-1]:
+        if isinstance(m, dict) and m.get("role") in ("user", "assistant"):
+            content = m.get("content", "")
+            if content and isinstance(content, str):
+                ctx.append({"role": m["role"], "content": content})
+
+    prompt_text = user_msg.strip() if user_msg.strip() else "What is in this image? Describe it in detail."
+    ctx.append({
+        "role": "user",
+        "content": [
+            {"type": "text", "text": prompt_text},
+            {"type": "image_url", "image_url": {"url": image_url}},
+        ],
+    })
+
+    # ===== GEMINI VISION WITH RETRIES =====
+    for attempt in range(3):
+        try:
+            logging.info(f"🖼️ Gemini vision attempt {attempt + 1}/3...")
+            r = await gemini_client.chat.completions.create(
+                model=GEMINI_MODEL,
+                messages=ctx,
+                max_tokens=1200,
+                temperature=0.7,
+                timeout=45.0,
+            )
+            t = extract_content(r)
+            if t:
+                logging.info("✅ Gemini vision responded")
+                return (t, "Gemini-Vision")
+        except Exception as e:
+            err_str = str(e).lower()
+            is_503 = "503" in err_str or "unavailable" in err_str or "high demand" in err_str
+            is_timeout = "timeout" in err_str or "timed out" in err_str
+            reason = "503" if is_503 else ("timeout" if is_timeout else "error")
+
+            if attempt < 2:
+                wait = 2 * (attempt + 1)
+                logging.warning(f"⚠️ Gemini vision attempt {attempt + 1} failed ({reason}), retry in {wait}s")
+                await asyncio.sleep(wait)
+            else:
+                logging.error(f"❌ Gemini vision all retries failed: {e}")
+
+    # ===== GROQ VISION FALLBACK (Llama 4 Scout) =====
     try:
-        ctx = [{"role": "system", "content": system_prompt}]
-
-        # Recent context (exclude current image message — it's the last one)
-        for m in chat_messages[-5:-1]:
-            if isinstance(m, dict) and m.get("role") in ("user", "assistant"):
-                content = m.get("content", "")
-                if content and isinstance(content, str):
-                    ctx.append({"role": m["role"], "content": content})
-
-        prompt_text = user_msg.strip() if user_msg.strip() else "What is in this image? Describe it in detail."
-        ctx.append({
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompt_text},
-                {"type": "image_url", "image_url": {"url": image_url}},
-            ],
-        })
-
-        logging.info(f"🖼️ Gemini vision — analyzing: {image_url[:80]}...")
-        r = await gemini_client.chat.completions.create(
-            model=GEMINI_MODEL, messages=ctx, max_tokens=1200, temperature=0.7
+        logging.info("🔄 Trying Groq vision (Llama 4 Scout)...")
+        GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+        r = await groq_client.chat.completions.create(
+            model=GROQ_VISION_MODEL,
+            messages=ctx,
+            max_tokens=1200,
+            temperature=0.7,
+            timeout=45.0,
         )
         t = extract_content(r)
         if t:
-            logging.info("✅ Gemini vision responded")
-            return (t, "Gemini-Vision")
+            logging.info("✅ Groq vision responded")
+            return (t, "Groq-Vision")
     except Exception as e:
-        logging.error(f"❌ Gemini vision failed: {e}")
-    return ("Sorry, I couldn't analyze the image right now. Please try again.", "None")
+        logging.error(f"❌ Groq vision failed: {e}")
+
+    logging.error("❌ Both Gemini and Groq vision failed")
+    return (
+        "Sorry, I couldn't analyze the image right now — the AI service is "
+        "experiencing high demand. Please try again in a moment.",
+        "None",
+    )
 
 
 # ===== BACKGROUND EXTRACTION =====
