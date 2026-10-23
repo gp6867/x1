@@ -1989,3 +1989,167 @@ body {
     padding-bottom: calc(12px + 3mm);
   }
 }
+
+/* ============= SIDEBAR TOGGLE FIX (desktop) ============= */
+.mobile-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.mobile-menu-btn:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* ============= MARKDOWN CONTENT ============= */
+.markdown-content {
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.message-bubble .markdown-content p {
+  white-space: normal;
+  margin-bottom: 10px;
+}
+
+.message-bubble .markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.message-bubble .markdown-content ul,
+.message-bubble .markdown-content ol {
+  margin: 8px 0 8px 24px;
+  padding-left: 4px;
+}
+
+.message-bubble .markdown-content li {
+  margin-bottom: 6px;
+}
+
+.message-bubble .markdown-content h1,
+.message-bubble .markdown-content h2,
+.message-bubble .markdown-content h3,
+.message-bubble .markdown-content h4 {
+  margin: 14px 0 8px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.message-bubble .markdown-content h1 { font-size: 1.4em; }
+.message-bubble .markdown-content h2 { font-size: 1.25em; }
+.message-bubble .markdown-content h3 { font-size: 1.1em; }
+.message-bubble .markdown-content h4 { font-size: 1em; }
+
+.message-bubble .markdown-content strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.message-bubble .markdown-content blockquote {
+  border-left: 3px solid var(--primary-color);
+  padding-left: 12px;
+  margin: 10px 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.message-bubble .markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+.message-bubble .markdown-content th,
+.message-bubble .markdown-content td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.message-bubble .markdown-content th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+.inline-code {
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  color: #d97706;
+  border: 1px solid var(--border-color);
+}
+
+.dark .inline-code {
+  color: #fbbf24;
+}
+
+/* ============= CODE BLOCK (ChatGPT-style) ============= */
+.code-block-wrapper {
+  margin: 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.code-block-lang {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.code-block-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.code-block-copy-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--primary-color);
+}
+
+.code-block-copy-btn svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .code-block-copy-btn span {
+    display: none;
+  }
+  .code-block-copy-btn {
+    padding: 4px 6px;
+  }
+}

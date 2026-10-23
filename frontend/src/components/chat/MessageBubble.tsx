@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Sparkles, Image as ImageIcon } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import MessageActions from './MessageActions';
+import CodeBlock from './CodeBlock';
 
 interface MessageBubbleProps {
   content: string;
@@ -52,9 +56,52 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
         <div className="message-bubble relative">
           {content && content !== '📎 Image' && content !== '📎 Sent an image' && (
-            <p className="text-[15px] leading-relaxed text-token-text-primary">
-              {content}
-            </p>
+            role === 'assistant' ? (
+              <div className="markdown-content">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  components={{
+                    code(props: any) {
+                      const { inline, className, children } = props;
+                      const match = /language-(\w+)/.exec(className || '');
+                      const codeString = String(children).replace(/\n$/, '');
+                      const hasLang = !!match;
+                      const hasNewlines = codeString.includes('\n');
+
+                      // Multi-line block OR has language tag → code block
+                      if (!inline && (hasLang || hasNewlines)) {
+                        return (
+                          <CodeBlock
+                            language={match?.[1] || 'text'}
+                            code={codeString}
+                          />
+                        );
+                      }
+
+                      // Inline code
+                      return <code className="inline-code">{children}</code>;
+                    },
+                    a(props: any) {
+                      return (
+                        <a
+                          href={props.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {props.children}
+                        </a>
+                      );
+                    },
+                  }}
+                >
+                  {content}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p className="text-[15px] leading-relaxed text-token-text-primary">
+                {content}
+              </p>
+            )
           )}
           
           {imageUrl && !imageError && (
@@ -112,7 +159,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           
-          {/* ✅ FIX: Buttons ALWAYS visible — koi hover logic nahi */}
           {role === 'assistant' && (
             <div className="mt-2">
               <MessageActions
