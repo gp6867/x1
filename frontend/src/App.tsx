@@ -10,9 +10,15 @@ import AIImages from './pages/ai/AIImages';
 import Pricing from './pages/Pricing';
 import OAuthCallback from './pages/oauth/Callback';
 import Settings from './pages/settings/Settings';
+import Home from './pages/Home';
+import Blog from './pages/Blog';
+import Privacy from './pages/Privacy';
+import About from './pages/About';
+import Terms from './pages/Terms';
+import Contact from './pages/Contact';
 import './App.css';
 
-// ✅ GA4 Page View Tracker — har route change par page view bhejta hai
+// ✅ GA4 Page View Tracker
 function PageViewTracker() {
   const location = useLocation();
 
@@ -31,7 +37,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/chat" element={<Chat />} />
-        {/* ✅ NEW: chat with specific ID — ye missing tha */}
         <Route path="/chat/:id" element={<Chat />} />
         <Route path="/chat/new" element={<ChatNew />} />
         <Route path="/ai-video" element={<AIVideo />} />
@@ -39,8 +44,14 @@ function App() {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/oauth-callback" element={<OAuthCallback />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<Terms />} />
+        {/* ✅ NEW: Contact page */}
+        <Route path="/contact" element={<Contact />} />
         <Route path="/" element={<Navigate to="/chat" replace />} />
-        {/* ✅ NEW: 404 fallback — galat URL par blank ke bajaye chat par bhejo */}
         <Route path="*" element={<Navigate to="/chat" replace />} />
       </Routes>
     </Router>
