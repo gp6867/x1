@@ -5,15 +5,17 @@ const GA_ID = 'G-ND4HN9EFVZ';
 const isProd = import.meta.env.PROD;
 
 // ===== PAGE VIEW =====
+// ✅ FIX: use 'event' + 'page_view' — config nahi
 export const trackPageView = (path: string, title?: string) => {
   if (typeof window === 'undefined') return;
 
   if (isProd && window.gtag) {
-    window.gtag('config', GA_ID, {
-      page_path: path,
-      page_title: title || document.title,
+    window.gtag('event', 'page_view', {
       page_location: window.location.href,
+      page_title: title || document.title,
+      page_path: path,
     });
+    console.log('[GA4 PageView]', path);
   } else {
     console.log('[GA4 PageView - DEV]', { path, title });
   }
