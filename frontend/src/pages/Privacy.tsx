@@ -28,15 +28,15 @@ const Privacy: React.FC = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">Privacy Policy</h1>
           <p className="text-sm text-slate-500 mb-8">Last updated: October 23, 2026</p>
 
-          <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-slate-700 dark:text-slate-300">
+          <div className="marketing-legal max-w-none space-y-6 text-slate-700 dark:text-slate-300">
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">1. Introduction</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">1. Introduction</h2>
               <p>MonsterX AI ("we", "our", "us") is operated by Xone AI. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our AI assistant at xoneai.in.</p>
               <p>By using MonsterX AI, you agree to this Privacy Policy. If you do not agree, please do not use our service.</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">2. Information We Collect</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">2. Information We Collect</h2>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Account Information:</strong> Email address, name, and password (encrypted) when you register.</li>
                 <li><strong>Chat Messages:</strong> Your conversations with our AI, including queries and responses.</li>
@@ -47,7 +47,7 @@ const Privacy: React.FC = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">3. How We Use Your Information</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">3. How We Use Your Information</h2>
               <ul className="list-disc pl-6 space-y-2">
                 <li>To provide AI chat responses and maintain conversation memory.</li>
                 <li>To improve the quality of our AI responses and user experience.</li>
@@ -59,7 +59,7 @@ const Privacy: React.FC = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">4. Third-Party Services</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">4. Third-Party Services</h2>
               <p>We share limited data with trusted third parties strictly to operate our service:</p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Groq & Google Gemini:</strong> For AI inference (your messages are sent to generate responses).</li>
@@ -72,12 +72,12 @@ const Privacy: React.FC = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">5. Data Security</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">5. Data Security</h2>
               <p>We use industry-standard security: passwords are hashed (bcrypt), data is transmitted over HTTPS, and database access is restricted. However, no online service is 100% secure — use a strong password and keep your account safe.</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">6. Your Rights (DPDP Act, India)</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">6. Your Rights (DPDP Act, India)</h2>
               <p>Under the Digital Personal Data Protection Act (2023), you have the right to:</p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>Access your personal data.</li>
@@ -90,27 +90,27 @@ const Privacy: React.FC = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">7. Data Retention</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">7. Data Retention</h2>
               <p>We retain your account and chat data until you delete your account. After deletion, data is purged within 30 days (except as required by law).</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">8. Cookies</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">8. Cookies</h2>
               <p>We use essential cookies for login sessions and Google Analytics for anonymous usage stats. You can disable cookies in your browser settings, but the service may not function properly.</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">9. Children's Privacy</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">9. Children's Privacy</h2>
               <p>MonsterX AI is not intended for users under 13. If we discover a child under 13 has created an account, we will delete it.</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">10. Changes to This Policy</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">10. Changes to This Policy</h2>
               <p>We may update this policy. Material changes will be notified via email or in-app notice. Continued use means acceptance.</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">11. Contact</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">11. Contact</h2>
               <p>For privacy questions:<br />
                 <strong>Xone AI</strong><br />
                 Email: <a href="mailto:privacy@xoneai.in" className="text-emerald-600 hover:underline">privacy@xoneai.in</a><br />

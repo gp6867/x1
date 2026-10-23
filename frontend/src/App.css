@@ -2347,3 +2347,51 @@ body {
     background-color: var(--bg-secondary);
   }
 }
+
+/* ============= MARKETING PAGES ENHANCEMENTS ============= */
+
+/* Legal pages bigger typography */
+.marketing-legal {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.marketing-legal h2 {
+  font-size: 1.625rem !important;
+  font-weight: 700 !important;
+  margin-top: 2.5rem !important;
+  margin-bottom: 1rem !important;
+  scroll-margin-top: 100px;
+}
+.marketing-legal p {
+  margin-bottom: 1rem;
+}
+.marketing-legal ul {
+  margin-bottom: 1.25rem;
+}
+.marketing-legal li {
+  margin-bottom: 0.5rem;
+}
+
+/* Homepage hero logo floating */
+.hero-logo {
+  filter: drop-shadow(0 20px 40px rgba(16, 163, 127, 0.35));
+  animation: logoFloat 6s ease-in-out infinite;
+}
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Feature card hover */
+.feature-card {
+  transition: all 0.3s ease;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* Smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
+}
