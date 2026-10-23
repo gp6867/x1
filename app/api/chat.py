@@ -172,16 +172,16 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
     return ("Sorry, I'm having trouble connecting. Please try again.", "None")
 
 
-# ===== GEMINI VISION (with retry + Groq vision fallback) =====
+# ===== GEMINI VISION (parallel + fast) =====
 async def get_gemini_vision_response(
     user_msg: str,
     image_url: str,
     chat_messages: list,
     system_prompt: str,
 ) -> tuple:
-    """Vision: Gemini primary (with 3 retries), Groq Llama 4 Scout fallback."""
+    """Vision: run Gemini AND Groq in parallel, take first success. Max 12s."""
 
-    ctx = [{"role": "system", "content": system_prompt}]
+    ctx = [{"role": "system", "content": system_prompt + " Be concise — describe the image in 3-5 sentences unless user asks for more detail."}]
 
     for m in chat_messages[-5:-1]:
         if isinstance(m, dict) and m.get("role") in ("user", "assistant"):
@@ -189,7 +189,7 @@ async def get_gemini_vision_response(
             if content and isinstance(content, str):
                 ctx.append({"role": m["role"], "content": content})
 
-    prompt_text = user_msg.strip() if user_msg.strip() else "What is in this image? Describe it in detail."
+    prompt_text = user_msg.strip() if user_msg.strip() else "What is in this image? Describe it briefly."
     ctx.append({
         "role": "user",
         "content": [
@@ -198,56 +198,58 @@ async def get_gemini_vision_response(
         ],
     })
 
-    # ===== GEMINI VISION WITH RETRIES =====
-    for attempt in range(3):
-        try:
-            logging.info(f"🖼️ Gemini vision attempt {attempt + 1}/3...")
-            r = await gemini_client.chat.completions.create(
-                model=GEMINI_MODEL,
-                messages=ctx,
-                max_tokens=1200,
-                temperature=0.7,
-                timeout=45.0,
-            )
-            t = extract_content(r)
-            if t:
-                logging.info("✅ Gemini vision responded")
-                return (t, "Gemini-Vision")
-        except Exception as e:
-            err_str = str(e).lower()
-            is_503 = "503" in err_str or "unavailable" in err_str or "high demand" in err_str
-            is_timeout = "timeout" in err_str or "timed out" in err_str
-            reason = "503" if is_503 else ("timeout" if is_timeout else "error")
-
-            if attempt < 2:
-                wait = 2 * (attempt + 1)
-                logging.warning(f"⚠️ Gemini vision attempt {attempt + 1} failed ({reason}), retry in {wait}s")
-                await asyncio.sleep(wait)
-            else:
-                logging.error(f"❌ Gemini vision all retries failed: {e}")
-
-    # ===== GROQ VISION FALLBACK (Llama 4 Scout) =====
-    try:
-        logging.info("🔄 Trying Groq vision (Llama 4 Scout)...")
-        GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
-        r = await groq_client.chat.completions.create(
-            model=GROQ_VISION_MODEL,
+    async def try_gemini():
+        r = await gemini_client.chat.completions.create(
+            model=GEMINI_MODEL,
             messages=ctx,
-            max_tokens=1200,
+            max_tokens=600,
             temperature=0.7,
-            timeout=45.0,
+            timeout=12.0,
         )
-        t = extract_content(r)
-        if t:
-            logging.info("✅ Groq vision responded")
-            return (t, "Groq-Vision")
-    except Exception as e:
-        logging.error(f"❌ Groq vision failed: {e}")
+        return extract_content(r)
 
-    logging.error("❌ Both Gemini and Groq vision failed")
+    async def try_groq():
+        r = await groq_client.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            messages=ctx,
+            max_tokens=600,
+            temperature=0.7,
+            timeout=12.0,
+        )
+        return extract_content(r)
+
+    # Run both in parallel
+    tasks = {
+        asyncio.create_task(try_gemini()): "Gemini-Vision",
+        asyncio.create_task(try_groq()): "Groq-Vision",
+    }
+
+    pending = set(tasks.keys())
+    try:
+        while pending:
+            done, pending = await asyncio.wait(
+                pending, timeout=13.0, return_when=asyncio.FIRST_COMPLETED
+            )
+            if not done:
+                break
+            for task in done:
+                provider = tasks[task]
+                try:
+                    text = task.result()
+                    if text:
+                        logging.info(f"✅ {provider} responded")
+                        for p in pending:
+                            p.cancel()
+                        return (text, provider)
+                except Exception as e:
+                    logging.warning(f"⚠️ {provider} failed: {e}")
+    finally:
+        for task in pending:
+            task.cancel()
+
+    logging.error("❌ Both vision providers failed/timed out")
     return (
-        "Sorry, I couldn't analyze the image right now — the AI service is "
-        "experiencing high demand. Please try again in a moment.",
+        "Sorry, I couldn't analyze this image right now — please try again in a moment.",
         "None",
     )
 
