@@ -2395,3 +2395,22 @@ body {
 html {
   scroll-behavior: smooth;
 }
+
+/* ✅ Code block: long lines wrap, no horizontal slide */
+.code-block-wrapper pre,
+.code-block-wrapper code,
+.code-block-wrapper span,
+.code-block-wrapper div[class*="token"] {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+.code-block-wrapper pre {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.code-block-wrapper {
+  overflow-x: hidden !important;
+}

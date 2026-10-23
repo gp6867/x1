@@ -77,7 +77,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
           lineHeight: 1.55,
           background: 'transparent',
           borderRadius: 0,
-          overflowX: 'auto',
+          overflowX: 'hidden', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
           maxWidth: '100%',
         }}
         codeTagProps={{
