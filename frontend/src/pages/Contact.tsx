@@ -35,7 +35,7 @@ const Contact: React.FC = () => {
         keywords="MonsterX AI contact, Xone AI support, AI assistant help, contact AI team"
       />
 
-      <div className="min-h-screen bg-white dark:bg-slate-900 flex flex-col">
+      <div className="h-screen overflow-y-auto bg-white dark:bg-slate-900 flex flex-col">
         {/* Header */}
         <header className="border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto px-4 py-4">

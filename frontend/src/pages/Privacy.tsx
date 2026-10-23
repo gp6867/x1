@@ -15,7 +15,7 @@ const Privacy: React.FC = () => {
         canonical="https://www.xoneai.in/privacy"
       />
 
-      <div className="min-h-screen bg-white dark:bg-slate-900">
+      <div className="h-screen overflow-y-auto bg-white dark:bg-slate-900">
         <header className="border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <button onClick={() => navigate('/home')} className="flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">
