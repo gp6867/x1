@@ -1,5 +1,6 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { trackPageView } from './utils/analytics';
 import Chat from './pages/chat/Chat';
 import ChatNew from './pages/chat/ChatNew';
 import Login from './pages/auth/Login';
@@ -11,9 +12,21 @@ import OAuthCallback from './pages/oauth/Callback';
 import Settings from './pages/settings/Settings';
 import './App.css';
 
+// ✅ GA4 Page View Tracker — har route change par page view bhejta hai
+function PageViewTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location]);
+
+  return null;
+}
+
 function App() {
   return (
     <Router>
+      <PageViewTracker />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
