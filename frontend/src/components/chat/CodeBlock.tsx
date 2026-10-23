@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vscDarkPlus, ghcolors } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy, Check } from 'lucide-react';
 
 interface CodeBlockProps {
@@ -10,10 +10,23 @@ interface CodeBlockProps {
 
 const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
   const [copied, setCopied] = useState(false);
-
-  const isDark =
+  const [isDark, setIsDark] = useState(() =>
     typeof document !== 'undefined' &&
-    document.documentElement.classList.contains('dark');
+    document.documentElement.classList.contains('dark')
+  );
+
+  // ✅ Dark mode toggle ko live track kare (page reload nahi chahiye)
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   const handleCopy = async () => {
     try {
@@ -21,7 +34,6 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Copy failed:', err);
       // Fallback for older browsers
       try {
         const textarea = document.createElement('textarea');
@@ -35,7 +47,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch (fallbackErr) {
-        console.error('Fallback copy failed:', fallbackErr);
+        console.error('Copy failed:', fallbackErr);
       }
     }
   };
@@ -57,14 +69,16 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
       </div>
       <SyntaxHighlighter
         language={language || 'text'}
-        style={isDark ? oneDark : oneLight}
+        style={isDark ? vscDarkPlus : ghcolors}
         customStyle={{
           margin: 0,
           padding: '14px 16px',
           fontSize: '13px',
-          lineHeight: 1.5,
+          lineHeight: 1.55,
           background: 'transparent',
           borderRadius: 0,
+          overflowX: 'auto',
+          maxWidth: '100%',
         }}
         codeTagProps={{
           style: {
