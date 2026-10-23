@@ -27,7 +27,7 @@ groq_client = AsyncOpenAI(
 GROQ_MODEL = "openai/gpt-oss-120b"
 
 _gemini_http_client = httpx.AsyncClient(
-    timeout=httpx.Timeout(60.0, connect=15.0),
+    timeout=httpx.Timeout(90.0, connect=15.0),
     limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
 )
 gemini_client = AsyncOpenAI(
@@ -50,6 +50,7 @@ BASE_SYSTEM_PROMPT = (
     "('the project', 'the app', 'that person'), resolve them using KNOWN FACTS below. "
     "Never ask 'which person?' or 'which project?' if it's already in known facts. "
     "Maintain continuity — reference past decisions and ongoing work naturally. "
+    "When the user sends an image, analyze it carefully and describe what you see before answering any specific question. "
     "Reply in the same language the user is using (English, Hindi, or Hinglish)."
 )
 
@@ -98,6 +99,12 @@ def extract_content(resp) -> str:
             c = resp.choices[0].message.content
             if c and isinstance(c, str):
                 return c.strip()
+            if isinstance(c, list):
+                parts = []
+                for p in c:
+                    if isinstance(p, dict) and p.get("type") == "text":
+                        parts.append(p.get("text", ""))
+                return " ".join(parts).strip()
     except Exception:
         pass
     return ""
@@ -164,9 +171,48 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
     return ("Sorry, I'm having trouble connecting. Please try again.", "None")
 
 
+# ===== GEMINI VISION (for images) =====
+async def get_gemini_vision_response(
+    user_msg: str,
+    image_url: str,
+    chat_messages: list,
+    system_prompt: str,
+) -> tuple:
+    """Groq doesn't support vision — image messages go straight to Gemini."""
+    try:
+        ctx = [{"role": "system", "content": system_prompt}]
+
+        # Recent context (exclude current image message — it's the last one)
+        for m in chat_messages[-5:-1]:
+            if isinstance(m, dict) and m.get("role") in ("user", "assistant"):
+                content = m.get("content", "")
+                if content and isinstance(content, str):
+                    ctx.append({"role": m["role"], "content": content})
+
+        prompt_text = user_msg.strip() if user_msg.strip() else "What is in this image? Describe it in detail."
+        ctx.append({
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt_text},
+                {"type": "image_url", "image_url": {"url": image_url}},
+            ],
+        })
+
+        logging.info(f"🖼️ Gemini vision — analyzing: {image_url[:80]}...")
+        r = await gemini_client.chat.completions.create(
+            model=GEMINI_MODEL, messages=ctx, max_tokens=1200, temperature=0.7
+        )
+        t = extract_content(r)
+        if t:
+            logging.info("✅ Gemini vision responded")
+            return (t, "Gemini-Vision")
+    except Exception as e:
+        logging.error(f"❌ Gemini vision failed: {e}")
+    return ("Sorry, I couldn't analyze the image right now. Please try again.", "None")
+
+
 # ===== BACKGROUND EXTRACTION =====
 async def _run_extraction_bg(user_id: int, chat_id: str, messages_snapshot: list, prev_summary: str):
-    """Background extraction — fresh DB session, fire and forget"""
     try:
         from ..database.db import SessionLocal
         db = SessionLocal()
@@ -264,51 +310,58 @@ async def get_feedback(chat_id: str, request: Request, db: Session = Depends(get
 async def send_message(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         data = await request.json()
-        user_msg = data.get("message", "")
+        user_msg = (data.get("message") or "").strip()
         chat_id = data.get("chat_id")
+        image_url = data.get("image_url")
 
         u = await get_current_user(request, db)
         if not u:
             return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
-        if not user_msg:
+        if not user_msg and not image_url:
             return JSONResponse(content={"success": True, "message": "Hello!"})
 
         chat = find_chat(db, chat_id, u.id) if chat_id else None
         if not chat:
-            chat = Chat(user_id=u.id, title=generate_title(user_msg), messages=[],
+            title_source = user_msg or "Image chat"
+            chat = Chat(user_id=u.id, title=generate_title(title_source), messages=[],
                         created_at=datetime.utcnow(), updated_at=datetime.utcnow())
             db.add(chat); db.commit(); db.refresh(chat)
 
         messages = chat.messages or []
 
-        # Build memory context (facts + summary)
         summary_row = get_summary(db, str(chat.uuid_id))
         memory_ctx = build_memory_context(db, u.id, str(chat.uuid_id))
         system_prompt = BASE_SYSTEM_PROMPT + ("\n\n" + memory_ctx if memory_ctx else "")
 
-        # Save user message
-        messages.append({"role": "user", "content": user_msg})
+        # Save user message with optional image_url
+        user_obj = {"role": "user", "content": user_msg}
+        if image_url:
+            user_obj["image_url"] = image_url
+        messages.append(user_obj)
         chat.messages = messages
         chat.updated_at = datetime.utcnow()
         db.commit()
 
-        # Get AI response
-        ai_response, provider = await get_ai_response(messages, system_prompt)
+        # Get AI response (vision if image, else text)
+        if image_url:
+            ai_response, provider = await get_gemini_vision_response(
+                user_msg, image_url, messages, system_prompt
+            )
+        else:
+            ai_response, provider = await get_ai_response(messages, system_prompt)
         logging.info(f"🤖 Response from: {provider}")
 
-        # Save assistant message
         messages.append({"role": "assistant", "content": ai_response})
         chat.messages = messages
         chat.updated_at = datetime.utcnow()
         db.commit()
 
-        # Background extraction — fire and forget
-        if should_extract(user_msg) or has_pronoun(user_msg) or len(messages) % 6 == 0:
+        if not image_url and (should_extract(user_msg) or has_pronoun(user_msg) or len(messages) % 6 == 0):
             background_tasks.add_task(
                 _run_extraction_bg,
                 u.id,
                 str(chat.uuid_id),
-                list(messages),  # snapshot
+                list(messages),
                 summary_row.summary if summary_row else ""
             )
 
@@ -316,7 +369,7 @@ async def send_message(request: Request, background_tasks: BackgroundTasks, db: 
             "success": True,
             "message": ai_response,
             "chat_id": str(chat.uuid_id),
-            "provider": provider
+            "provider": provider,
         })
     except Exception as e:
         logging.error(f"send error: {e}")
@@ -324,7 +377,6 @@ async def send_message(request: Request, background_tasks: BackgroundTasks, db: 
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
-# ===== MEMORY MANAGEMENT =====
 @router.get("/memory")
 async def view_memory(request: Request, db: Session = Depends(get_db)):
     try:
@@ -367,7 +419,6 @@ async def forget_all(request: Request, db: Session = Depends(get_db)):
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
-# ===== TEST =====
 @router.get("/test-groq")
 async def test_groq():
     try:
@@ -396,10 +447,9 @@ async def test_gemini():
 
 @router.get("/test")
 async def test():
-    return JSONResponse(content={"success": True, "message": "MonsterX AI with full memory is running"})
+    return JSONResponse(content={"success": True, "message": "MonsterX AI with vision + memory running"})
 
 
-# ===== CATCH-ALL =====
 @router.get("/{chat_id}")
 async def get_chat(chat_id: str, request: Request, db: Session = Depends(get_db)):
     try:

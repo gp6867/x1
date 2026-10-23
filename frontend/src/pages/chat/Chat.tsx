@@ -12,6 +12,7 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
+  imageUrl?: string;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -31,31 +32,16 @@ const Chat: React.FC = () => {
     return match ? match[1] : null;
   })();
 
-  // ✅ Effective chat ID — URL se ya state se (whichever exists)
   const effectiveChatId = currentChatId || chatIdFromUrl;
-
-  // ✅ Debug log
-  useEffect(() => {
-    console.log('[Chat] State:', {
-      currentChatId,
-      chatIdFromUrl,
-      effectiveChatId,
-      hasToken: !!token,
-      messagesCount: messages.length,
-      feedbackMapKeys: Object.keys(feedbackMap),
-    });
-  }, [currentChatId, chatIdFromUrl, token, messages.length, feedbackMap]);
 
   useEffect(() => {
     if (!token) return;
-
     if (!chatIdFromUrl) {
       setCurrentChatId(null);
       setMessages([]);
       setFeedbackMap({});
       return;
     }
-
     loadChat(chatIdFromUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatIdFromUrl, token]);
@@ -75,6 +61,7 @@ const Chat: React.FC = () => {
           role: msg.role === 'user' ? 'user' : 'assistant',
           content: typeof msg.content === 'string' ? msg.content : '',
           timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+          imageUrl: msg.image_url || undefined,
         }));
         setMessages(loadedMessages);
 
@@ -82,12 +69,11 @@ const Chat: React.FC = () => {
           const fbRes = await axios.get(`${API_URL}/chat/feedback/${chatId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
-          console.log('[Chat] Feedback fetched:', fbRes.data);
           if (fbRes.data?.success) {
             setFeedbackMap(fbRes.data.feedback || {});
           }
         } catch (fbErr) {
-          console.warn('[Chat] Feedback load failed:', fbErr);
+          console.warn('Feedback load failed:', fbErr);
           setFeedbackMap({});
         }
       } else {
@@ -129,9 +115,7 @@ const Chat: React.FC = () => {
       );
 
       if (response.data.success) {
-        if (response.data.chat_id) {
-          setCurrentChatId(response.data.chat_id);
-        }
+        if (response.data.chat_id) setCurrentChatId(response.data.chat_id);
 
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -150,20 +134,91 @@ const Chat: React.FC = () => {
 
       if (error.response?.status === 401) {
         errorText = 'Session expired. Please login again.';
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
+        setTimeout(() => { window.location.href = '/login'; }, 2000);
       } else if (error.response?.data?.message) {
         errorText = error.response.data.message;
       }
 
-      const errorMessage: Message = {
+      setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: errorText,
         timestamp: new Date(),
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ============= IMAGE UPLOAD + SEND (NEW) =============
+  const handleFileUpload = async (file: File, text: string) => {
+    setIsLoading(true);
+
+    try {
+      // 1. Upload image
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadRes = await axios.post(`${API_URL}/upload/image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!uploadRes.data.success || !uploadRes.data.url) {
+        throw new Error(uploadRes.data.message || 'Upload failed');
+      }
+
+      const imageUrl: string = uploadRes.data.url;
+
+      // 2. Add user message with image
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: text || '',
+        timestamp: new Date(),
+        imageUrl,
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, userMessage]);
+
+      // 3. Send to backend with image_url
+      const chatRes = await axios.post(
+        `${API_URL}/chat/send`,
+        {
+          message: text || 'What is in this image? Describe it in detail.',
+          image_url: imageUrl,
+          chat_id: currentChatId,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (chatRes.data.success) {
+        if (chatRes.data.chat_id) setCurrentChatId(chatRes.data.chat_id);
+
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: chatRes.data.message,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        throw new Error('AI response failed');
+      }
+    } catch (error: any) {
+      console.error('Upload+send error:', error);
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Failed to process image. Please try again.',
+        timestamp: new Date(),
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -171,11 +226,7 @@ const Chat: React.FC = () => {
 
   const handleRegenerate = async () => {
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-
-    if (!lastUserMessage) {
-      console.warn('No user message to regenerate from');
-      return;
-    }
+    if (!lastUserMessage) return;
 
     const lastAssistantIndex = [...messages].reverse().findIndex(m => m.role === 'assistant');
     let messagesWithoutLastAssistant = messages;
@@ -200,62 +251,26 @@ const Chat: React.FC = () => {
       );
 
       if (response.data.success) {
-        if (response.data.chat_id) {
-          setCurrentChatId(response.data.chat_id);
-        }
-
-        const aiMessage: Message = {
+        if (response.data.chat_id) setCurrentChatId(response.data.chat_id);
+        setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: response.data.message,
           timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, aiMessage]);
+        }]);
       } else {
         throw new Error('Failed to regenerate');
       }
-    } catch (error: any) {
-      console.error('Regenerate error:', error);
-      const errorMessage: Message = {
+    } catch (error) {
+      setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: 'Failed to regenerate response. Please try again.',
         timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      }]);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleFileUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await axios.post(`${API_URL}/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.data.success) {
-        const imageMessage: Message = {
-          id: Date.now().toString(),
-          role: 'user',
-          content: `📎 Image: ${file.name}`,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, imageMessage]);
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-    }
-  };
-
-  const handleVoiceInput = (audioBlob: Blob) => {
-    console.log('Voice input received:', audioBlob);
   };
 
   const toggleTheme = () => {
@@ -276,7 +291,6 @@ const Chat: React.FC = () => {
         />
 
         <div className="messages-container">
-          {/* Welcome — render-only, state mein nahi */}
           {messages.length === 0 && !isLoading && (
             <MessageBubble
               content="Hello! How can I help you today?"
@@ -294,6 +308,7 @@ const Chat: React.FC = () => {
               content={message.content}
               role={message.role}
               timestamp={message.timestamp}
+              imageUrl={message.imageUrl}
               chatId={effectiveChatId}
               messageIndex={message.role === 'assistant' ? index : undefined}
               initialFeedback={feedbackMap[index] || null}
@@ -322,7 +337,6 @@ const Chat: React.FC = () => {
         <ChatInput
           onSendMessage={handleSendMessage}
           onFileUpload={handleFileUpload}
-          onVoiceInput={handleVoiceInput}
         />
       </div>
     </div>
