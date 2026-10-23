@@ -62,7 +62,7 @@ const Footer: React.FC = () => {
 
         <div className="border-t border-slate-200 dark:border-slate-800 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-slate-500">
           <div>© 2026 Xone AI. All rights reserved.</div>
-          <div>Made with ❤️ in India</div>
+          <div>MonsterX AI by Xone AI</div>
         </div>
       </div>
     </footer>

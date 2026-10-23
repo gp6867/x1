@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, Sparkles, Brain, Zap, Shield, Code, Search,
-  Check, X, Star, MessageSquare, TrendingUp,
+  Check, X, Star, MessageSquare, TrendingUp, Clock,
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
@@ -11,18 +11,18 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
 
   const stats = [
-    { value: '63+', label: 'Likes', icon: Star },
-    { value: '1000+', label: 'Messages', icon: MessageSquare },
-    { value: '0', label: 'Dislikes', icon: TrendingUp },
-    { value: '24/7', label: 'Always Online', icon: Zap },
+    { value: '1000+', label: 'Messages Sent', icon: MessageSquare },
+    { value: '<1s', label: 'Avg Response', icon: Zap },
+    { value: '24/7', label: 'Always Online', icon: Clock },
+    { value: '100%', label: 'Free Forever', icon: Star },
   ];
 
   const features = [
     { icon: Brain, title: 'Real AI Memory', desc: 'Remembers your name, projects, code, and context across every chat — like talking to the same person.' },
-    { icon: Zap, title: 'Lightning Fast', desc: 'Powered by Groq inference — replies in under a second. No more waiting for a spinner.' },
+    { icon: Zap, title: 'Lightning Fast', desc: 'Replies in under a second. No more waiting for spinners or reloading the page.' },
     { icon: Code, title: 'Coding Agent', desc: 'Writes, debugs, and explains code in Python, JavaScript, TypeScript, React — any language.' },
     { icon: Search, title: 'Deep Search', desc: 'Multi-source research assistant that summarizes complex topics and cites its reasoning.' },
-    { icon: Shield, title: 'Never Down', desc: 'Groq primary + Gemini auto-fallback. If one fails, we switch automatically — zero downtime.' },
+    { icon: Shield, title: 'Never Down', desc: 'Automatic failover keeps you connected — if one AI is unavailable, another seamlessly takes over.' },
     { icon: Sparkles, title: 'Truly Free', desc: 'No credit card. No hidden fees. No "free trial". Advanced AI for everyone, forever.' },
   ];
 
@@ -32,18 +32,17 @@ const Home: React.FC = () => {
     { feature: 'Coding Agent', monsterx: true, chatgpt: true, claude: true },
     { feature: 'Deep Search', monsterx: true, chatgpt: true, claude: false },
     { feature: 'Hinglish Support', monsterx: true, chatgpt: true, claude: false },
-    { feature: 'Gemini Fallback', monsterx: true, chatgpt: false, claude: false },
+    { feature: 'Automatic Failover', monsterx: true, chatgpt: false, claude: false },
     { feature: 'No Credit Card', monsterx: true, chatgpt: false, claude: false },
-    { feature: 'Built in India', monsterx: true, chatgpt: false, claude: false },
   ];
 
   const faqs = [
     { q: 'Is MonsterX AI really free?', a: 'Yes — 100% free, no credit card required. We have premium plans for power users, but core AI chat is free forever.' },
-    { q: 'How is MonsterX different from ChatGPT?', a: 'MonsterX AI has real persistent memory that remembers your projects, code, and context across chats. Plus it is free and powered by Groq for faster responses.' },
-    { q: 'What AI models power MonsterX AI?', a: 'We use Groq ultra-fast inference (gpt-oss-120b) as primary, with Google Gemini as automatic fallback — so you never get a busy error.' },
+    { q: 'How is MonsterX different from ChatGPT?', a: 'MonsterX AI has real persistent memory that remembers your projects, code, and context across chats. Plus it is completely free and built for speed.' },
     { q: 'Can I use it for coding?', a: 'Absolutely. MonsterX AI has a built-in coding agent that writes, debugs, and explains code in Python, JavaScript, TypeScript, React, and more.' },
     { q: 'Does it remember my previous chats?', a: 'Yes! Our advanced memory system remembers your name, projects, code patterns, and preferences — across all chats, not just one conversation.' },
     { q: 'Is my data safe?', a: 'Yes. Passwords are encrypted, data is transmitted over HTTPS, and we never share your chats with third parties. See our Privacy Policy for full details.' },
+    { q: 'Do I need to install anything?', a: 'No. MonsterX AI runs entirely in your browser. Works on desktop, tablet, and mobile — just sign up and start chatting.' },
   ];
 
   const faqSchema = {
@@ -59,9 +58,9 @@ const Home: React.FC = () => {
     <>
       <SEO
         title="MonsterX AI by Xone AI — Free Advanced AI Chat, Coding Agent & Deep Search"
-        description="Meet MonsterX AI — advanced AI assistant by Xone AI with real memory, coding agent, and deep search. Powered by Groq + Gemini. Free forever, no credit card. ChatGPT & Claude alternative."
+        description="Meet MonsterX AI — advanced AI assistant by Xone AI with real memory, coding agent, and deep search. Free forever, no credit card. ChatGPT & Claude alternative."
         canonical="https://www.xoneai.in/home"
-        keywords="MonsterX AI, Xone AI, AI chat, coding agent, deep search, ChatGPT alternative, Claude alternative, free AI assistant, Groq AI, Gemini AI"
+        keywords="MonsterX AI, Xone AI, AI chat, coding agent, deep search, ChatGPT alternative, Claude alternative, free AI assistant"
         schema={faqSchema}
       />
 
@@ -241,7 +240,7 @@ const Home: React.FC = () => {
           <div className="max-w-4xl mx-auto px-6 py-20 md:py-28 text-center">
             <h2 className="text-3xl md:text-5xl font-extrabold mb-4">Ready to try the future of AI?</h2>
             <p className="text-lg md:text-xl text-emerald-50 mb-8 max-w-2xl mx-auto">
-              Join 63+ users who already switched to a smarter, faster, and truly free AI assistant.
+              Join users worldwide who already switched to a smarter, faster, and truly free AI assistant.
             </p>
             <button
               onClick={() => navigate('/chat')}

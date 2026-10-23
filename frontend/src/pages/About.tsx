@@ -28,7 +28,7 @@ const About: React.FC = () => {
           <div className="text-center mb-12">
             <img src="/favicon-192.png" alt="MonsterX AI" className="w-20 h-20 mx-auto rounded-2xl shadow-lg mb-4" />
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">About MonsterX AI</h1>
-            <p className="text-slate-600 dark:text-slate-400">Built by Xone AI — for everyone, in India</p>
+            <p className="text-slate-600 dark:text-slate-400">Built by Xone AI — for everyone, everywhere</p>
           </div>
 
           <div className="space-y-10 text-slate-700 dark:text-slate-300">
@@ -48,7 +48,7 @@ const About: React.FC = () => {
                 <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                   <Zap className="w-6 h-6 text-emerald-600 mb-2" />
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Blazing Fast Chat</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Groq-powered responses in under a second.</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Lightning-fast responses in under a second.</p>
                 </div>
                 <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                   <Target className="w-6 h-6 text-emerald-600 mb-2" />
@@ -71,7 +71,7 @@ const About: React.FC = () => {
             <section>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Our Story</h2>
               <p className="leading-relaxed">
-                MonsterX AI started as a side project in 2026 — a frustration with expensive AI subscriptions and limited context windows. We asked: <em>why should great AI cost $20/month?</em> So we built our own. Powered by Groq (for speed), Google Gemini (for reliability), and Supabase (for secure storage) — MonsterX AI is our answer to that question.
+                MonsterX AI started as a side project in 2026 — a frustration with expensive AI subscriptions and limited context windows. We asked: <em>why should great AI cost $20/month?</em> So we built our own. Built with a focus on speed, reliability, and privacy — MonsterX AI is our answer to that question.
               </p>
               <p className="leading-relaxed mt-3">
                 Today, MonsterX AI is used by developers, students, and creators across India. And we're just getting started.
@@ -83,9 +83,9 @@ const About: React.FC = () => {
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Truly free:</strong> No credit card, no trials, no limits on basic usage.</li>
                 <li><strong>Real memory:</strong> Remembers across chats — like talking to the same person.</li>
-                <li><strong>Faster than ChatGPT:</strong> Groq inference delivers responses in under 1 second.</li>
-                <li><strong>Built for India:</strong> Hinglish support, UPI payments, Indian data residency.</li>
-                <li><strong>Never down:</strong> Groq primary with Gemini auto-fallback — always online.</li>
+                <li><strong>Blazing Fast:</strong> Responses in under 1 second — no waiting.</li>
+                <li><strong>Global-first:</strong> Hinglish support, secure payments, and strong privacy protection.</li>
+                <li><strong>Never down:</strong> Automatic failover keeps you connected — always online.</li>
               </ul>
             </section>
 
