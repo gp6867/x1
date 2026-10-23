@@ -2304,3 +2304,46 @@ body {
   overflow-x: auto;
   max-width: 100%;
 }
+
+/* ============= SIDEBAR TOGGLE — ONE BUTTON AT A TIME ============= */
+
+/* Default: header button hidden (desktop) — override earlier rules */
+.mobile-menu-btn {
+  display: none !important;
+}
+
+/* Show header button ONLY when sidebar is closed */
+.sidebar.closed ~ .main-content .mobile-menu-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.sidebar.closed ~ .main-content .mobile-menu-btn:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Mobile: header button always visible (sidebar overlaps content anyway) */
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .mobile-menu-btn:hover {
+    background-color: var(--bg-secondary);
+  }
+}

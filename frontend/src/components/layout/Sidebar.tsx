@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Menu, MessageSquare, Settings, LogOut, Search, Image, Video } from 'lucide-react';
+import { Plus, Menu, MessageSquare, Settings, LogOut, Search, Image, Video, Home as HomeIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 interface Chat {
-  id: string;   // ✅ UUID string
+  id: string;
   title: string;
   updated_at: string;
   created_at: string;
@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
   const { logout, isAuthenticated, token } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeChat, setActiveChat] = useState<string | null>(null);   // ✅ string
+  const [activeChat, setActiveChat] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     }
   }, [isAuthenticated, token]);
 
-  // ============= SET ACTIVE CHAT FROM URL (UUID ya integer) =============
+  // ============= SET ACTIVE CHAT FROM URL =============
   useEffect(() => {
     const match = location.pathname.match(/\/chat\/([a-f0-9-]{36}|\d+)/i);
     setActiveChat(match ? match[1] : null);
@@ -47,8 +47,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     setError(null);
     
     try {
-      console.log('📡 Fetching chat history from:', `${API_URL}/chat/history`);
-      
       const response = await fetch(`${API_URL}/chat/history`, {
         method: 'GET',
         headers: {
@@ -62,8 +60,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       }
 
       const text = await response.text();
-      console.log('📦 Raw response:', text.substring(0, 200));
-
       let data;
       try {
         data = JSON.parse(text);
@@ -73,11 +69,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         return;
       }
 
-      console.log('✅ Parsed data:', data);
-
       if (data.success && Array.isArray(data.chats)) {
         setChats(data.chats);
-        console.log(`✅ Loaded ${data.chats.length} chats`);
       } else {
         setChats([]);
       }
@@ -92,8 +85,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
   // ============= HANDLE NEW CHAT =============
   const handleNewChat = async () => {
-    console.log('➕ New chat clicked');
-    
     try {
       const response = await fetch(`${API_URL}/chat/new`, {
         method: 'POST',
@@ -120,7 +111,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   // ============= HANDLE LOGOUT =============
   const handleLogout = async () => {
     try {
-      console.log('🚪 Logging out...');
       await logout();
       navigate('/login');
     } catch (error) {
@@ -130,25 +120,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
   // ============= HANDLE AI IMAGES =============
   const handleAIImages = () => {
-    console.log('🎨 AI Images clicked');
     navigate('/ai-images');
   };
 
-  // ============= HANDLE AI VIDEO (NEW) =============
+  // ============= HANDLE AI VIDEO =============
   const handleAIVideo = () => {
-    console.log('🎬 AI Video clicked');
     navigate('/ai-video');
   };
 
   // ============= HANDLE SETTINGS =============
   const handleSettings = () => {
-    console.log('⚙️ Settings clicked');
     navigate('/settings');
   };
 
-  // ============= HANDLE CHAT SELECT (string - UUID ya integer) =============
+  // ============= HANDLE HOME (NEW) =============
+  const handleHome = () => {
+    navigate('/home');
+  };
+
+  // ============= HANDLE CHAT SELECT =============
   const handleChatSelect = (chatId: string) => {
-    console.log(`💬 Selecting chat: ${chatId}`);
     setActiveChat(chatId);
     navigate(`/chat/${chatId}`);
   };
@@ -229,25 +220,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         )}
       </div>
 
-      {/* ===== AI IMAGES BUTTON - COMMENTED (baad mein kaam aa sakta hai) ===== */}
+      {/* ===== AI IMAGES BUTTON - COMMENTED ===== */}
       {/* 
-      <button 
-        className="ai-images-btn" 
-        onClick={handleAIImages}
-        title="Generate AI Images"
-      >
+      <button className="ai-images-btn" onClick={handleAIImages} title="Generate AI Images">
         <Image size={18} />
         <span>AI Images</span>
       </button>
       */}
 
-      {/* ===== AI VIDEO BUTTON - COMMENTED (baad mein kaam aa sakta hai) ===== */}
+      {/* ===== AI VIDEO BUTTON - COMMENTED ===== */}
       {/* 
-      <button 
-        className="ai-video-btn" 
-        onClick={handleAIVideo}
-        title="Generate AI Videos - Photo + Video = Magic!"
-      >
+      <button className="ai-video-btn" onClick={handleAIVideo} title="Generate AI Videos">
         <Video size={18} />
         <span>AI Video</span>
       </button>
@@ -262,7 +245,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           )}
         </div>
         
-        {/* Loading State */}
         {loading && (
           <div className="history-item loading">
             <div className="loading-spinner"></div>
@@ -270,33 +252,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           </div>
         )}
 
-        {/* Error State */}
         {!loading && error && (
           <div className="history-item error">
             <span className="error-text">{error}</span>
-            <button 
-              className="retry-btn"
-              onClick={loadChatHistory}
-              title="Retry"
-            >
-              ⟳
-            </button>
+            <button className="retry-btn" onClick={loadChatHistory} title="Retry">⟳</button>
           </div>
         )}
 
-        {/* No Chats State */}
         {!loading && !error && filteredChats.length === 0 && (
           <div className="history-item empty">
             <MessageSquare size={16} className="empty-icon" />
-            <span>
-              {searchQuery 
-                ? 'No chats found' 
-                : 'Start a new conversation!'}
-            </span>
+            <span>{searchQuery ? 'No chats found' : 'Start a new conversation!'}</span>
           </div>
         )}
 
-        {/* Chat History Items - REAL DATA */}
         {!loading && !error && filteredChats.map((chat) => (
           <div 
             key={chat.id}
@@ -317,6 +286,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
       {/* ===== SIDEBAR FOOTER ===== */}
       <div className="sidebar-footer">
+        {/* ✅ HOME BUTTON (NEW - Settings ke upar) */}
+        <div 
+          className={`history-item ${location.pathname === '/home' ? 'active' : ''}`}
+          onClick={handleHome}
+          title="Home"
+        >
+          <HomeIcon size={16} />
+          <span>Home</span>
+        </div>
         <div 
           className={`history-item ${location.pathname === '/settings' ? 'active' : ''}`}
           onClick={handleSettings}
