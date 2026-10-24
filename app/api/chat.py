@@ -40,8 +40,8 @@ GEMINI_MODEL = "gemini-3.8-flash"
 
 # ===== MEMORY CONFIG =====
 MAX_CONTEXT_MESSAGES = 12
-MAX_MESSAGE_CHARS = 1500
-MAX_TOTAL_CONTEXT_CHARS = 6500
+MAX_MESSAGE_CHARS = 3000
+MAX_TOTAL_CONTEXT_CHARS = 12000
 
 BASE_SYSTEM_PROMPT = (
     "You are MonsterX AI by Xone AI, a helpful, intelligent AI assistant. "
@@ -52,8 +52,42 @@ BASE_SYSTEM_PROMPT = (
     "Never ask 'which person?' or 'which project?' if it's already in known facts. "
     "Maintain continuity — reference past decisions and ongoing work naturally. "
     "When the user sends an image, analyze it carefully and describe what you see before answering any specific question. "
-    "Reply in the same language the user is using (English, Hindi, or Hinglish)."
+    "Reply in the same language the user is using (English, Hindi, or Hinglish).\n\n"
+    "CODE GENERATION RULES (CRITICAL — follow strictly):\n"
+    "1. When user asks for 'complete code', 'full code', 'pura code', 'code do', or asks to build/create a project: "
+    "deliver COMPLETE, RUNNABLE code files — not partial snippets, not placeholders, not just folder structures.\n"
+    "2. NEVER say 'Below is complete code' or 'Here is the full codebase' unless you are actually providing "
+    "100% complete code in that same response. Do not promise and then not deliver.\n"
+    "3. If the project has many files: give ONE complete file at a time with its full path as a header comment "
+    "(e.g. '// frontend/src/App.jsx'), then end with exactly: 'File N done. Send \"next\" for file N+1.' "
+    "Do NOT dump the folder structure repeatedly. Show it once at the beginning, then move to code.\n"
+    "4. If the user has already created the folders and says 'now give code' — SKIP the plan, SKIP the tree, "
+    "and deliver the first complete file immediately.\n"
+    "5. Do NOT apologize repeatedly. Do NOT re-explain. The user has waited long enough — just deliver code.\n"
+    "6. Every code block MUST include a file path comment as its first line.\n"
+    "7. Keep plans short (max 3-4 bullet points). The bulk of your response should be actual code."
 )
+
+
+# ===== CODE REQUEST DETECTION =====
+_CODE_KEYWORDS = [
+    "code", "script", "program", "file", "function", "class",
+    "component", "endpoint", "route", "api", "backend", "frontend",
+    "full code", "complete code", "pura code", "poora code", "code do",
+    "code likho", "code banao", "code chahiye", "code de",
+    "build a", "build the", "create a", "create the", "banao", "bana do",
+    "banana hai", "likho", "likh do", "implement", "develop",
+    "project", "website", "app banao", "site banao",
+    "next", "aage", "aage ka", "continue",
+]
+
+
+def is_code_request(msg: str) -> bool:
+    """Detect if user message asks for code delivery"""
+    if not msg:
+        return False
+    m = msg.lower()
+    return any(kw in m for kw in _CODE_KEYWORDS)
 
 
 # ===== HELPERS =====
@@ -145,11 +179,23 @@ def build_context(messages_history: list, system_prompt: str) -> list:
 
 async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
     ctx = build_context(messages_history, system_prompt)
+
+    # ✅ Detect code request → bigger token budget
+    last_user_msg = ""
+    for m in reversed(messages_history):
+        if isinstance(m, dict) and m.get("role") == "user":
+            last_user_msg = m.get("content", "")
+            break
+
+    code_mode = is_code_request(last_user_msg)
+    max_out = 3500 if code_mode else 800
+    logging.info(f"🎯 Code mode: {code_mode}, max_tokens: {max_out}")
+
     # Groq primary
     try:
         logging.info("🔄 Groq (primary)...")
         r = await groq_client.chat.completions.create(
-            model=GROQ_MODEL, messages=ctx, max_tokens=800, temperature=0.7
+            model=GROQ_MODEL, messages=ctx, max_tokens=max_out, temperature=0.7
         )
         t = extract_content(r)
         if t:
@@ -157,11 +203,12 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
             return (t, "Groq")
     except Exception as e:
         logging.warning(f"⚠️ Groq failed ({'rate-limit' if is_rate_limit(e) else 'error'}) → Gemini: {e}")
+
     # Gemini fallback
     try:
         logging.info("🔄 Gemini (fallback)...")
         r = await gemini_client.chat.completions.create(
-            model=GEMINI_MODEL, messages=ctx, max_tokens=800, temperature=0.7
+            model=GEMINI_MODEL, messages=ctx, max_tokens=max_out, temperature=0.7
         )
         t = extract_content(r)
         if t:
