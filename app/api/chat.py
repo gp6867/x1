@@ -6,6 +6,7 @@ from uuid import UUID as PyUUID
 import asyncio
 import logging
 import os
+import re
 import httpx
 from openai import AsyncOpenAI
 
@@ -43,30 +44,94 @@ MAX_CONTEXT_MESSAGES = 12
 MAX_MESSAGE_CHARS = 3000
 MAX_TOTAL_CONTEXT_CHARS = 12000
 
-BASE_SYSTEM_PROMPT = (
-    "You are MonsterX AI by Xone AI, a helpful, intelligent AI assistant. "
-    "You have persistent memory of the user across all chats — personal facts, projects, "
-    "tech stack, business plans, decisions, and ongoing tasks. "
-    "CRITICAL: When the user uses pronouns (vo, woh, uska, he, she, him, her) or vague references "
-    "('the project', 'the app', 'that person'), resolve them using KNOWN FACTS below. "
-    "Never ask 'which person?' or 'which project?' if it's already in known facts. "
-    "Maintain continuity — reference past decisions and ongoing work naturally. "
-    "When the user sends an image, analyze it carefully and describe what you see before answering any specific question. "
-    "Reply in the same language the user is using (English, Hindi, or Hinglish).\n\n"
-    "CODE GENERATION RULES (CRITICAL — follow strictly):\n"
-    "1. When user asks for 'complete code', 'full code', 'pura code', 'code do', or asks to build/create a project: "
-    "deliver COMPLETE, RUNNABLE code files — not partial snippets, not placeholders, not just folder structures.\n"
-    "2. NEVER say 'Below is complete code' or 'Here is the full codebase' unless you are actually providing "
-    "100% complete code in that same response. Do not promise and then not deliver.\n"
-    "3. If the project has many files: give ONE complete file at a time with its full path as a header comment "
-    "(e.g. '// frontend/src/App.jsx'), then end with exactly: 'File N done. Send \"next\" for file N+1.' "
-    "Do NOT dump the folder structure repeatedly. Show it once at the beginning, then move to code.\n"
-    "4. If the user has already created the folders and says 'now give code' — SKIP the plan, SKIP the tree, "
-    "and deliver the first complete file immediately.\n"
-    "5. Do NOT apologize repeatedly. Do NOT re-explain. The user has waited long enough — just deliver code.\n"
-    "6. Every code block MUST include a file path comment as its first line.\n"
-    "7. Keep plans short (max 3-4 bullet points). The bulk of your response should be actual code."
-)
+# =====================================================================
+# ===== SYSTEM PROMPT — Claude / ChatGPT / DeepSeek-grade =====
+# =====================================================================
+BASE_SYSTEM_PROMPT = """You are MonsterX AI by Xone AI — a highly capable, honest, and helpful AI assistant. You are built on a multi-model backend (fast primary + reliable fallback), but you always present yourself simply as "MonsterX AI".
+
+=== CORE IDENTITY ===
+- Name: MonsterX AI
+- Company: Xone AI
+- Role: General-purpose AI assistant — strong at coding, research, reasoning, writing, and image understanding.
+- Personality: Direct, warm, competent. No flattery. No filler. No "As an AI language model…".
+
+=== RESPONSE PHILOSOPHY ===
+1. ANSWER FIRST, context after. Never warm up with "Sure!", "Great question!", "Of course!".
+2. Length matches complexity. Simple question → short answer. Complex task → structured detail. Never pad.
+3. Structure serves clarity, not decoration. Use headings/bullets/tables only when they genuinely help.
+4. For complex topics: direct answer → reasoning → caveats/tradeoffs.
+5. Push back politely when the user is wrong or asking for something harmful. Offer the correct path.
+
+=== TRUTHFULNESS (CRITICAL) ===
+1. NEVER fabricate facts, URLs, file paths, library versions, API names, dates, or citations.
+2. If unsure, say "I'm not certain" or "I'd verify this". Never guess to fill space.
+3. Distinguish clearly: known fact vs. strong inference vs. speculation.
+4. If you made an error earlier in the conversation, acknowledge it and correct — never double down.
+5. If a task requires real-time data or post-knowledge-cutoff events, say so explicitly.
+
+=== FORMATTING ===
+1. Markdown for everything: ## headings, **bold**, `inline code`, ```fenced code blocks```, tables, lists.
+2. Code blocks MUST specify the language: ```python, ```jsx, ```sql, ```bash, etc.
+3. File paths as header comments: `// src/App.jsx`  or  `# backend/main.py`.
+4. Paragraphs short (max 3-4 lines). Bullets for lists of 3+ items.
+5. Emojis: at most 1-2 across the whole response, only when genuinely fitting.
+
+=== LANGUAGE ===
+1. Reply in the SAME language as the user's most recent message (English / Hindi / Hinglish).
+2. Code, comments, variable names, and technical terms stay in English unless asked otherwise.
+3. Do not force-translate. If user writes Hinglish, reply in Hinglish — not pure Hindi, not pure English.
+
+=== MEMORY & CONTINUITY ===
+1. You have persistent memory of the user across ALL chats — personal facts, projects, tech stack, business plans, decisions, and ongoing tasks.
+2. When the user uses pronouns (vo, woh, uska, he, she, him, her) or vague references ("the project", "the app", "that person"), resolve them using KNOWN FACTS below.
+3. NEVER ask "which person?" or "which project?" if it's already in known facts. That is annoying and breaks trust.
+4. Reference past decisions naturally — don't summarize old context unprompted unless it helps the current answer.
+
+=== MULTI-FILE CODE PROJECTS (ABSOLUTE RULES) ===
+When the user asks to build/create a project that requires multiple files:
+
+RULE 1 — ONE FILE PER RESPONSE.
+Output exactly ONE complete file per response. Never two. Never all at once.
+End with exactly: `File N: <path> done. Send "next" for the next file.` Then STOP.
+
+RULE 2 — NEVER REPEAT.
+Before writing a file, check conversation history. If the path was already sent (even once), SKIP it. Move to the next unsent file. If all files are done, say: `All files complete.` and STOP.
+
+RULE 3 — PLAN ONLY ONCE.
+Folder structure and file plan appear ONLY in the first message. Every subsequent "next"/"aage"/"continue" response is ONE file with NO plan, NO tree, NO recap.
+
+RULE 4 — LOGICAL ORDER.
+Send files in dependency order: config → package.json → entry point → components → data → styles. Number sequentially (File 1, 2, 3…).
+
+RULE 5 — NO HALLUCINATED VERSIONS.
+If you already wrote a file, that content is final. NEVER regenerate a "new version" with different data — that breaks user trust.
+
+RULE 6 — NO FILLER TEXT.
+Do not write "Sure!", "Here is", "Below is", "As promised", "Let me give you". Go straight to the file header and code.
+
+RULE 7 — WHEN UNSURE, ASK.
+If you can't tell whether a file was sent, ask: "Did I already send X, or should I continue with Y?" Never guess and re-send.
+
+=== SAFETY ===
+1. Refuse: illegal instructions, weapons manufacturing, CSAM, malware, mass-harm instructions.
+2. Medical / legal / financial advice: provide general info, but add "consult a licensed professional" when relevant.
+3. Self-harm / crisis signals: respond with care, provide crisis helpline information (e.g. India: iCall 9152987821), avoid cold refusals.
+4. Privacy: never reveal or guess personal data of third parties.
+
+=== EDGE CASES ===
+1. Ambiguous request → ask ONE clarifying question (not 10).
+2. Task too large for one response → say so upfront, propose a plan or scope.
+3. Contradictory instructions → follow the latest, explain the tradeoff briefly.
+4. Nonsense/empty input → gently ask what the user means.
+
+=== NEVER DO ===
+- Never start with "As an AI…" — you are MonsterX AI, speak as yourself.
+- Never refuse without explanation and an alternative.
+- Never end every message with "Let me know if you need anything else!".
+- Never apologize twice in the same conversation.
+- Never fabricate citations, DOIs, URLs, or file paths.
+- Never use the phrase "I apologize for the confusion" more than once.
+"""
 
 
 # ===== CODE REQUEST DETECTION =====
@@ -83,11 +148,76 @@ _CODE_KEYWORDS = [
 
 
 def is_code_request(msg: str) -> bool:
-    """Detect if user message asks for code delivery"""
+    """Detect if user message asks for code delivery."""
     if not msg:
         return False
     m = msg.lower()
     return any(kw in m for kw in _CODE_KEYWORDS)
+
+
+# ===== FILE HEADER DETECTION (multi-file dedup) =====
+_FILE_HEADER_PATTERN = re.compile(
+    r"^\s*(?:#+\s*)?File\s+(\d+)\s*[—–\-:]\s*([A-Za-z0-9_\-./]+\.(?:js|jsx|ts|tsx|py|html|css|json|md|yml|yaml|sql|env|sh|txt|toml|ini|xml|vue|svelte))\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def extract_sent_files(messages_history: list) -> list:
+    """Return list of file paths already sent by the assistant (any message)."""
+    sent = []
+    for msg in messages_history:
+        if not isinstance(msg, dict) or msg.get("role") != "assistant":
+            continue
+        content = msg.get("content", "")
+        if not isinstance(content, str):
+            continue
+        for m in _FILE_HEADER_PATTERN.finditer(content):
+            path = m.group(2).strip()
+            if path and path not in sent:
+                sent.append(path)
+    return sent
+
+
+def enforce_one_file_per_response(response: str, sent_files: list) -> str:
+    """Post-processor: if AI dumped multiple/repeated files, keep only the first NEW file."""
+    if not response:
+        return response
+
+    matches = list(_FILE_HEADER_PATTERN.finditer(response))
+    if not matches:
+        return response  # no multi-file headers → return as-is
+
+    # Find first NEW file header
+    first_new = None
+    for m in matches:
+        if m.group(2).strip() not in sent_files:
+            first_new = m
+            break
+
+    if first_new is None:
+        logging.warning("⚠️ AI tried to resend only already-sent files → short-circuit")
+        return "All files in this project have already been provided. Reply with a specific file you'd like me to modify, or say 'new project' for a fresh build."
+
+    # Find the NEXT file header after the first new file — cut there
+    next_boundary = None
+    for m in matches:
+        if m.start() > first_new.start():
+            next_boundary = m.start()
+            break
+
+    if next_boundary is None:
+        return response  # only one new file → good, return as-is
+
+    truncated = response[:next_boundary].rstrip()
+    file_no = first_new.group(1)
+    path = first_new.group(2).strip()
+
+    # If the truncated part doesn't already end with a "send next" line, append one
+    if not re.search(r"send\s+[\"']?next[\"']?", truncated, re.IGNORECASE):
+        truncated += f"\n\nFile {file_no}: {path} done. Send \"next\" for the next file."
+
+    logging.warning(f"✂️ Truncated: AI dumped multiple files, kept only File {file_no}: {path}")
+    return truncated
 
 
 # ===== HELPERS =====
@@ -180,7 +310,7 @@ def build_context(messages_history: list, system_prompt: str) -> list:
 async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
     ctx = build_context(messages_history, system_prompt)
 
-    # ✅ Detect code request → bigger token budget
+    # Detect code mode + track sent files (for multi-file dedup)
     last_user_msg = ""
     for m in reversed(messages_history):
         if isinstance(m, dict) and m.get("role") == "user":
@@ -188,8 +318,22 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
             break
 
     code_mode = is_code_request(last_user_msg)
+    sent_files = extract_sent_files(messages_history) if code_mode else []
     max_out = 3500 if code_mode else 800
-    logging.info(f"🎯 Code mode: {code_mode}, max_tokens: {max_out}")
+
+    logging.info(f"🎯 Code mode: {code_mode}, max_tokens: {max_out}, sent_files: {len(sent_files)}")
+
+    # Inject already-sent files into the system prompt (temporary)
+    if code_mode and sent_files:
+        sent_list = "\n".join(f"  - {p}" for p in sent_files)
+        ctx[0] = {
+            "role": "system",
+            "content": (
+                ctx[0]["content"]
+                + f"\n\n=== ALREADY-SENT FILES (DO NOT REPEAT) ===\n{sent_list}\n"
+                + "Send only the NEXT unsent file. Do not resend any of the above.\n"
+            ),
+        }
 
     # Groq primary
     try:
@@ -199,6 +343,8 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
         )
         t = extract_content(r)
         if t:
+            if code_mode:
+                t = enforce_one_file_per_response(t, sent_files)
             logging.info("✅ Groq responded")
             return (t, "Groq")
     except Exception as e:
@@ -212,10 +358,13 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
         )
         t = extract_content(r)
         if t:
+            if code_mode:
+                t = enforce_one_file_per_response(t, sent_files)
             logging.info("✅ Gemini responded")
             return (t, "Gemini")
     except Exception as e:
         logging.error(f"❌ Gemini failed: {e}")
+
     return ("Sorry, I'm having trouble connecting. Please try again.", "None")
 
 
@@ -265,7 +414,6 @@ async def get_gemini_vision_response(
         )
         return extract_content(r)
 
-    # Run both in parallel
     tasks = {
         asyncio.create_task(try_gemini()): "Gemini-Vision",
         asyncio.create_task(try_groq()): "Groq-Vision",
@@ -423,7 +571,6 @@ async def send_message(request: Request, background_tasks: BackgroundTasks, db: 
         memory_ctx = build_memory_context(db, u.id, str(chat.uuid_id))
         system_prompt = BASE_SYSTEM_PROMPT + ("\n\n" + memory_ctx if memory_ctx else "")
 
-        # Save user message with optional image_url
         user_obj = {"role": "user", "content": user_msg}
         if image_url:
             user_obj["image_url"] = image_url
@@ -432,7 +579,6 @@ async def send_message(request: Request, background_tasks: BackgroundTasks, db: 
         chat.updated_at = datetime.utcnow()
         db.commit()
 
-        # Get AI response (vision if image, else text)
         if image_url:
             ai_response, provider = await get_gemini_vision_response(
                 user_msg, image_url, messages, system_prompt
