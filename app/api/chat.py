@@ -310,7 +310,6 @@ def build_context(messages_history: list, system_prompt: str) -> list:
 async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
     ctx = build_context(messages_history, system_prompt)
 
-    # Detect code mode + track sent files (for multi-file dedup)
     last_user_msg = ""
     for m in reversed(messages_history):
         if isinstance(m, dict) and m.get("role") == "user":
@@ -323,7 +322,6 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
 
     logging.info(f"🎯 Code mode: {code_mode}, max_tokens: {max_out}, sent_files: {len(sent_files)}")
 
-    # Inject already-sent files into the system prompt (temporary)
     if code_mode and sent_files:
         sent_list = "\n".join(f"  - {p}" for p in sent_files)
         ctx[0] = {
@@ -335,7 +333,10 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
             ),
         }
 
-    # Groq primary
+    groq_reason = None
+    gemini_reason = None
+
+    # ===== GROQ PRIMARY =====
     try:
         logging.info("🔄 Groq (primary)...")
         r = await groq_client.chat.completions.create(
@@ -347,10 +348,12 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
                 t = enforce_one_file_per_response(t, sent_files)
             logging.info("✅ Groq responded")
             return (t, "Groq")
+        groq_reason = "empty"
     except Exception as e:
-        logging.warning(f"⚠️ Groq failed ({'rate-limit' if is_rate_limit(e) else 'error'}) → Gemini: {e}")
+        groq_reason = "rate_limit" if is_rate_limit(e) else "error"
+        logging.warning(f"⚠️ Groq failed ({groq_reason}) → trying Gemini: {e}")
 
-    # Gemini fallback
+    # ===== GEMINI FALLBACK =====
     try:
         logging.info("🔄 Gemini (fallback)...")
         r = await gemini_client.chat.completions.create(
@@ -362,10 +365,17 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
                 t = enforce_one_file_per_response(t, sent_files)
             logging.info("✅ Gemini responded")
             return (t, "Gemini")
+        gemini_reason = "empty"
     except Exception as e:
-        logging.error(f"❌ Gemini failed: {e}")
+        gemini_reason = "rate_limit" if is_rate_limit(e) else "error"
+        logging.error(f"❌ Gemini failed ({gemini_reason}): {e}")
 
-    return ("Sorry, I'm having trouble connecting. Please try again.", "None")
+    # ===== BOTH FAILED → friendly message =====
+    logging.error(f"❌ Both providers failed — Groq: {groq_reason}, Gemini: {gemini_reason}")
+    friendly = get_friendly_error_message(groq_reason or "error", gemini_reason or "error")
+    provider_tag = "LimitReached" if (groq_reason == "rate_limit" and gemini_reason == "rate_limit") else "Error"
+    return (friendly, provider_tag)
+
 
 
 # ===== GEMINI VISION (parallel + fast) =====
@@ -443,10 +453,15 @@ async def get_gemini_vision_response(
             task.cancel()
 
     logging.error("❌ Both vision providers failed/timed out")
-    return (
-        "Sorry, I couldn't analyze this image right now — please try again in a moment.",
-        "None",
+    friendly = (
+        "**🖼️ Image analysis unavailable right now**\n\n"
+        "Our AI vision service is busy handling high demand.\n\n"
+        "**Please try:**\n"
+        "- **🔄 Wait 30-60 seconds** and resend the image\n"
+        "- **🌙 Try again later today** if it keeps happening\n"
+        "- **⭐ Upgrade to Pro** *(coming soon)* for priority image analysis"
     )
+    return (friendly, "VisionError")
 
 
 # ===== BACKGROUND EXTRACTION =====
