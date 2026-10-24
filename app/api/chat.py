@@ -474,8 +474,8 @@ async def _run_extraction_bg(user_id: int, chat_id: str, messages_snapshot: list
                 db=db, user_id=user_id, chat_id=chat_id,
                 messages_history=messages_snapshot,
                 previous_summary=prev_summary,
-                primary_client=gemini_client, primary_model=GEMINI_MODEL,
-                fallback_client=groq_client, fallback_model=GROQ_MODEL,
+                primary_client=groq_client, primary_model=GROQ_MODEL,
+                fallback_client=gemini_client, fallback_model=GEMINI_MODEL,
             )
         finally:
             db.close()
