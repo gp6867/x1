@@ -5,7 +5,7 @@ import MessageBubble from '../../components/chat/MessageBubble';
 import ChatInput from '../../components/chat/ChatInput';
 import Sidebar from '../../components/layout/Sidebar';
 import { useAuthStore } from '../../store/authStore';
-import axios from 'axios';
+import api from '../../services/api';
 
 interface Message {
   id: string;
@@ -48,7 +48,7 @@ const Chat: React.FC = () => {
 
   const loadChat = async (chatId: string) => {
     try {
-      const response = await axios.get(`${API_URL}/chat/${chatId}`, {
+      const response = await api.get(`${API_URL}/chat/${chatId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
@@ -66,7 +66,7 @@ const Chat: React.FC = () => {
         setMessages(loadedMessages);
 
         try {
-          const fbRes = await axios.get(`${API_URL}/chat/feedback/${chatId}`, {
+          const fbRes = await api.get(`${API_URL}/chat/feedback/${chatId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
           if (fbRes.data?.success) {
@@ -103,7 +103,7 @@ const Chat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
+      const response = await api.post(
         `${API_URL}/chat/send`,
         { message: content, chat_id: currentChatId },
         {
@@ -159,7 +159,7 @@ const Chat: React.FC = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const uploadRes = await axios.post(`${API_URL}/upload/image`, formData, {
+      const uploadRes = await api.post(`${API_URL}/upload/image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
@@ -183,7 +183,7 @@ const Chat: React.FC = () => {
       setMessages(prev => [...prev, userMessage]);
 
       // 3. Send to backend with image_url
-      const chatRes = await axios.post(
+      const chatRes = await api.post(
         `${API_URL}/chat/send`,
         {
           message: text || '',
@@ -239,7 +239,7 @@ const Chat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
+      const response = await api.post(
         `${API_URL}/chat/send`,
         { message: lastUserMessage.content, chat_id: currentChatId },
         {
