@@ -18,6 +18,10 @@ from ..brain.memory_manager import build_memory_context, extract_and_save
 from ..brain.memory_filter import should_extract, has_pronoun
 from ..brain.memory_store import get_all_facts, delete_fact, delete_all, get_summary, delete_chat_summary
 from ..utils.jwt_handler import verify_token
+from ..utils.rate_limit import (
+    get_user_plan, check_daily_limit, check_hourly_limit,
+    increment_usage, get_usage_stats, PLAN_LIMITS,
+)
 
 router = APIRouter()
 
@@ -573,6 +577,48 @@ async def send_message(request: Request, background_tasks: BackgroundTasks, db: 
         if not user_msg and not image_url:
             return JSONResponse(content={"success": True, "message": "Hello!"})
 
+        # ===== RATE LIMITING =====
+        plan = get_user_plan(u)
+
+        allowed_daily, used, limit, _ = check_daily_limit(db, u.id, plan)
+        if not allowed_daily:
+            logging.warning(f"🚫 Daily limit: user={u.id}, {used}/{limit}")
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "success": False,
+                    "limit_reached": True,
+                    "message": (
+                        f"**🚀 Daily limit reached**\n\n"
+                        f"You've used all **{limit}** messages for today ({used}/{limit}).\n\n"
+                        f"**What you can do:**\n"
+                        f"- ⏰ **Wait until midnight UTC** — limits reset automatically\n"
+                        f"- ⭐ **Upgrade to Pro** *(coming soon)* for 60+ messages/day\n\n"
+                        f"Thanks for using MonsterX AI!"
+                    ),
+                    "used": used,
+                    "limit": limit,
+                },
+            )
+
+        allowed_hourly, used_h, limit_h = check_hourly_limit(u.id, plan)
+        if not allowed_hourly:
+            logging.warning(f"🚫 Hourly limit: user={u.id}, {used_h}/{limit_h}")
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "success": False,
+                    "limit_reached": True,
+                    "message": (
+                        f"**⏳ Slow down a bit**\n\n"
+                        f"You've sent **{used_h}** messages in the last hour (limit: {limit_h}).\n\n"
+                        f"Please wait a few minutes and try again."
+                    ),
+                    "used": used_h,
+                    "limit": limit_h,
+                },
+            )
+
         chat = find_chat(db, chat_id, u.id) if chat_id else None
         if not chat:
             title_source = user_msg or "Image chat"
@@ -601,6 +647,15 @@ async def send_message(request: Request, background_tasks: BackgroundTasks, db: 
         else:
             ai_response, provider = await get_ai_response(messages, system_prompt)
         logging.info(f"🤖 Response from: {provider}")
+        # ===== INCREMENT USAGE =====
+        model_tag = None
+        if provider and "gemini" in provider.lower():
+            model_tag = "gemini"
+        elif provider and "sonnet" in provider.lower():
+            model_tag = "sonnet"
+        elif provider and "haiku" in provider.lower():
+            model_tag = "haiku"
+        increment_usage(db, u.id, model=model_tag)
 
         messages.append({"role": "assistant", "content": ai_response})
         chat.messages = messages
@@ -694,6 +749,24 @@ async def test_gemini():
         return JSONResponse(content={"success": True, "provider": "Gemini", "response": extract_content(r)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@router.get("/usage")
+async def get_my_usage(request: Request, db: Session = Depends(get_db)):
+    try:
+        u = await get_current_user(request, db)
+        if not u:
+            return JSONResponse(status_code=401, content={"success": False, "message": "Not authenticated"})
+        plan = get_user_plan(u)
+        stats = get_usage_stats(db, u.id)
+        stats["plan"] = plan
+        stats["daily_limit"] = PLAN_LIMITS[plan]["daily"]
+        stats["hourly_limit"] = PLAN_LIMITS[plan]["hourly"]
+        stats["remaining"] = max(0, PLAN_LIMITS[plan]["daily"] - stats["messages_used"])
+        return JSONResponse(content={"success": True, **stats})
+    except Exception as e:
+        logging.error(f"usage error: {e}")
+        return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
 @router.get("/test")
