@@ -3,7 +3,6 @@ import json
 import logging
 from .memory_store import save_fact, get_all_facts, save_summary, get_summary
 
-
 EXTRACTION_PROMPT = """You are a memory extraction AI for an AI chatbot. Analyze the conversation and extract:
 
 1. **Facts** — structured knowledge about the user
@@ -19,48 +18,25 @@ Return ONLY valid JSON, no markdown fences, no explanation:
 }
 
 CATEGORIES (pick exactly one per fact):
-- "personal": name, age, city, family, relationships (girlfriend/boyfriend/family members + names)
-- "preference": likes, dislikes, favorite food/music/style, hobbies
-- "project": projects user is building (name, purpose, current stage)
-- "tech": tech stack, frameworks, databases, tools, providers (e.g. FastAPI, Supabase, Groq)
-- "decision": architectural or strategic decisions made
-- "goal": short-term and long-term goals (business, career, personal)
+- "personal": name, age, city, family, relationships
+- "preference": likes, dislikes, hobbies
+- "project": projects user is building
+- "tech": tech stack, frameworks, tools
+- "decision": architectural or strategic decisions
+- "goal": short-term and long-term goals
 - "task": ongoing TODOs, pending work
-- "code": key code architecture, patterns, function names, approaches (NOT raw code — extract what it does)
-- "business": business model, revenue, marketing, customers, pricing, ad budget
+- "code": key code architecture, patterns
+- "business": business model, revenue, marketing
 - "learning": what user is currently learning
-- "relationship": relationship dynamics (e.g. GF doesn't love user back)
+- "relationship": relationship dynamics
 
 RULES:
 1. Extract ONLY what's explicitly stated or clearly implied. Don't invent.
 2. RESOLVE PRONOUNS: if "vo"/"woh"/"uska" refers to a person already mentioned, use their name.
-3. Use English snake_case keys. Values can be in user's language (English/Hindi/Hinglish).
-4. Update existing facts if new info conflicts (e.g. user changed project name).
-5. Summary: 2-4 sentences. Focus on: current project state, decisions, next steps, active issues.
-6. Skip greetings, small talk, one-off questions.
-7. Return [] for facts if nothing new. Return "" for summary if not enough context.
-
-EXAMPLES:
-
-Msg: "Meri GF ka naam Kripa hai"
-facts: [{"category":"personal","key":"girlfriend_name","value":"Kripa","context":"User's girlfriend"}]
-
-Msg: "Vo hai na mujhse pyar nahi karti" (prev: Kripa=GF)
-facts: [{"category":"relationship","key":"girlfriend_love_status","value":"Kripa does not love the user","context":"Ongoing"}]
-summary: "User is discussing relationship with Kripa. Kripa doesn't love them back."
-
-Msg: "I'm building a FastAPI backend with Groq AI and deploying on Render"
-facts: [
-  {"category":"project","key":"backend_framework","value":"FastAPI"},
-  {"category":"tech","key":"ai_provider","value":"Groq"},
-  {"category":"tech","key":"deployment","value":"Render"}
-]
-
-Msg: "Mujhe ads chalane hain Google par 300 rupaye budget se 3 din ke liye"
-facts: [{"category":"business","key":"ad_plan","value":"Google ads, ₹300 budget, 3 days"}]
-
-Msg: "Switch karta hoon gemini-3.8-flash par kyunki 2.0 deprecated hai"
-facts: [{"category":"decision","key":"gemini_model","value":"Using gemini-3.8-flash (2.0 deprecated)"}]
+3. Use English snake_case keys. Values can be in user's language.
+4. Update existing facts if new info conflicts.
+5. Skip greetings, small talk, one-off questions.
+6. Return [] for facts if nothing new. Return "" for summary if not enough context.
 
 Previous summary (update this if provided):
 {previous_summary}
@@ -115,7 +91,6 @@ async def extract_and_save(
 ):
     """Unified extraction: facts + summary in one LLM call"""
     try:
-        # Build conversation excerpt (last 10 messages, truncated)
         lines = []
         for m in (messages_history or [])[-10:]:
             if isinstance(m, dict) and m.get("role") in ("user", "assistant"):
@@ -193,11 +168,12 @@ def build_memory_context(db, user_id: int, chat_id: str = None) -> str:
     for f in facts:
         groups.setdefault(f.category, []).append(f)
 
+    # Nice category display order
     order = ["personal", "preference", "relationship", "project", "tech",
              "code", "business", "decision", "goal", "task", "learning", "fact"]
 
-    lines = ["
-=== BACKGROUND MEMORY (GLOBAL FACTS) ==="]
+    lines = []
+    lines.append("=== BACKGROUND MEMORY (GLOBAL FACTS) ===")
     lines.append("⚠️ USE WITH CAUTION: These are facts from PAST conversations. Only use them if the user's CURRENT question directly relates to them. Do NOT assume the current topic is about these past projects.")
     lines.append("")
 
@@ -220,6 +196,5 @@ def build_memory_context(db, user_id: int, chat_id: str = None) -> str:
         
     lines.append("=== REMINDER ===")
     lines.append("Always prioritize the CURRENT conversation history above all else.")
-    return "
-".join(lines)
-
+    
+    return "\n".join(lines)
