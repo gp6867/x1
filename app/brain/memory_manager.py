@@ -180,7 +180,7 @@ async def extract_and_save(
 
 
 def build_memory_context(db, user_id: int, chat_id: str = None) -> str:
-    """Full memory context — grouped by category + chat summary"""
+    """Full memory context — strictly separated into Global Facts and Current Chat Summary"""
     facts = get_all_facts(db, user_id, limit=100)
     summary_row = get_summary(db, chat_id) if chat_id else None
     summary_text = summary_row.summary if summary_row else ""
@@ -193,12 +193,12 @@ def build_memory_context(db, user_id: int, chat_id: str = None) -> str:
     for f in facts:
         groups.setdefault(f.category, []).append(f)
 
-    # Nice category display order
     order = ["personal", "preference", "relationship", "project", "tech",
              "code", "business", "decision", "goal", "task", "learning", "fact"]
 
-    lines = ["=== USER MEMORY (persistent across chats) ==="]
-    lines.append("Use these facts to resolve pronouns (vo/woh/uska/he/she) and maintain continuity.")
+    lines = ["
+=== BACKGROUND MEMORY (GLOBAL FACTS) ==="]
+    lines.append("⚠️ USE WITH CAUTION: These are facts from PAST conversations. Only use them if the user's CURRENT question directly relates to them. Do NOT assume the current topic is about these past projects.")
     lines.append("")
 
     for cat in order:
@@ -214,10 +214,12 @@ def build_memory_context(db, user_id: int, chat_id: str = None) -> str:
         lines.append("")
 
     if summary_text:
-        lines.append("=== CURRENT CHAT SUMMARY ===")
+        lines.append("=== CURRENT CHAT SUMMARY (USE THIS TO MAINTAIN CONTINUITY) ===")
         lines.append(summary_text)
-        lines.append("=== END SUMMARY ===")
         lines.append("")
+        
+    lines.append("=== REMINDER ===")
+    lines.append("Always prioritize the CURRENT conversation history above all else.")
+    return "
+".join(lines)
 
-    lines.append("=== END USER MEMORY ===")
-    return "\n".join(lines)
