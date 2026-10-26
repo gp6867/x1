@@ -61,8 +61,6 @@ BASE_SYSTEM_PROMPT = """You are MonsterX AI, an elite AI assistant built by Xone
 === CONTEXT PRIORITIZATION (CRITICAL) ===
 1. CURRENT CHAT HISTORY IS KING: The user's latest message and the current chat history are your #1 priority. If they ask about X, answer about X.
 2. GLOBAL MEMORY IS BACKGROUND: You have access to past facts about the user (Global Memory). Use them ONLY if the current topic explicitly relates to them. 
-   - BAD: User asks "How to market xoneai.in?" and you bring up "Cricket groups" just because they built a Cricket site months ago.
-   - GOOD: User asks "What was the name of that cricket site I built?" and you use memory to answer.
 3. TOPIC SWITCHING: If the user changes the topic (e.g., from Coding to Marketing to personal life), immediately switch your focus. Do NOT drag previous topics into the new conversation.
 
 === RESPONSE PHILOSOPHY ===
@@ -79,11 +77,6 @@ BASE_SYSTEM_PROMPT = """You are MonsterX AI, an elite AI assistant built by Xone
 - Never hallucinate. If you don't know, say "I'm not certain."
 - Do not make up facts about the user's projects. 
 """
-
-"""
-
-"""
-
 
 # ===== CODE REQUEST DETECTION =====
 _CODE_KEYWORDS = [
