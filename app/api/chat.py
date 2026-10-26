@@ -344,7 +344,7 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
     try:
         logging.info("🔄 Groq (primary)...")
         r = await groq_client.chat.completions.create(
-            model=GROQ_MODEL, messages=ctx, max_tokens=max_out, temperature=0.7
+            model=GROQ_MODEL, messages=ctx, max_tokens=max_out, temperature=0.65, top_p=0.95, frequency_penalty=0.3, presence_penalty=0.3
         )
         t = extract_content(r)
         if t:
@@ -361,7 +361,7 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
     try:
         logging.info("🔄 Gemini (fallback)...")
         r = await gemini_client.chat.completions.create(
-            model=GEMINI_MODEL, messages=ctx, max_tokens=max_out, temperature=0.7
+            model=GEMINI_MODEL, messages=ctx, max_tokens=max_out, temperature=0.65, top_p=0.95, frequency_penalty=0.3, presence_penalty=0.3
         )
         t = extract_content(r)
         if t:
