@@ -24,6 +24,7 @@ const Chat: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [feedbackMap, setFeedbackMap] = useState<Record<number, 'like' | 'dislike'>>({});
+  const [guestMessagesLeft, setGuestMessagesLeft] = useState<number | null>(null);
   const { user, token } = useAuthStore();
   const location = useLocation();
 
@@ -47,6 +48,7 @@ const Chat: React.FC = () => {
   }, [chatIdFromUrl, token]);
 
   const loadChat = async (chatId: string) => {
+    if (!token) return;
     try {
       const response = await api.get(`${API_URL}/chat/${chatId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -91,6 +93,39 @@ const Chat: React.FC = () => {
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
+
+    if (!token) {
+      const count = parseInt(localStorage.getItem('guest_msg_count') || '0', 10);
+      if (count >= 5) {
+        setMessages(prev => [...prev, {
+          id: 'limit', role: 'assistant', content: 'You have reached the guest limit (5 messages). Please login or register to continue.', timestamp: new Date()
+        }]);
+        setIsLoading(false);
+        setTimeout(() => {
+          window.location.href = '/register';
+        }, 2000);
+        return;
+      }
+      
+      localStorage.setItem('guest_msg_count', (count + 1).toString());
+      setGuestMessagesLeft(Math.max(0, 5 - (count + 1)));
+      
+      try {
+        const response = await axios.post(`${API_URL}/chat/guest`, { message: content });
+        if (response.data.success) {
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 1).toString(), role: 'assistant', content: response.data.message, timestamp: new Date()
+          }]);
+        }
+      } catch (error: any) {
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(), role: 'assistant', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date()
+        }]);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),

@@ -498,7 +498,29 @@ async def get_feedback(chat_id: str, request: Request, db: Session = Depends(get
         return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
 
 
+@router.post("/guest")
+async def guest_chat(request: Request):
+    try:
+        data = await request.json()
+        user_msg = (data.get("message") or "").strip()
+        if not user_msg:
+            return JSONResponse(content={"success": True, "message": "Hello!"})
+            
+        # Call AI without saving to DB
+        ai_response, provider = await get_ai_response([{"role": "user", "content": user_msg}], BASE_SYSTEM_PROMPT)
+        
+        return JSONResponse(content={
+            "success": True,
+            "message": ai_response,
+            "chat_id": "guest",
+            "provider": provider
+        })
+    except Exception as e:
+        logging.error(f"Guest chat error: {e}")
+        return JSONResponse(status_code=500, content={"success": False, "message": "Server error"})
+
 @router.post("/send")
+
 async def send_message(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         data = await request.json()
