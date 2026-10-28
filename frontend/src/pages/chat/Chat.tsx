@@ -91,24 +91,28 @@ const Chat: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async (content: string) => {
+    const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
+    // ===== GUEST MODE LOGIC (BINA LOGIN) =====
     if (!token) {
       const count = parseInt(localStorage.getItem('guest_msg_count') || '0', 10);
+      
       if (count >= 5) {
         setMessages(prev => [...prev, {
           id: 'limit', role: 'assistant', content: 'You have reached the guest limit (5 messages). Please login or register to continue.', timestamp: new Date()
         }]);
         setIsLoading(false);
-        setTimeout(() => {
-          window.location.href = '/register';
-        }, 2000);
+        setTimeout(() => { window.location.href = '/register'; }, 2000);
         return;
       }
       
       localStorage.setItem('guest_msg_count', (count + 1).toString());
       setGuestMessagesLeft(Math.max(0, 5 - (count + 1)));
+      
+      const userMessage: Message = { id: Date.now().toString(), role: 'user', content, timestamp: new Date() };
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
       
       try {
         const response = await axios.post(`${API_URL}/chat/guest`, { message: content });
@@ -118,6 +122,7 @@ const Chat: React.FC = () => {
           }]);
         }
       } catch (error: any) {
+        console.error('Guest Chat Error:', error);
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(), role: 'assistant', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date()
         }]);
@@ -127,6 +132,7 @@ const Chat: React.FC = () => {
       return;
     }
 
+    // ===== NORMAL LOGGED-IN LOGIC =====
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -138,7 +144,7 @@ const Chat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post(
+      const response = await axios.post(
         `${API_URL}/chat/send`,
         { message: content, chat_id: currentChatId },
         {
@@ -151,29 +157,24 @@ const Chat: React.FC = () => {
 
       if (response.data.success) {
         if (response.data.chat_id) setCurrentChatId(response.data.chat_id);
-
-        const aiMessage: Message = {
+        setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: response.data.message,
           timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, aiMessage]);
+        }]);
       } else {
         throw new Error('Failed to get response');
       }
     } catch (error: any) {
       console.error('Chat error:', error);
-
       let errorText = 'Sorry, I encountered an error. Please try again.';
-
       if (error.response?.status === 401) {
         errorText = 'Session expired. Please login again.';
         setTimeout(() => { window.location.href = '/login'; }, 2000);
       } else if (error.response?.data?.message) {
         errorText = error.response.data.message;
       }
-
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -185,81 +186,7 @@ const Chat: React.FC = () => {
     }
   };
 
-  // ============= IMAGE UPLOAD + SEND (NEW) =============
-  const handleFileUpload = async (file: File, text: string) => {
-    setIsLoading(true);
-
-    try {
-      // 1. Upload image
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const uploadRes = await api.post(`${API_URL}/upload/image`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!uploadRes.data.success || !uploadRes.data.url) {
-        throw new Error(uploadRes.data.message || 'Upload failed');
-      }
-
-      const imageUrl: string = uploadRes.data.url;
-
-      // 2. Add user message with image
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        role: 'user',
-        content: text || '',
-        timestamp: new Date(),
-        imageUrl,
-      };
-      setMessages(prev => [...prev, userMessage]);
-
-      // 3. Send to backend with image_url
-      const chatRes = await api.post(
-        `${API_URL}/chat/send`,
-        {
-          message: text || '',
-          image_url: imageUrl,
-          chat_id: currentChatId,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (chatRes.data.success) {
-        if (chatRes.data.chat_id) setCurrentChatId(chatRes.data.chat_id);
-
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: chatRes.data.message,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, aiMessage]);
-      } else {
-        throw new Error('AI response failed');
-      }
-    } catch (error: any) {
-      console.error('Upload+send error:', error);
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Failed to process image. Please try again.',
-        timestamp: new Date(),
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegenerate = async () => {
+const handleRegenerate = async () => {
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
     if (!lastUserMessage) return;
 
