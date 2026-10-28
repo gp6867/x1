@@ -5,7 +5,7 @@ import MessageBubble from '../../components/chat/MessageBubble';
 import ChatInput from '../../components/chat/ChatInput';
 import Sidebar from '../../components/layout/Sidebar';
 import { useAuthStore } from '../../store/authStore';
-import api from '../../services/api';
+import axios from 'axios';
 
 interface Message {
   id: string;
@@ -25,6 +25,7 @@ const Chat: React.FC = () => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [feedbackMap, setFeedbackMap] = useState<Record<number, 'like' | 'dislike'>>({});
   const [guestMessagesLeft, setGuestMessagesLeft] = useState<number | null>(null);
+  
   const { user, token } = useAuthStore();
   const location = useLocation();
 
@@ -35,22 +36,41 @@ const Chat: React.FC = () => {
 
   const effectiveChatId = currentChatId || chatIdFromUrl;
 
+  // Track guest message count
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      const count = parseInt(localStorage.getItem('guest_msg_count') || '0', 10);
+      setGuestMessagesLeft(Math.max(0, 5 - count));
+    } else {
+      setGuestMessagesLeft(null);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) {
+      if (!chatIdFromUrl) {
+        setMessages([]);
+        setFeedbackMap({});
+      }
+      return;
+    }
+
     if (!chatIdFromUrl) {
       setCurrentChatId(null);
       setMessages([]);
       setFeedbackMap({});
       return;
     }
+
     loadChat(chatIdFromUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatIdFromUrl, token]);
 
   const loadChat = async (chatId: string) => {
-    if (!token) return;
+    if (!token) return; 
+    
     try {
-      const response = await api.get(`${API_URL}/chat/${chatId}`, {
+      const response = await axios.get(`${API_URL}/chat/${chatId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
@@ -68,14 +88,11 @@ const Chat: React.FC = () => {
         setMessages(loadedMessages);
 
         try {
-          const fbRes = await api.get(`${API_URL}/chat/feedback/${chatId}`, {
+          const fbRes = await axios.get(`${API_URL}/chat/feedback/${chatId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
-          if (fbRes.data?.success) {
-            setFeedbackMap(fbRes.data.feedback || {});
-          }
+          if (fbRes.data?.success) setFeedbackMap(fbRes.data.feedback || {});
         } catch (fbErr) {
-          console.warn('Feedback load failed:', fbErr);
           setFeedbackMap({});
         }
       } else {
@@ -91,10 +108,10 @@ const Chat: React.FC = () => {
     }
   };
 
-    const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
-    // ===== GUEST MODE LOGIC (BINA LOGIN) =====
+    // GUEST MODE
     if (!token) {
       const count = parseInt(localStorage.getItem('guest_msg_count') || '0', 10);
       
@@ -102,7 +119,6 @@ const Chat: React.FC = () => {
         setMessages(prev => [...prev, {
           id: 'limit', role: 'assistant', content: 'You have reached the guest limit (5 messages). Please login or register to continue.', timestamp: new Date()
         }]);
-        setIsLoading(false);
         setTimeout(() => { window.location.href = '/register'; }, 2000);
         return;
       }
@@ -122,7 +138,6 @@ const Chat: React.FC = () => {
           }]);
         }
       } catch (error: any) {
-        console.error('Guest Chat Error:', error);
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(), role: 'assistant', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date()
         }]);
@@ -132,61 +147,36 @@ const Chat: React.FC = () => {
       return;
     }
 
-    // ===== NORMAL LOGGED-IN LOGIC =====
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content,
-      timestamp: new Date(),
-    };
-
+    // NORMAL LOGGED-IN
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        `${API_URL}/chat/send`,
-        { message: content, chat_id: currentChatId },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL}/chat/send`, { message: content, chat_id: currentChatId }, {
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+      });
 
       if (response.data.success) {
         if (response.data.chat_id) setCurrentChatId(response.data.chat_id);
         setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: response.data.message,
-          timestamp: new Date(),
+          id: (Date.now() + 1).toString(), role: 'assistant', content: response.data.message, timestamp: new Date()
         }]);
-      } else {
-        throw new Error('Failed to get response');
       }
     } catch (error: any) {
-      console.error('Chat error:', error);
       let errorText = 'Sorry, I encountered an error. Please try again.';
       if (error.response?.status === 401) {
         errorText = 'Session expired. Please login again.';
         setTimeout(() => { window.location.href = '/login'; }, 2000);
-      } else if (error.response?.data?.message) {
-        errorText = error.response.data.message;
       }
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: errorText,
-        timestamp: new Date(),
-      }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: errorText, timestamp: new Date() }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-const handleRegenerate = async () => {
+  const handleRegenerate = async () => {
+    if (!token) return;
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
     if (!lastUserMessage) return;
 
@@ -201,35 +191,49 @@ const handleRegenerate = async () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post(
-        `${API_URL}/chat/send`,
-        { message: lastUserMessage.content, chat_id: currentChatId },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL}/chat/send`, { message: lastUserMessage.content, chat_id: currentChatId }, {
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+      });
 
       if (response.data.success) {
         if (response.data.chat_id) setCurrentChatId(response.data.chat_id);
         setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: response.data.message,
-          timestamp: new Date(),
+          id: (Date.now() + 1).toString(), role: 'assistant', content: response.data.message, timestamp: new Date()
         }]);
-      } else {
-        throw new Error('Failed to regenerate');
       }
     } catch (error) {
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Failed to regenerate response. Please try again.',
-        timestamp: new Date(),
-      }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: 'Failed to regenerate response.', timestamp: new Date() }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (file: File, text: string) => {
+    if (!token) return;
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadRes = await axios.post(`${API_URL}/upload/image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!uploadRes.data.success || !uploadRes.data.url) throw new Error('Upload failed');
+      const imageUrl = uploadRes.data.url;
+
+      const userMessage: Message = { id: Date.now().toString(), role: 'user', content: text || '', timestamp: new Date(), imageUrl };
+      setMessages(prev => [...prev, userMessage]);
+
+      const chatRes = await axios.post(`${API_URL}/chat/send`, { message: text || 'What is in this image?', image_url: imageUrl, chat_id: currentChatId }, {
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+      });
+
+      if (chatRes.data.success) {
+        if (chatRes.data.chat_id) setCurrentChatId(chatRes.data.chat_id);
+        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: chatRes.data.message, timestamp: new Date() }]);
+      }
+    } catch (error) {
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: 'Failed to process image.', timestamp: new Date() }]);
     } finally {
       setIsLoading(false);
     }
@@ -243,63 +247,30 @@ const handleRegenerate = async () => {
   return (
     <div className={`app ${isDarkMode ? 'dark' : ''}`}>
       <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
-
       <div className="main-content">
-        <ChatHeader
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          onThemeToggle={toggleTheme}
-          isDarkMode={isDarkMode}
-          userName={user?.name}
-        />
-
+        <ChatHeader onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} onThemeToggle={toggleTheme} isDarkMode={isDarkMode} userName={user?.name} />
         <div className="messages-container">
           {messages.length === 0 && !isLoading && (
-            <MessageBubble
-              content="Hello! How can I help you today?"
-              role="assistant"
-              timestamp={new Date()}
-              chatId={null}
-              messageIndex={undefined}
-              initialFeedback={null}
-            />
+            <MessageBubble content="Hello! How can I help you today?" role="assistant" timestamp={new Date()} chatId={null} messageIndex={undefined} initialFeedback={null} />
           )}
-
           {messages.map((message, index) => (
-            <MessageBubble
-              key={message.id}
-              content={message.content}
-              role={message.role}
-              timestamp={message.timestamp}
-              imageUrl={message.imageUrl}
-              chatId={effectiveChatId}
-              messageIndex={message.role === 'assistant' ? index : undefined}
-              initialFeedback={feedbackMap[index] || null}
-              onRegenerate={message.role === 'assistant' ? handleRegenerate : undefined}
-            />
+            <MessageBubble key={message.id} content={message.content} role={message.role} timestamp={message.timestamp} imageUrl={message.imageUrl} chatId={effectiveChatId} messageIndex={message.role === 'assistant' ? index : undefined} initialFeedback={feedbackMap[index] || null} onRegenerate={message.role === 'assistant' ? handleRegenerate : undefined} />
           ))}
-
           {isLoading && (
             <div className="message-wrapper assistant">
               <div className="message-content">
-                <div className="avatar assistant">
-                  <span>AI</span>
-                </div>
-                <div className="message-bubble">
-                  <div className="thinking">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                </div>
+                <div className="avatar assistant"><span>AI</span></div>
+                <div className="message-bubble"><div className="thinking"><span></span><span></span><span></span></div></div>
               </div>
             </div>
           )}
         </div>
-
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          onFileUpload={handleFileUpload}
-        />
+        {!token && guestMessagesLeft !== null && (
+          <div className="bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200 dark:border-amber-800 px-4 py-2 text-center text-sm text-amber-800 dark:text-amber-400">
+            You have <strong>{guestMessagesLeft} free messages</strong> left. <a href="/register" className="underline font-medium hover:text-amber-900">Sign up</a> to save your chats and get 30/day.
+          </div>
+        )}
+        <ChatInput onSendMessage={handleSendMessage} onFileUpload={handleFileUpload} />
       </div>
     </div>
   );
