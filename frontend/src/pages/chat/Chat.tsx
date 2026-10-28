@@ -24,7 +24,6 @@ const Chat: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [feedbackMap, setFeedbackMap] = useState<Record<number, 'like' | 'dislike'>>({});
-  const [guestMessagesLeft, setGuestMessagesLeft] = useState<number | null>(null);
   
   const { user, token } = useAuthStore();
   const location = useLocation();
@@ -35,16 +34,6 @@ const Chat: React.FC = () => {
   })();
 
   const effectiveChatId = currentChatId || chatIdFromUrl;
-
-  // Track guest message count
-  useEffect(() => {
-    if (!token) {
-      const count = parseInt(localStorage.getItem('guest_msg_count') || '0', 10);
-      setGuestMessagesLeft(Math.max(0, 5 - count));
-    } else {
-      setGuestMessagesLeft(null);
-    }
-  }, [token]);
 
   useEffect(() => {
     if (!token) {
@@ -111,43 +100,46 @@ const Chat: React.FC = () => {
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
-    // GUEST MODE
+    // ===== GUEST MODE LOGIC (BINA LOGIN) =====
     if (!token) {
       const count = parseInt(localStorage.getItem('guest_msg_count') || '0', 10);
       
+      // Agar 5 message pure ho gaye
       if (count >= 5) {
-        setMessages(prev => [...prev, {
-          id: 'limit', role: 'assistant', content: 'You have reached the guest limit (5 messages). Please login or register to continue.', timestamp: new Date()
-        }]);
-        setTimeout(() => { window.location.href = '/register'; }, 2000);
+        alert("You have reached the limit of 5 free messages. Please login or register to continue.");
+        window.location.href = '/register';
         return;
       }
       
+      // Message count badhao
       localStorage.setItem('guest_msg_count', (count + 1).toString());
-      setGuestMessagesLeft(Math.max(0, 5 - (count + 1)));
       
+      // UI mein user ka message dikhao
       const userMessage: Message = { id: Date.now().toString(), role: 'user', content, timestamp: new Date() };
       setMessages(prev => [...prev, userMessage]);
       setIsLoading(true);
       
       try {
+        // GUEST API par call karo (bina token ke)
         const response = await axios.post(`${API_URL}/chat/guest`, { message: content });
+        
         if (response.data.success) {
           setMessages(prev => [...prev, {
             id: (Date.now() + 1).toString(), role: 'assistant', content: response.data.message, timestamp: new Date()
           }]);
         }
       } catch (error: any) {
+        console.error('Guest Chat Error:', error);
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(), role: 'assistant', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date()
         }]);
       } finally {
         setIsLoading(false);
       }
-      return;
+      return; // Important: Yahan se wapas jao
     }
 
-    // NORMAL LOGGED-IN
+    // ===== NORMAL LOGGED-IN LOGIC =====
     const userMessage: Message = { id: Date.now().toString(), role: 'user', content, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
@@ -265,11 +257,9 @@ const Chat: React.FC = () => {
             </div>
           )}
         </div>
-        {!token && guestMessagesLeft !== null && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200 dark:border-amber-800 px-4 py-2 text-center text-sm text-amber-800 dark:text-amber-400">
-            You have <strong>{guestMessagesLeft} free messages</strong> left. <a href="/register" className="underline font-medium hover:text-amber-900">Sign up</a> to save your chats and get 30/day.
-          </div>
-        )}
+        
+        {/* Banner removed as requested */}
+        
         <ChatInput onSendMessage={handleSendMessage} onFileUpload={handleFileUpload} />
       </div>
     </div>
