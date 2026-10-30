@@ -13,6 +13,11 @@ Allow: /about
 Allow: /privacy
 Allow: /terms
 Allow: /contact
+
+# ✅ Allow the main chat page for guest chat SEO
+Allow: /chat$
+
+# ❌ Block specific private chat histories (e.g., /chat/1234-abcd)
 Disallow: /chat/
 Disallow: /settings/
 Disallow: /api/
