@@ -5,6 +5,7 @@ import MessageBubble from '../../components/chat/MessageBubble';
 import ChatInput from '../../components/chat/ChatInput';
 import Sidebar from '../../components/layout/Sidebar';
 import { useAuthStore } from '../../store/authStore';
+import SEO from '../../components/SEO';
 import axios from 'axios';
 
 interface Message {
@@ -104,23 +105,19 @@ const Chat: React.FC = () => {
     if (!token) {
       const count = parseInt(localStorage.getItem('guest_msg_count') || '0', 10);
       
-      // Agar 5 message pure ho gaye
       if (count >= 5) {
         alert("You have reached the limit of 5 free messages. Please login or register to continue.");
         window.location.href = '/register';
         return;
       }
       
-      // Message count badhao
       localStorage.setItem('guest_msg_count', (count + 1).toString());
       
-      // UI mein user ka message dikhao
       const userMessage: Message = { id: Date.now().toString(), role: 'user', content, timestamp: new Date() };
       setMessages(prev => [...prev, userMessage]);
       setIsLoading(true);
       
       try {
-        // GUEST API par call karo (bina token ke)
         const response = await axios.post(`${API_URL}/chat/guest`, { message: content });
         
         if (response.data.success) {
@@ -136,7 +133,7 @@ const Chat: React.FC = () => {
       } finally {
         setIsLoading(false);
       }
-      return; // Important: Yahan se wapas jao
+      return;
     }
 
     // ===== NORMAL LOGGED-IN LOGIC =====
@@ -237,32 +234,38 @@ const Chat: React.FC = () => {
   };
 
   return (
-    <div className={`app ${isDarkMode ? 'dark' : ''}`}>
-      <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <div className="main-content">
-        <ChatHeader onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} onThemeToggle={toggleTheme} isDarkMode={isDarkMode} userName={user?.name} />
-        <div className="messages-container">
-          {messages.length === 0 && !isLoading && (
-            <MessageBubble content="Hello! How can I help you today?" role="assistant" timestamp={new Date()} chatId={null} messageIndex={undefined} initialFeedback={null} />
-          )}
-          {messages.map((message, index) => (
-            <MessageBubble key={message.id} content={message.content} role={message.role} timestamp={message.timestamp} imageUrl={message.imageUrl} chatId={effectiveChatId} messageIndex={message.role === 'assistant' ? index : undefined} initialFeedback={feedbackMap[index] || null} onRegenerate={message.role === 'assistant' ? handleRegenerate : undefined} />
-          ))}
-          {isLoading && (
-            <div className="message-wrapper assistant">
-              <div className="message-content">
-                <div className="avatar assistant"><span>AI</span></div>
-                <div className="message-bubble"><div className="thinking"><span></span><span></span><span></span></div></div>
+    <>
+      <SEO
+        title="Chat with MonsterX AI — Free AI Assistant"
+        description="Chat with MonsterX AI. Real memory, coding agent, and image vision. Start free without a credit card."
+        canonical="https://www.xoneai.in/chat"
+        robots={chatIdFromUrl ? "noindex, follow" : "index, follow"}
+      />
+      <div className={`app ${isDarkMode ? 'dark' : ''}`}>
+        <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <div className="main-content">
+          <ChatHeader onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} onThemeToggle={toggleTheme} isDarkMode={isDarkMode} userName={user?.name} />
+          <div className="messages-container">
+            {messages.length === 0 && !isLoading && (
+              <MessageBubble content="Hello! How can I help you today?" role="assistant" timestamp={new Date()} chatId={null} messageIndex={undefined} initialFeedback={null} />
+            )}
+            {messages.map((message, index) => (
+              <MessageBubble key={message.id} content={message.content} role={message.role} timestamp={message.timestamp} imageUrl={message.imageUrl} chatId={effectiveChatId} messageIndex={message.role === 'assistant' ? index : undefined} initialFeedback={feedbackMap[index] || null} onRegenerate={message.role === 'assistant' ? handleRegenerate : undefined} />
+            ))}
+            {isLoading && (
+              <div className="message-wrapper assistant">
+                <div className="message-content">
+                  <div className="avatar assistant"><span>AI</span></div>
+                  <div className="message-bubble"><div className="thinking"><span></span><span></span><span></span></div></div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          
+          <ChatInput onSendMessage={handleSendMessage} onFileUpload={handleFileUpload} />
         </div>
-        
-        {/* Banner removed as requested */}
-        
-        <ChatInput onSendMessage={handleSendMessage} onFileUpload={handleFileUpload} />
       </div>
-    </div>
+    </>
   );
 };
 
