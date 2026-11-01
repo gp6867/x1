@@ -2425,3 +2425,65 @@ html {
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
 }
+
+/* ===== BLOG ARTICLE CUSTOM STYLING ===== */
+.blog-article-content {
+  color: #334155; /* Light mode text */
+  font-size: 1.125rem;
+  line-height: 1.8;
+}
+
+.dark .blog-article-content {
+  color: #cbd5e1; /* Dark mode text (light gray) */
+}
+
+.blog-article-content h1,
+.blog-article-content h2,
+.blog-article-content h3 {
+  color: #0f172a;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.dark .blog-article-content h1,
+.dark .blog-article-content h2,
+.dark .blog-article-content h3 {
+  color: #f8fafc;
+}
+
+.blog-article-content h2 { font-size: 1.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+.dark .blog-article-content h2 { border-bottom-color: #334155; }
+.blog-article-content h3 { font-size: 1.4rem; }
+
+.blog-article-content p {
+  margin-bottom: 1.5rem;
+}
+
+.blog-article-content ul, 
+.blog-article-content ol {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.blog-article-content li {
+  margin-bottom: 0.5rem;
+}
+
+.blog-article-content a {
+  color: #10a37f;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.blog-article-content a:hover {
+  color: #0e8c6d;
+}
+
+.blog-article-content strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+.dark .blog-article-content strong {
+  color: #f8fafc;
+}

@@ -15,9 +15,9 @@ const BlogPost: React.FC = () => {
 
   if (!post) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Post not found</h1>
+          <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">Post not found</h1>
           <button onClick={() => navigate('/blog')} className="text-emerald-600 hover:underline">
             ← Back to Blog
           </button>
@@ -47,11 +47,11 @@ const BlogPost: React.FC = () => {
 
         <main className="max-w-3xl mx-auto px-6 py-12 md:py-20">
           {/* Article Header */}
-          <div className="mb-10 text-center">
+          <div className="mb-10 text-center border-b border-slate-200 dark:border-slate-800 pb-8">
             <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-600 mb-4 uppercase tracking-wider">
               {post.category}
             </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-6 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-6 leading-tight">
               {post.title}
             </h1>
             <div className="flex items-center justify-center gap-6 text-sm text-slate-500 flex-wrap">
@@ -61,15 +61,15 @@ const BlogPost: React.FC = () => {
             </div>
           </div>
 
-          {/* Article Content (Markdown) */}
-          <div className="markdown-content prose prose-slate dark:prose-invert max-w-none">
+          {/* Article Content (Markdown with Custom CSS) */}
+          <div className="blog-article-content">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {post.content}
             </ReactMarkdown>
           </div>
 
           {/* CTA at the end of article */}
-          <div className="mt-16 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-8 text-center text-white">
+          <div className="mt-16 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-8 text-center text-white shadow-xl">
             <h3 className="text-xl font-bold mb-2">Try MonsterX AI for Free</h3>
             <p className="text-emerald-50 mb-4 text-sm">30 messages/day. No credit card required.</p>
             <button onClick={() => navigate('/chat')} className="bg-white text-emerald-700 px-6 py-2.5 rounded-lg font-bold hover:bg-emerald-50 transition">
