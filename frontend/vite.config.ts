@@ -10,40 +10,81 @@ export default defineConfig({
       routes: [
         {
           path: '/',
-          tags: {
-            title: 'MonsterX AI — Your Intelligent AI Assistant | Xone AI',
-            description: 'Meet MonsterX AI, the powerful AI assistant by Xone AI. Chat, generate images, and get instant smart answers — all in one place.',
-            canonical: 'https://www.xoneai.in/',
-            robots: 'index, follow',
+          tags: { 
+            title: 'MonsterX AI by Xone AI — Advanced AI Chat', 
+            description: 'Your AI that actually remembers you. Free AI chat with coding agent and image vision.' 
           },
         },
         {
-          path: '/login',
-          tags: {
-            title: 'Login to MonsterX AI | Xone AI',
-            description: 'Sign in to your Xone AI account and chat with MonsterX AI — your personal AI assistant.',
-            canonical: 'https://www.xoneai.in/login',
-            robots: 'noindex, follow',
+          path: '/home',
+          tags: { 
+            title: 'MonsterX AI — AI with Memory & Coding Agent', 
+            description: 'Free AI assistant with real persistent memory across chats. No credit card required.' 
           },
         },
         {
-          path: '/register',
-          tags: {
-            title: 'Create Your MonsterX AI Account | Xone AI',
-            description: 'Create a free Xone AI account and start chatting with MonsterX AI today.',
-            canonical: 'https://www.xoneai.in/register',
-            robots: 'noindex, follow',
+          path: '/chat',
+          tags: { 
+            title: 'Chat with MonsterX AI — Free AI Assistant', 
+            description: 'Chat with MonsterX AI. Real memory, coding agent, and image vision. Start free.' 
           },
         },
         {
           path: '/pricing',
-          tags: {
-            title: 'Pricing — MonsterX AI Plans | Xone AI',
-            description: 'Choose the perfect MonsterX AI plan for your needs. Flexible pricing for individuals and teams.',
-            canonical: 'https://www.xoneai.in/pricing',
-            robots: 'index, follow',
+          tags: { 
+            title: 'Pricing — MonsterX AI', 
+            description: 'Simple, honest pricing. Start free with 30 messages a day. Premium plans coming soon.' 
           },
         },
+        {
+          path: '/blog',
+          tags: { 
+            title: 'Blog — MonsterX AI', 
+            description: 'Tutorials, comparisons, and productivity tips for MonsterX AI.' 
+          },
+        },
+        {
+          path: '/compare/monsterx-vs-chatgpt',
+          tags: { 
+            title: 'MonsterX AI vs ChatGPT: Which is Better in 2026?', 
+            description: 'An honest comparison between MonsterX AI and ChatGPT. Compare pricing, memory, and coding capabilities.' 
+          },
+        },
+        {
+          path: '/alternatives/chatgpt',
+          tags: { 
+            title: 'Best ChatGPT Alternatives in 2026: Top 4 Picks', 
+            description: 'Looking for a ChatGPT alternative? Compare MonsterX AI, Claude, Gemini, and DeepSeek.' 
+          },
+        },
+        {
+          path: '/about',
+          tags: { 
+            title: 'About Us — MonsterX AI', 
+            description: 'Learn about Xone AI, the team behind MonsterX AI — an advanced, memory-powered AI assistant.' 
+          },
+        },
+        {
+          path: '/contact',
+          tags: { 
+            title: 'Contact & Support — MonsterX AI', 
+            description: 'Get in touch with the Xone AI team. Email support and business inquiries.' 
+          },
+        },
+        {
+          path: '/privacy',
+          tags: { 
+            title: 'Privacy Policy — MonsterX AI', 
+            description: 'Learn how Xone AI collects, uses, and protects your data on MonsterX AI.' 
+          },
+        },
+        {
+          path: '/terms',
+          tags: { 
+            title: 'Terms of Service — MonsterX AI', 
+            description: 'Terms of Service for using MonsterX AI by Xone AI.' 
+          },
+        }
       ],
     }),
   ],
