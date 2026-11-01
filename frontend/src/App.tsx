@@ -5,6 +5,7 @@ import { trackPageView } from './utils/analytics';
 // Core Pages
 import Home from './pages/Home';
 import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost'; // ✅ New Article Page Added
 import Pricing from './pages/Pricing';
 import Contact from './pages/Contact';
 import Privacy from './pages/Privacy';
@@ -49,6 +50,7 @@ function App() {
         <Route path="/" element={<Navigate to="/chat" replace />} />
         <Route path="/home" element={<Home />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} /> {/* ✅ New Route */}
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/privacy" element={<Privacy />} />
