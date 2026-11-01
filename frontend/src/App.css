@@ -2414,3 +2414,14 @@ html {
 .code-block-wrapper {
   overflow-x: hidden !important;
 }
+
+/* ===== CLS PREVENTION: Font Display Swap ===== */
+@font-face {
+  font-family: 'Inter';
+  font-display: swap;
+  src: local('Inter'), local('sans-serif');
+}
+/* Fallback for system fonts */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
