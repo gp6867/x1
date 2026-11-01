@@ -61,8 +61,8 @@ const BlogPost: React.FC = () => {
             </div>
           </div>
 
-          {/* Article Content (Markdown with Custom CSS) */}
-          <div className="blog-article-content">
+          {/* Article Content (Markdown with Custom CSS & Tailwind classes) */}
+          <div className="blog-article-content text-slate-700 dark:text-slate-300">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {post.content}
             </ReactMarkdown>

@@ -2487,3 +2487,68 @@ body {
 .dark .blog-article-content strong {
   color: #f8fafc;
 }
+
+/* ===== BLOG ARTICLE 100% FORCEFUL STYLING ===== */
+.blog-article-content {
+  color: #334155 !important; /* Light mode text */
+  font-size: 1.125rem !important;
+  line-height: 1.8 !important;
+}
+
+.dark .blog-article-content {
+  color: #cbd5e1 !important; /* Dark mode text (Light gray) */
+}
+
+.blog-article-content p {
+  color: #334155 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.dark .blog-article-content p {
+  color: #cbd5e1 !important;
+}
+
+.blog-article-content h1,
+.blog-article-content h2,
+.blog-article-content h3 {
+  color: #0f172a !important; /* Dark headings for light mode */
+  font-weight: 700 !important;
+  margin-top: 2.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.dark .blog-article-content h1,
+.dark .blog-article-content h2,
+.dark .blog-article-content h3 {
+  color: #ffffff !important; /* White headings for dark mode */
+}
+
+.blog-article-content h2 { 
+  font-size: 1.75rem !important; 
+  border-bottom: 1px solid #e2e8f0 !important; 
+  padding-bottom: 0.5rem !important; 
+}
+
+.dark .blog-article-content h2 { 
+  border-bottom-color: #334155 !important; 
+}
+
+.blog-article-content strong {
+  color: #0f172a !important;
+}
+
+.dark .blog-article-content strong {
+  color: #ffffff !important;
+}
+
+.blog-article-content blockquote {
+  border-left: 4px solid #10a37f !important;
+  padding-left: 1rem !important;
+  color: #475569 !important;
+  font-style: italic !important;
+  margin: 1.5rem 0 !important;
+}
+
+.dark .blog-article-content blockquote {
+  color: #94a3b8 !important;
+}
