@@ -219,6 +219,23 @@ const Home: React.FC = () => {
           </div>
         </section>
 
+        {/* Internal Linking to Comparison Pages */}
+        <section className="max-w-6xl mx-auto px-6 py-4">
+          <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center">
+            <p className="text-slate-700 dark:text-slate-300 mb-3 text-sm">
+              Wondering how MonsterX AI compares to ChatGPT or other tools?
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link to="/compare/monsterx-vs-chatgpt" className="inline-flex items-center gap-2 text-emerald-600 font-semibold hover:underline text-sm">
+                Read the MonsterX vs ChatGPT comparison →
+              </Link>
+              <Link to="/alternatives/chatgpt" className="inline-flex items-center gap-2 text-emerald-600 font-semibold hover:underline text-sm">
+                View the best ChatGPT alternatives →
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Pricing preview */}
         <section className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
           <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
