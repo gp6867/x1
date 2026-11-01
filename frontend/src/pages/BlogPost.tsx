@@ -61,9 +61,24 @@ const BlogPost: React.FC = () => {
             </div>
           </div>
 
-          {/* Article Content (Markdown with Custom CSS & Tailwind classes) */}
-          <div className="blog-article-content text-slate-700 dark:text-slate-300">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {/* Article Content (React Markdown with Tailwind Components for perfect readability) */}
+          <div className="text-base">
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({node, ...props}) => <h1 className="text-2xl md:text-3xl font-bold mt-10 mb-4 text-slate-900 dark:text-white" {...props} />,
+                h2: ({node, ...props}) => <h2 className="text-xl md:text-2xl font-bold mt-8 mb-4 pb-2 border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white" {...props} />,
+                h3: ({node, ...props}) => <h3 className="text-lg font-bold mt-6 mb-3 text-slate-900 dark:text-white" {...props} />,
+                p: ({node, ...props}) => <p className="mb-5 leading-relaxed text-slate-700 dark:text-slate-300" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-5 text-slate-700 dark:text-slate-300 space-y-2" {...props} />,
+                ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-5 text-slate-700 dark:text-slate-300 space-y-2" {...props} />,
+                li: ({node, ...props}) => <li className="pl-1 leading-relaxed" {...props} />,
+                strong: ({node, ...props}) => <strong className="font-bold text-slate-900 dark:text-white" {...props} />,
+                blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-emerald-500 pl-4 py-2 my-6 italic text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-r-lg" {...props} />,
+                a: ({node, ...props}) => <a className="text-emerald-600 hover:underline font-medium" {...props} />,
+                code: ({node, ...props}) => <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-600 dark:text-emerald-400" {...props} />
+              }}
+            >
               {post.content}
             </ReactMarkdown>
           </div>

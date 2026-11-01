@@ -22,12 +22,12 @@
     <link rel="shortcut icon" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- ===== LCP OPTIMIZATION (ADDED) ===== -->
+    <!-- ===== LCP OPTIMIZATION ===== -->
     <link rel="preload" href="/favicon-192.png" as="image" fetchpriority="high" />
 
-    <!-- ===== PRIMARY META TAGS ===== -->
-    <title>MonsterX AI by Xone AI — Advanced AI Chat, Coding Agent & Deep Search</title>
-    <meta name="description" content="MonsterX AI by Xone AI is an advanced AI assistant with AI chat, coding agent, deep search, AI skills, and AI image generation. A powerful Claude, Gemini & ChatGPT alternative from Xone AI." />
+    <!-- ===== PRIMARY META TAGS (Bing Fix: Description ~150 chars) ===== -->
+    <title>MonsterX AI by Xone AI — Advanced AI Chat & Coding Agent</title>
+    <meta name="description" content="MonsterX AI is a free AI assistant with real memory, coding agent, and image vision. A powerful Claude & ChatGPT alternative by Xone AI." />
     <meta name="keywords" content="MonsterX AI, Xone AI, MonsterX AI by Xone AI, AI chat, AI assistant, conversational AI, generative AI, coding agent, AI coding assistant, AI code generator, code debugger, deep search, AI deep research, AI research assistant, AI skills, AI tools, AI skill platform, Claude alternative, Gemini alternative, ChatGPT alternative, large language model, LLM, artificial intelligence, AI chatbot, best AI assistant, AI image generation, Xone AI platform, MonsterX AI platform, AI tools 2026" />
     <meta name="author" content="Xone AI" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -217,7 +217,12 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- ✅ STATIC H1 FOR BING CRAWLERS (React will replace this) -->
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif;">
+        <h1>MonsterX AI — Advanced AI Chat Assistant</h1>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
