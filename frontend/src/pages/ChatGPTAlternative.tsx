@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, ArrowRight, Star, Zap, Brain } from 'lucide-react';
+import { ArrowLeft, Check, X, ArrowRight, Star } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
 
@@ -11,9 +11,9 @@ const ChatGPTAlternative: React.FC = () => {
     {
       name: 'MonsterX AI',
       tagline: 'Best for free memory & coding',
-      description: 'A free AI assistant with persistent memory, a coding agent, and image vision. Built by an indie developer. No credit card required.',
-      pros: ['Free tier with 30 messages/day', 'Persistent memory across all chats', 'Dedicated coding agent', 'Image analysis'],
-      cons: ['Newer platform (less established)', 'No DALL-E image generation'],
+      description: 'A free AI assistant with persistent memory, a coding agent, and image vision. Built by an indie developer.',
+      pros: ['Free tier with 30 messages/day', 'Persistent memory across all chats', 'Dedicated coding agent'],
+      cons: ['Newer platform', 'No DALL-E image generation'],
       isTop: true
     },
     {
@@ -46,9 +46,9 @@ const ChatGPTAlternative: React.FC = () => {
     <>
       <SEO
         title="Best ChatGPT Alternatives in 2026: Top 4 Picks"
-        description="Looking for a ChatGPT alternative? Compare MonsterX AI, Claude, Gemini, and DeepSeek. Find the best free AI assistant for coding, writing, and everyday tasks."
+        description="Looking for a ChatGPT alternative? Compare MonsterX AI, Claude, Gemini, and DeepSeek. Find the best free AI assistant."
         canonical="https://www.xoneai.in/alternatives/chatgpt"
-        keywords="ChatGPT alternatives, best ChatGPT alternative 2026, free AI assistant, MonsterX AI vs ChatGPT"
+        keywords="ChatGPT alternatives, best ChatGPT alternative 2026, free AI assistant"
       />
 
       <div className="h-screen overflow-y-auto bg-white dark:bg-slate-950">
@@ -91,9 +91,7 @@ const ChatGPTAlternative: React.FC = () => {
                       </button>
                     )}
                   </div>
-                  
                   <p className="text-slate-600 dark:text-slate-400 mb-6">{alt.description}</p>
-
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
@@ -125,29 +123,6 @@ const ChatGPTAlternative: React.FC = () => {
             ))}
           </div>
 
-          {/* Why MonsterX is different */}
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-8 md:p-12 border border-slate-200 dark:border-slate-800 mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Why MonsterX AI is different</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div>
-                <Brain className="w-8 h-8 text-emerald-600 mb-3" />
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Real Memory</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">It remembers your projects, code, and preferences across every chat — something ChatGPT only partially does.</p>
-              </div>
-              <div>
-                <Zap className="w-8 h-8 text-emerald-600 mb-3" />
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Truly Free</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">30 messages per day, no credit card. ChatGPT requires $20/month for the best experience.</p>
-              </div>
-              <div>
-                <Check className="w-8 h-8 text-emerald-600 mb-3" />
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Built for Developers</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">A dedicated coding agent with syntax highlighting, copy buttons, and debugging support.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA */}
           <div className="text-center">
             <button onClick={() => navigate('/chat')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl font-bold transition shadow-lg shadow-emerald-600/20 inline-flex items-center gap-2 text-lg">
               Start Chatting Free <ArrowRight size={20} />
