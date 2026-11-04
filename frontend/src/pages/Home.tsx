@@ -236,6 +236,17 @@ const Home: React.FC = () => {
           </div>
         </section>
 
+        {/* Free Tools */}
+        <section className="max-w-6xl mx-auto px-6 py-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center shadow-sm">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Free AI Tools</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Try our free tools. No login required.</p>
+            <Link to="/tools/python-error-fixer" className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition border border-emerald-200 dark:border-emerald-800">
+              🐍 Python Error Fixer →
+            </Link>
+          </div>
+        </section>
+
         {/* Pricing preview */}
         <section className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
           <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
