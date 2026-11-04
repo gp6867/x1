@@ -19,6 +19,8 @@ const About = lazy(() => import('./pages/About'));
 const Terms = lazy(() => import('./pages/Terms'));
 const CompareChatGPT = lazy(() => import('./pages/CompareChatGPT'));
 const ChatGPTAlternative = lazy(() => import('./pages/ChatGPTAlternative'));
+const PillarGuide = lazy(() => import('./pages/PillarGuide'));
+const ToolPythonFixer = lazy(() => import('./pages/ToolPythonFixer')); // ✅ New Tool
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const OAuthCallback = lazy(() => import('./pages/oauth/Callback'));
 const AIVideo = lazy(() => import('./pages/ai/AIVideo'));
@@ -61,9 +63,11 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/terms" element={<Terms />} />
           
-          {/* Comparison & Alternatives */}
+          {/* SEO Tools & Guides */}
           <Route path="/compare/monsterx-vs-chatgpt" element={<CompareChatGPT />} />
           <Route path="/alternatives/chatgpt" element={<ChatGPTAlternative />} />
+          <Route path="/guides/ai-coding-assistants" element={<PillarGuide />} />
+          <Route path="/tools/python-error-fixer" element={<ToolPythonFixer />} /> {/* ✅ New Tool Route */}
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />
