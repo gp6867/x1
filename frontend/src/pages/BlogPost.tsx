@@ -26,6 +26,34 @@ const BlogPost: React.FC = () => {
     );
   }
 
+  // ✅ Claude/ChatGPT Level: BlogPosting Schema for AI Search
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    author: {
+      '@type': 'Person',
+      name: post.author,
+      url: 'https://www.xoneai.in/about'
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'MonsterX AI',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.xoneai.in/favicon-512.png'
+      }
+    },
+    datePublished: post.date,
+    dateModified: post.date, // Future updates ke liye
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://www.xoneai.in/blog/${post.slug}`
+    },
+    image: 'https://www.xoneai.in/og-image.png'
+  };
+
   return (
     <>
       <SEO
@@ -33,6 +61,7 @@ const BlogPost: React.FC = () => {
         description={post.excerpt}
         canonical={`https://www.xoneai.in/blog/${post.slug}`}
         type="article"
+        schema={articleSchema} // ✅ Schema passed to Helmet
       />
 
       <div className="h-screen overflow-y-auto bg-white dark:bg-slate-950">
@@ -61,7 +90,7 @@ const BlogPost: React.FC = () => {
             </div>
           </div>
 
-          {/* Article Content (React Markdown with Tailwind Components for perfect readability) */}
+          {/* Article Content (React Markdown with Tailwind Components) */}
           <div className="text-base">
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}

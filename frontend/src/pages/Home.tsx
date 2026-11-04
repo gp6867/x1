@@ -55,7 +55,7 @@ const Home: React.FC = () => {
         <header className="border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md">
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
             <Link to="/home" className="flex items-center gap-2.5">
-              <img src="/favicon-192.png" alt="MonsterX AI" className="w-9 h-9 rounded-lg" />
+              <img src="/favicon-192.png" alt="MonsterX AI - Advanced AI Chat Assistant Logo" className="w-9 h-9 rounded-lg" />
               <div>
                 <div className="font-bold text-slate-900 dark:text-white text-sm leading-tight">MonsterX AI</div>
                 <div className="text-xs text-slate-500 leading-tight">by Xone AI</div>
