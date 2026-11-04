@@ -28,6 +28,7 @@ const Footer: React.FC = () => {
               <li><Link to="/chat" className="hover:text-emerald-600 transition">Chat</Link></li>
               <li><Link to="/pricing" className="hover:text-emerald-600 transition">Pricing</Link></li>
               <li><Link to="/blog" className="hover:text-emerald-600 transition">Blog</Link></li>
+              <li><Link to="/tools/python-error-fixer" className="hover:text-emerald-600 transition">Python Fixer</Link></li>
             </ul>
           </div>
 

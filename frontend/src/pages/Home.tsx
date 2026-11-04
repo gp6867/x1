@@ -66,6 +66,7 @@ const Home: React.FC = () => {
               <Link to="/blog" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Blog</Link>
               <Link to="/pricing" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Pricing</Link>
               <Link to="/contact" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Contact</Link>
+              <Link to="/tools/python-error-fixer" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Python Fixer</Link>
             </nav>
             <button
               onClick={() => navigate('/chat')}
