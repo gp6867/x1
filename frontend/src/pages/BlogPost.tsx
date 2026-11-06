@@ -26,32 +26,59 @@ const BlogPost: React.FC = () => {
     );
   }
 
-  // ✅ Claude/ChatGPT Level: BlogPosting Schema for AI Search
+  // ✅ Advanced GEO Schema: BlogPosting + BreadcrumbList
   const articleSchema = {
     '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description: post.excerpt,
-    author: {
-      '@type': 'Person',
-      name: post.author,
-      url: 'https://www.xoneai.in/about'
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'MonsterX AI',
-      logo: {
-        '@type': 'ImageObject',
-        url: 'https://www.xoneai.in/favicon-512.png'
+    '@graph': [
+      {
+        '@type': 'BlogPosting',
+        headline: post.title,
+        description: post.excerpt,
+        author: {
+          '@type': 'Person',
+          name: post.author,
+          url: 'https://www.xoneai.in/about'
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'MonsterX AI',
+          logo: {
+            '@type': 'ImageObject',
+            url: 'https://www.xoneai.in/favicon-512.png'
+          }
+        },
+        datePublished: post.date,
+        dateModified: post.date,
+        mainEntityOfPage: {
+          '@type': 'WebPage',
+          '@id': `https://www.xoneai.in/blog/${post.slug}`
+        },
+        image: 'https://www.xoneai.in/og-image.png'
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: 'https://www.xoneai.in/'
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Blog',
+            item: 'https://www.xoneai.in/blog'
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: post.title,
+            item: `https://www.xoneai.in/blog/${post.slug}`
+          }
+        ]
       }
-    },
-    datePublished: post.date,
-    dateModified: post.date, // Future updates ke liye
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': `https://www.xoneai.in/blog/${post.slug}`
-    },
-    image: 'https://www.xoneai.in/og-image.png'
+    ]
   };
 
   return (
@@ -61,7 +88,7 @@ const BlogPost: React.FC = () => {
         description={post.excerpt}
         canonical={`https://www.xoneai.in/blog/${post.slug}`}
         type="article"
-        schema={articleSchema} // ✅ Schema passed to Helmet
+        schema={articleSchema}
       />
 
       <div className="h-screen overflow-y-auto bg-white dark:bg-slate-950">
@@ -90,7 +117,7 @@ const BlogPost: React.FC = () => {
             </div>
           </div>
 
-          {/* Article Content (React Markdown with Tailwind Components) */}
+          {/* Article Content */}
           <div className="text-base">
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
@@ -112,7 +139,7 @@ const BlogPost: React.FC = () => {
             </ReactMarkdown>
           </div>
 
-          {/* CTA at the end of article */}
+          {/* CTA */}
           <div className="mt-16 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-8 text-center text-white shadow-xl">
             <h3 className="text-xl font-bold mb-2">Try MonsterX AI for Free</h3>
             <p className="text-emerald-50 mb-4 text-sm">30 messages/day. No credit card required.</p>
