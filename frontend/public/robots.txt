@@ -22,7 +22,7 @@ Disallow: /chat/
 Disallow: /settings/
 Disallow: /api/
 
-# ===== AI CRAWLERS (GEO) =====
+# ===== AI CRAWLERS (GEO) - ORIGINAL =====
 User-agent: GPTBot
 Allow: /
 
@@ -60,6 +60,55 @@ User-agent: cohere-ai
 Allow: /
 
 User-agent: YouBot
+Allow: /
+
+# ===== ADDITIONAL AI CRAWLERS (NEWLY ADDED) =====
+# Search & Citations
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: meta-webindexer
+Allow: /
+
+User-agent: Amzn-SearchBot
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: MistralAI-Index
+Allow: /
+
+# Training Crawlers
+User-agent: Amazonbot
+Allow: /
+
+User-agent: cohere-training-data-crawler
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# User Fetchers
+User-agent: Claude-User
+Allow: /
+
+User-agent: meta-externalfetcher
+Allow: /
+
+User-agent: MistralAI-User
 Allow: /
 
 # ===== SITEMAP =====
