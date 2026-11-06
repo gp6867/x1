@@ -67,6 +67,8 @@ const Home: React.FC = () => {
               <Link to="/pricing" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Pricing</Link>
               <Link to="/contact" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Contact</Link>
               <Link to="/tools/python-error-fixer" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Python Fixer</Link>
+              <Link to="/tools/regex-generator" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Regex</Link>
+              <Link to="/tools/code-explainer" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Explainer</Link>
             </nav>
             <button
               onClick={() => navigate('/chat')}

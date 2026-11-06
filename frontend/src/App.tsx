@@ -22,7 +22,8 @@ const ChatGPTAlternative = lazy(() => import('./pages/ChatGPTAlternative'));
 const PillarGuide = lazy(() => import('./pages/PillarGuide'));
 const ToolPythonFixer = lazy(() => import('./pages/ToolPythonFixer'));
 const ToolRegexGenerator = lazy(() => import('./pages/ToolRegexGenerator'));
-const ToolCodeExplainer = lazy(() => import('./pages/ToolCodeExplainer')); // ✅ New Tool
+const ToolCodeExplainer = lazy(() => import('./pages/ToolCodeExplainer'));
+const ErrorFixerPage = lazy(() => import('./pages/ErrorFixerPage')); // ✅ New Tool
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const OAuthCallback = lazy(() => import('./pages/oauth/Callback'));
 const AIVideo = lazy(() => import('./pages/ai/AIVideo'));
@@ -65,7 +66,8 @@ function App() {
           <Route path="/guides/ai-coding-assistants" element={<PillarGuide />} />
           <Route path="/tools/python-error-fixer" element={<ToolPythonFixer />} />
           <Route path="/tools/regex-generator" element={<ToolRegexGenerator />} />
-          <Route path="/tools/code-explainer" element={<ToolCodeExplainer />} /> {/* ✅ New Route */}
+          <Route path="/tools/code-explainer" element={<ToolCodeExplainer />} />
+          <Route path="/fix/:errorSlug" element={<ErrorFixerPage />} /> {/* ✅ New Route */}
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
