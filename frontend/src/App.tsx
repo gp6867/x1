@@ -21,7 +21,8 @@ const CompareChatGPT = lazy(() => import('./pages/CompareChatGPT'));
 const ChatGPTAlternative = lazy(() => import('./pages/ChatGPTAlternative'));
 const PillarGuide = lazy(() => import('./pages/PillarGuide'));
 const ToolPythonFixer = lazy(() => import('./pages/ToolPythonFixer'));
-const ToolRegexGenerator = lazy(() => import('./pages/ToolRegexGenerator')); // ✅ New Tool
+const ToolRegexGenerator = lazy(() => import('./pages/ToolRegexGenerator'));
+const ToolCodeExplainer = lazy(() => import('./pages/ToolCodeExplainer')); // ✅ New Tool
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const OAuthCallback = lazy(() => import('./pages/oauth/Callback'));
 const AIVideo = lazy(() => import('./pages/ai/AIVideo'));
@@ -63,7 +64,8 @@ function App() {
           <Route path="/alternatives/chatgpt" element={<ChatGPTAlternative />} />
           <Route path="/guides/ai-coding-assistants" element={<PillarGuide />} />
           <Route path="/tools/python-error-fixer" element={<ToolPythonFixer />} />
-          <Route path="/tools/regex-generator" element={<ToolRegexGenerator />} /> {/* ✅ New Route */}
+          <Route path="/tools/regex-generator" element={<ToolRegexGenerator />} />
+          <Route path="/tools/code-explainer" element={<ToolCodeExplainer />} /> {/* ✅ New Route */}
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
