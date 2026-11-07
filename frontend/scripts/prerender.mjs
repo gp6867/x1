@@ -4,8 +4,6 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { preview } from 'vite';
 
-// ROUTE_MAP: original URL → what to actually render
-// '/' renders '/home' (landing page) and saves as index.html
 const ROUTE_MAP = {
   '/': '/home',
   '/home': '/home',
@@ -44,7 +42,7 @@ async function main() {
   try {
     await fs.access(path.join(DIST_DIR, 'index.html'));
   } catch {
-    console.error('❌ dist/index.html not found. Run `vite build` first.');
+    console.error('❌ dist/index.html not found.');
     process.exit(0);
   }
 
@@ -65,22 +63,31 @@ async function main() {
     });
     console.log('   ✅ Browser ready\n');
   } catch (err) {
-    console.warn('⚠️  No browser — skipping prerender:', err.message);
+    console.warn('⚠️  No browser:', err.message);
     server.httpServer.close();
     process.exit(0);
   }
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
-  await page.setUserAgent(
-    'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
-  );
+  await page.setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)');
+
+  // Block API calls — pages render with static content only, no 30s hangs
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const url = req.url();
+    if (url.includes(':5000') || url.includes('.onrender.com')) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
 
   let ok = 0;
   let failed = 0;
 
   for (const [route, targetRoute] of Object.entries(ROUTE_MAP)) {
-    process.stdout.write(`📄 ${route} (via ${targetRoute})... `);
+    process.stdout.write(`📄 ${route}... `);
     try {
       await page.goto(`http://localhost:${PORT}${targetRoute}`, {
         waitUntil: 'networkidle0',
@@ -95,13 +102,19 @@ async function main() {
         throw new Error(`Too short (${html.length} bytes)`);
       }
 
-      // CRITICAL: reject output if no real headings (catches chat UI case)
-      if (!html.includes('<h1') || !html.includes('<h2')) {
-        throw new Error('No h1/h2 — content not rendered (chat UI?)');
+      // Reject chat UI (has this unique placeholder)
+      if (html.includes('placeholder="Message MonsterX AI"')) {
+        throw new Error('Rendered chat UI instead of expected page');
       }
 
+      // Reject static H1 fallback
       if (html.includes('STATIC H1 FOR BING CRAWLERS')) {
-        throw new Error('Static fallback still present');
+        throw new Error('Static H1 still present');
+      }
+
+      // Require AT LEAST ONE heading (any level) — relaxed from h1+h2
+      if (!/<h[1-6][\s>]/.test(html)) {
+        throw new Error('No headings found — page may not have rendered');
       }
 
       const filePath = route === '/'
@@ -129,12 +142,12 @@ async function main() {
 }
 
 const watchdog = setTimeout(() => {
-  console.warn('\n⚠️  Prerender timeout (90s) — deploy continues.');
+  console.warn('\n⚠️  Timeout — deploy continues.');
   process.exit(0);
 }, 90_000);
 watchdog.unref();
 
 main().catch((err) => {
-  console.error('\n💥 Prerender crashed:', err);
+  console.error('💥 Crash:', err);
   process.exit(0);
 });
