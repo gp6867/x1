@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Code2, ArrowRight, Loader, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Code2, ArrowRight, Loader, Copy, Check, Shield, Zap } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
 import axios from 'axios';
@@ -43,8 +43,8 @@ const ToolRegexGenerator: React.FC = () => {
   return (
     <>
       <SEO
-        title="Free AI Regex Generator — MonsterX AI"
-        description="Generate Regular Expressions (Regex) from plain English instantly. Free AI-powered regex generator by MonsterX AI. No login required."
+        title="AI Regex Generator — Create Regex from Plain English (Free)"
+        description="Free AI regex generator. Describe what you want to match in plain English and get a working regex pattern for email, phone, URL, password, dates and more. No signup."
         canonical="https://www.xoneai.in/tools/regex-generator"
       />
 
@@ -63,19 +63,20 @@ const ToolRegexGenerator: React.FC = () => {
               <Code2 className="text-emerald-600" size={32} />
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-4">
-              AI Regex Generator
+              AI Regex Generator from Plain English
             </h1>
             <p className="text-slate-600 dark:text-slate-400">
-              Describe what you want to match in plain English. Our AI will write the Regex for you.
+              Describe what you want to match in plain English. Our AI writes a tested regex pattern and explains how it works. Free, no signup.
             </p>
           </div>
 
-          <form onSubmit={handleGenerate} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
+          <form onSubmit={handleGenerate} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-4">
             <textarea
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
               placeholder="Example: Match all valid email addresses, or Find dates in DD/MM/YYYY format"
               className="w-full h-32 p-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-medium text-sm resize-none focus:outline-none focus:border-emerald-500 mb-4"
+              maxLength={2000}
               required
             />
             <button
@@ -87,8 +88,25 @@ const ToolRegexGenerator: React.FC = () => {
             </button>
           </form>
 
+          <div className="mb-8 grid md:grid-cols-2 gap-3 text-xs">
+            <div className="flex items-start gap-2 p-3 bg-slate-100 dark:bg-slate-900 rounded-lg">
+              <Shield size={16} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-slate-900 dark:text-white">Privacy</p>
+                <p className="text-slate-600 dark:text-slate-400">Descriptions are processed in memory and never stored. Sign up to save history.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2 p-3 bg-slate-100 dark:bg-slate-900 rounded-lg">
+              <Zap size={16} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-slate-900 dark:text-white">Limits</p>
+                <p className="text-slate-600 dark:text-slate-400">2,000 chars per prompt • 30 free generations/day for guests • No login.</p>
+              </div>
+            </div>
+          </div>
+
           {result && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
               <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                 <h3 className="font-bold text-slate-900 dark:text-white">Generated Result</h3>
                 <button onClick={copyToClipboard} className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5">
@@ -100,6 +118,118 @@ const ToolRegexGenerator: React.FC = () => {
               </div>
             </div>
           )}
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Example: Before & After</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-2">You write</p>
+                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{`Match valid email addresses,
+but only Gmail and Outlook,
+and allow dots before the @.`}</pre>
+              </div>
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-2">AI gives you</p>
+                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap">{`^(?!.*\\.\\.)[a-zA-Z0-9._]+
+@(gmail|outlook)\\.(com|in)$
+
+Explanation: allows letters,
+digits, dots, underscores;
+disallows consecutive dots;
+matches gmail/outlook only.`}</pre>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">What is the AI Regex Generator?</h2>
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+              The AI Regex Generator converts plain English into working regular expressions. Regex is powerful but notoriously hard to write from scratch — one misplaced <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-600 dark:text-emerald-400">*</code> or a missing <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-600 dark:text-emerald-400">\</code> can break the whole pattern. This tool lets you describe what you want in a normal sentence and returns a tested pattern you can paste directly into JavaScript, Python, PHP, Java, Go, or any language that supports regex.
+            </p>
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+              Every output includes a plain-English explanation of how the pattern works — so you learn regex as you use it. No login, no rate limits for guests, no hidden character caps.
+            </p>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Popular Regex Patterns You Can Generate</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Email validation</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">"Match valid email addresses with optional + tag and subdomains."</p>
+              </div>
+              <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">US phone number</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">"Match (555) 123-4567 and 555-123-4567 in one pattern."</p>
+              </div>
+              <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">URL / domain</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">"Match http and https URLs including subdomains and ports."</p>
+              </div>
+              <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Strong password</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">"Require uppercase, lowercase, a digit, and a special character, min 8 chars."</p>
+              </div>
+              <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Date formats</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">"Match dates in DD/MM/YYYY and YYYY-MM-DD in one regex."</p>
+              </div>
+              <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">IP address</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">"Match IPv4 addresses, ignoring loopback and private ranges."</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">How to Use the Regex Generator</h2>
+            <ol className="space-y-3 text-slate-700 dark:text-slate-300 list-decimal pl-6">
+              <li><strong className="text-slate-900 dark:text-white">Describe what you want to match</strong> — in plain English, like "find dates in DD/MM/YYYY".</li>
+              <li><strong className="text-slate-900 dark:text-white">Click Generate Regex</strong> — the AI returns a pattern plus an explanation.</li>
+              <li><strong className="text-slate-900 dark:text-white">Copy and test</strong> — paste into your code or regex101.com to double-check.</li>
+            </ol>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Frequently Asked Questions</h2>
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Can AI really write a regex from plain English?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. AI models trained on code understand regex syntax fluently. They can produce patterns for common cases (email, phone, URL) and complex edge cases (nested groups, lookaheads, backreferences).</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Which regex flavour does it support?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">JavaScript, Python, PHP, Java, Go, Ruby, .NET, Rust — practically every major flavour. Just mention the language in your prompt if you want dialect-specific features.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Is my prompt stored?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Guest prompts are processed in memory and never saved. Sign up if you want to save your generated patterns in your account.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Does it handle lookaheads and backreferences?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. If you mention "negative lookahead", "backreference", or a specific pattern, the AI uses the appropriate constructs for the target language.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">What's the limit per prompt?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">2,000 characters — far more than you need for a single regex description. Guests get 30 generations per day.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Related Free Tools</h2>
+            <div className="flex flex-wrap gap-3">
+              <button onClick={() => navigate('/tools/python-error-fixer')} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition text-sm font-medium">
+                Python Error Fixer →
+              </button>
+              <button onClick={() => navigate('/tools/code-explainer')} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition text-sm font-medium">
+                AI Code Explainer →
+              </button>
+              <button onClick={() => navigate('/compare/monsterx-vs-chatgpt')} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition text-sm font-medium">
+                MonsterX AI vs ChatGPT →
+              </button>
+            </div>
+          </section>
 
           <div className="mt-12 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-center text-white">
             <h3 className="font-bold mb-2">Want an AI that remembers your code?</h3>
