@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Brain, Code, Search, Check, PenTool, Globe, Image as ImageIcon, Sparkles, Menu, X, Terminal, Code2, BookOpen } from 'lucide-react';
+import { ArrowRight, Brain, Code, Search, Check, PenTool, Globe, Image as ImageIcon, Sparkles, Menu, X, Terminal, Code2, BookOpen, User } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
 
@@ -262,8 +262,8 @@ const Home: React.FC = () => {
         <section className="border-y border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
           <div className="max-w-4xl mx-auto px-6 py-10 md:py-14">
             <div className="flex flex-col md:flex-row items-start gap-6">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 text-2xl">
-                👨‍💻
+              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                <User size={28} className="text-emerald-600" />
               </div>
               <div>
                 <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white mb-2">
