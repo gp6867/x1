@@ -267,7 +267,7 @@ const Home: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                  Built by an indie developer, not a corporation
+                  Built by an independent developer, not a corporation
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                   I'm Samrat, a solo developer from India. I was tired of paying $20/month for AI tools
