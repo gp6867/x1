@@ -1,11 +1,63 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Brain, Code, Search, Check, PenTool, Globe, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { ArrowRight, Brain, Code, Search, Check, PenTool, Globe, Image as ImageIcon, Sparkles, Menu, X, Terminal, Code2, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Navigation links (desktop + mobile dono ke liye)
+  const navLinks = [
+    { to: '/home', label: 'Home' },
+    { to: '/blog', label: 'Blog' },
+    { to: '/pricing', label: 'Pricing' },
+    { to: '/contact', label: 'Contact' },
+    { to: '/tools/python-error-fixer', label: 'Python Fixer' },
+    { to: '/tools/regex-generator', label: 'Regex' },
+    { to: '/tools/code-explainer', label: 'Explainer' },
+  ];
+
+  // Free tools cards
+  const freeTools = [
+    {
+      to: '/tools/python-error-fixer',
+      icon: Terminal,
+      iconBg: 'bg-red-50 dark:bg-red-900/30',
+      iconBgHover: 'group-hover:bg-red-100 dark:group-hover:bg-red-900/50',
+      iconColor: 'text-red-600',
+      borderHover: 'hover:border-red-300 dark:hover:border-red-700',
+      title: 'Python Error Fixer',
+      desc: 'Paste any Python traceback and get an AI-suggested fix in seconds.',
+      cta: 'Fix an error',
+      ctaColor: 'text-red-600',
+    },
+    {
+      to: '/tools/regex-generator',
+      icon: Code2,
+      iconBg: 'bg-blue-50 dark:bg-blue-900/30',
+      iconBgHover: 'group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50',
+      iconColor: 'text-blue-600',
+      borderHover: 'hover:border-blue-300 dark:hover:border-blue-700',
+      title: 'AI Regex Generator',
+      desc: 'Describe what you want to match in plain English and get a regex pattern.',
+      cta: 'Generate regex',
+      ctaColor: 'text-blue-600',
+    },
+    {
+      to: '/tools/code-explainer',
+      icon: BookOpen,
+      iconBg: 'bg-purple-50 dark:bg-purple-900/30',
+      iconBgHover: 'group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50',
+      iconColor: 'text-purple-600',
+      borderHover: 'hover:border-purple-300 dark:hover:border-purple-700',
+      title: 'AI Code Explainer',
+      desc: 'Paste any code and get a line-by-line explanation with bug checks.',
+      cta: 'Explain code',
+      ctaColor: 'text-purple-600',
+    },
+  ];
 
   // Expanded skills
   const skills = [
@@ -61,22 +113,58 @@ const Home: React.FC = () => {
                 <div className="text-xs text-slate-500 leading-tight">by Xone AI</div>
               </div>
             </Link>
+
+            {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-6 text-sm">
-              <Link to="/home" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition font-medium">Home</Link>
-              <Link to="/blog" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Blog</Link>
-              <Link to="/pricing" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Pricing</Link>
-              <Link to="/contact" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Contact</Link>
-              <Link to="/tools/python-error-fixer" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Python Fixer</Link>
-              <Link to="/tools/regex-generator" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Regex</Link>
-              <Link to="/tools/code-explainer" className="text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition">Explainer</Link>
+              {navLinks.map((link, i) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`text-slate-700 dark:text-slate-300 hover:text-emerald-600 transition ${i === 0 ? 'font-medium' : ''}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
             </nav>
-            <button
-              onClick={() => navigate('/chat')}
-              className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-100 transition"
-            >
-              Open Chat
-            </button>
+
+            {/* Right actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/chat')}
+                className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-100 transition"
+              >
+                Open Chat
+              </button>
+
+              {/* Mobile hamburger */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-300"
+                aria-label="Toggle navigation menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            </div>
           </div>
+
+          {/* Mobile dropdown menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+              <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-lg transition"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          )}
         </header>
 
         {/* Hero — Split layout, CSS mockup, no gradients */}
@@ -222,8 +310,41 @@ const Home: React.FC = () => {
           </div>
         </section>
 
+        {/* Free AI Tools — 3 cards */}
+        <section className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
+          <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
+            <div className="text-center mb-10 max-w-2xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                Free AI Tools
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400 text-lg">
+                Try our free tools. No login required.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {freeTools.map((tool) => (
+                <Link
+                  key={tool.to}
+                  to={tool.to}
+                  className={`group border border-slate-200 dark:border-slate-800 rounded-2xl p-6 bg-white dark:bg-slate-900 transition hover:shadow-lg ${tool.borderHover}`}
+                >
+                  <div className={`w-12 h-12 rounded-lg ${tool.iconBg} ${tool.iconBgHover} flex items-center justify-center mb-4 transition`}>
+                    <tool.icon size={24} className={tool.iconColor} />
+                  </div>
+                  <h3 className="font-bold text-slate-900 dark:text-white mb-2 text-lg">{tool.title}</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-5 leading-relaxed">{tool.desc}</p>
+                  <span className={`text-sm font-semibold inline-flex items-center gap-1 group-hover:gap-2 transition-all ${tool.ctaColor}`}>
+                    {tool.cta} <ArrowRight size={14} />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Internal Linking to Comparison Pages */}
-        <section className="max-w-6xl mx-auto px-6 py-4">
+        <section className="max-w-6xl mx-auto px-6 py-8">
           <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center">
             <p className="text-slate-700 dark:text-slate-300 mb-3 text-sm">
               Wondering how MonsterX AI compares to ChatGPT or other tools?
@@ -236,17 +357,6 @@ const Home: React.FC = () => {
                 View the best ChatGPT alternatives →
               </Link>
             </div>
-          </div>
-        </section>
-
-        {/* Free Tools */}
-        <section className="max-w-6xl mx-auto px-6 py-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center shadow-sm">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Free AI Tools</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Try our free tools. No login required.</p>
-            <Link to="/tools/python-error-fixer" className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition border border-emerald-200 dark:border-emerald-800">
-              🐍 Python Error Fixer →
-            </Link>
           </div>
         </section>
 
