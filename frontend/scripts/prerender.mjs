@@ -4,57 +4,56 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { preview } from 'vite';
 
-const ROUTES = [
-  '/',
-  '/home',
-  '/pricing',
-  '/blog',
-  '/blog/monsterx-vs-chatgpt-for-coding',
-  '/blog/how-to-use-ai-for-python-debugging',
-  '/blog/why-ai-needs-memory',
-  '/blog/best-free-ai-tools-for-students',
-  '/blog/best-free-ai-tools-for-developers-2027',
-  '/blog/best-ai-tools-for-college-students-usa',
-  '/tools/python-error-fixer',
-  '/tools/regex-generator',
-  '/tools/code-explainer',
-  '/compare/monsterx-vs-chatgpt',
-  '/alternatives/chatgpt',
-  '/guides/ai-coding-assistants',
-  '/fix/python-attributeerror',
-  '/fix/python-typeerror',
-  '/fix/react-cannot-read-properties',
-  '/fix/cors-error-express',
-  '/fix/javascript-undefined-function',
-  '/about',
-  '/contact',
-  '/privacy',
-  '/terms',
-];
+// ROUTE_MAP: original URL → what to actually render
+// '/' renders '/home' (landing page) and saves as index.html
+const ROUTE_MAP = {
+  '/': '/home',
+  '/home': '/home',
+  '/pricing': '/pricing',
+  '/blog': '/blog',
+  '/blog/monsterx-vs-chatgpt-for-coding': '/blog/monsterx-vs-chatgpt-for-coding',
+  '/blog/how-to-use-ai-for-python-debugging': '/blog/how-to-use-ai-for-python-debugging',
+  '/blog/why-ai-needs-memory': '/blog/why-ai-needs-memory',
+  '/blog/best-free-ai-tools-for-students': '/blog/best-free-ai-tools-for-students',
+  '/blog/best-free-ai-tools-for-developers-2027': '/blog/best-free-ai-tools-for-developers-2027',
+  '/blog/best-ai-tools-for-college-students-usa': '/blog/best-ai-tools-for-college-students-usa',
+  '/tools/python-error-fixer': '/tools/python-error-fixer',
+  '/tools/regex-generator': '/tools/regex-generator',
+  '/tools/code-explainer': '/tools/code-explainer',
+  '/compare/monsterx-vs-chatgpt': '/compare/monsterx-vs-chatgpt',
+  '/alternatives/chatgpt': '/alternatives/chatgpt',
+  '/guides/ai-coding-assistants': '/guides/ai-coding-assistants',
+  '/fix/python-attributeerror': '/fix/python-attributeerror',
+  '/fix/python-typeerror': '/fix/python-typeerror',
+  '/fix/react-cannot-read-properties': '/fix/react-cannot-read-properties',
+  '/fix/cors-error-express': '/fix/cors-error-express',
+  '/fix/javascript-undefined-function': '/fix/javascript-undefined-function',
+  '/about': '/about',
+  '/contact': '/contact',
+  '/privacy': '/privacy',
+  '/terms': '/terms',
+};
 
 const PORT = 4173;
-const DIST_DIR = 'dist'; // ← Output directly into dist, not dist-prerendered
-const MIN_HTML_SIZE = 8000;
+const DIST_DIR = 'dist';
+const MIN_HTML_SIZE = 15000;
 
 async function main() {
   console.log('🚀 Starting prerender...\n');
 
-  // 1. Verify dist/ exists
   try {
     await fs.access(path.join(DIST_DIR, 'index.html'));
   } catch {
     console.error('❌ dist/index.html not found. Run `vite build` first.');
-    process.exit(0); // don't fail deploy
+    process.exit(0);
   }
 
-  // 2. Start preview server
   console.log(`📡 Starting preview server on port ${PORT}...`);
   const server = await preview({
     preview: { port: PORT, strictPort: true, host: 'localhost' },
   });
   console.log('   ✅ Server ready\n');
 
-  // 3. Launch browser (works on Vercel + local Linux)
   console.log('🌐 Launching headless browser...');
   let browser;
   try {
@@ -66,10 +65,9 @@ async function main() {
     });
     console.log('   ✅ Browser ready\n');
   } catch (err) {
-    console.warn('⚠️  No browser available — skipping prerender:', err.message);
-    console.warn('⚠️  Deploy will continue with original dist/ output.');
+    console.warn('⚠️  No browser — skipping prerender:', err.message);
     server.httpServer.close();
-    process.exit(0); // IMPORTANT: do not fail the deploy
+    process.exit(0);
   }
 
   const page = await browser.newPage();
@@ -81,11 +79,10 @@ async function main() {
   let ok = 0;
   let failed = 0;
 
-  // 4. Render each route — write directly into dist/
-  for (const route of ROUTES) {
-    process.stdout.write(`📄 ${route}... `);
+  for (const [route, targetRoute] of Object.entries(ROUTE_MAP)) {
+    process.stdout.write(`📄 ${route} (via ${targetRoute})... `);
     try {
-      await page.goto(`http://localhost:${PORT}${route}`, {
+      await page.goto(`http://localhost:${PORT}${targetRoute}`, {
         waitUntil: 'networkidle0',
         timeout: 30000,
       });
@@ -98,14 +95,18 @@ async function main() {
         throw new Error(`Too short (${html.length} bytes)`);
       }
 
-      if (html.includes('STATIC H1 FOR BING CRAWLERS')) {
-        throw new Error('React did not render — static H1 still present');
+      // CRITICAL: reject output if no real headings (catches chat UI case)
+      if (!html.includes('<h1') || !html.includes('<h2')) {
+        throw new Error('No h1/h2 — content not rendered (chat UI?)');
       }
 
-      const filePath =
-        route === '/'
-          ? path.join(DIST_DIR, 'index.html')
-          : path.join(DIST_DIR, route.slice(1), 'index.html');
+      if (html.includes('STATIC H1 FOR BING CRAWLERS')) {
+        throw new Error('Static fallback still present');
+      }
+
+      const filePath = route === '/'
+        ? path.join(DIST_DIR, 'index.html')
+        : path.join(DIST_DIR, route.slice(1), 'index.html');
 
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       await fs.writeFile(filePath, html);
@@ -124,22 +125,16 @@ async function main() {
   console.log(`\n🎉 Done! ${ok} succeeded, ${failed} failed.`);
   console.log(`📂 Output: ${DIST_DIR}/\n`);
 
-  if (failed > 0) {
-    console.log(`⚠️  ${failed} route(s) failed but deploy will proceed.`);
-  }
-
-  process.exit(0); // always exit 0
+  process.exit(0);
 }
 
-// Watchdog: if prerender hangs > 90s, kill it and let deploy proceed
 const watchdog = setTimeout(() => {
-  console.warn('\n⚠️  Prerender timed out (90s) — skipping, deploy continues.');
+  console.warn('\n⚠️  Prerender timeout (90s) — deploy continues.');
   process.exit(0);
 }, 90_000);
 watchdog.unref();
 
 main().catch((err) => {
   console.error('\n💥 Prerender crashed:', err);
-  console.warn('⚠️  Deploy will continue with original dist/ output.');
-  process.exit(0); // never fail the deploy
+  process.exit(0);
 });
