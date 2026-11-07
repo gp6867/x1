@@ -1,4 +1,5 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { preview } from 'vite';
@@ -75,15 +76,34 @@ async function main() {
 
   // 4. Launch puppeteer
   console.log('🌐 Launching headless browser...');
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-    ],
-  });
+  // On Vercel, use @sparticuz/chromium. Locally, use system Chrome.
+  let browser;
+  try {
+    if (process.env.VERCEL) {
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+      console.log('   ✅ Using @sparticuz/chromium (Vercel)');
+    } else {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+        ],
+      });
+      console.log('   ✅ Using local Puppeteer');
+    }
+  } catch (err) {
+    console.warn('⚠️  No browser available — skipping prerender:', err.message);
+    console.warn('⚠️  Deploy will continue with original dist/ output.');
+    process.exit(0); // do NOT fail the deploy
+  }
   console.log('   ✅ Browser ready\n');
 
   const page = await browser.newPage();
