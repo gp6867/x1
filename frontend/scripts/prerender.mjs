@@ -1,5 +1,5 @@
-import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { preview } from 'vite';
@@ -33,78 +33,44 @@ const ROUTES = [
 ];
 
 const PORT = 4173;
-const OUTPUT_DIR = 'dist-prerendered';
-const MIN_HTML_SIZE = 3000;
-
-async function copyDir(src, dest) {
-  await fs.mkdir(dest, { recursive: true });
-  const entries = await fs.readdir(src, { withFileTypes: true });
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      await copyDir(srcPath, destPath);
-    } else {
-      await fs.copyFile(srcPath, destPath);
-    }
-  }
-}
+const DIST_DIR = 'dist'; // ← Output directly into dist, not dist-prerendered
+const MIN_HTML_SIZE = 8000;
 
 async function main() {
   console.log('🚀 Starting prerender...\n');
 
   // 1. Verify dist/ exists
   try {
-    await fs.access('dist/index.html');
+    await fs.access(path.join(DIST_DIR, 'index.html'));
   } catch {
-    console.error('❌ dist/index.html not found. Run `npm run build` first.');
-    process.exit(1);
+    console.error('❌ dist/index.html not found. Run `vite build` first.');
+    process.exit(0); // don't fail deploy
   }
 
-  // 2. Copy all static assets from dist/ to dist-prerendered/
-  console.log('📦 Copying static assets...');
-  await fs.rm(OUTPUT_DIR, { recursive: true, force: true });
-  await copyDir('dist', OUTPUT_DIR);
-  console.log('   ✅ Assets copied\n');
-
-  // 3. Start preview server
+  // 2. Start preview server
   console.log(`📡 Starting preview server on port ${PORT}...`);
   const server = await preview({
     preview: { port: PORT, strictPort: true, host: 'localhost' },
   });
   console.log('   ✅ Server ready\n');
 
-  // 4. Launch puppeteer
+  // 3. Launch browser (works on Vercel + local Linux)
   console.log('🌐 Launching headless browser...');
-  // On Vercel, use @sparticuz/chromium. Locally, use system Chrome.
   let browser;
   try {
-    if (process.env.VERCEL) {
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-      });
-      console.log('   ✅ Using @sparticuz/chromium (Vercel)');
-    } else {
-      browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-        ],
-      });
-      console.log('   ✅ Using local Puppeteer');
-    }
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+    console.log('   ✅ Browser ready\n');
   } catch (err) {
     console.warn('⚠️  No browser available — skipping prerender:', err.message);
     console.warn('⚠️  Deploy will continue with original dist/ output.');
-    process.exit(0); // do NOT fail the deploy
+    server.httpServer.close();
+    process.exit(0); // IMPORTANT: do not fail the deploy
   }
-  console.log('   ✅ Browser ready\n');
 
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
@@ -115,7 +81,7 @@ async function main() {
   let ok = 0;
   let failed = 0;
 
-  // 5. Render each route
+  // 4. Render each route — write directly into dist/
   for (const route of ROUTES) {
     process.stdout.write(`📄 ${route}... `);
     try {
@@ -124,19 +90,22 @@ async function main() {
         timeout: 30000,
       });
 
-      // Give React extra time to finish rendering
       await new Promise((r) => setTimeout(r, 1500));
 
       const html = await page.content();
 
       if (html.length < MIN_HTML_SIZE) {
-        throw new Error(`Too short (${html.length} bytes) — likely not rendered`);
+        throw new Error(`Too short (${html.length} bytes)`);
+      }
+
+      if (html.includes('STATIC H1 FOR BING CRAWLERS')) {
+        throw new Error('React did not render — static H1 still present');
       }
 
       const filePath =
         route === '/'
-          ? path.join(OUTPUT_DIR, 'index.html')
-          : path.join(OUTPUT_DIR, route.slice(1), 'index.html');
+          ? path.join(DIST_DIR, 'index.html')
+          : path.join(DIST_DIR, route.slice(1), 'index.html');
 
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       await fs.writeFile(filePath, html);
@@ -149,24 +118,28 @@ async function main() {
     }
   }
 
-  // 6. Cleanup
   await browser.close();
   server.httpServer.close();
 
   console.log(`\n🎉 Done! ${ok} succeeded, ${failed} failed.`);
-  console.log(`📂 Output: ${OUTPUT_DIR}/\n`);
-
-  if (ok === 0) {
-    console.error('❌ All routes failed. Aborting.');
-    process.exit(1);
-  }
+  console.log(`📂 Output: ${DIST_DIR}/\n`);
 
   if (failed > 0) {
-    console.log(`⚠️  ${failed} route(s) failed but ${ok} succeeded — deploy will proceed.`);
+    console.log(`⚠️  ${failed} route(s) failed but deploy will proceed.`);
   }
+
+  process.exit(0); // always exit 0
 }
+
+// Watchdog: if prerender hangs > 90s, kill it and let deploy proceed
+const watchdog = setTimeout(() => {
+  console.warn('\n⚠️  Prerender timed out (90s) — skipping, deploy continues.');
+  process.exit(0);
+}, 90_000);
+watchdog.unref();
 
 main().catch((err) => {
   console.error('\n💥 Prerender crashed:', err);
-  process.exit(1);
+  console.warn('⚠️  Deploy will continue with original dist/ output.');
+  process.exit(0); // never fail the deploy
 });
