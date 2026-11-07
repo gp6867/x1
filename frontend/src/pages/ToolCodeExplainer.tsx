@@ -36,8 +36,8 @@ const ToolCodeExplainer: React.FC = () => {
   return (
     <>
       <SEO
-        title="AI Code Explainer — Understand Any Code Line-by-Line (Free)"
-        description="Free AI code explainer. Paste Python, JavaScript, TypeScript, Java, C++ or any language and get a line-by-line explanation, bug check, and improvement tips. No login."
+        title="AI Code Explainer — Understand Code Line-by-Line (Free)"
+        description="Free AI code explainer. Paste Python, JavaScript, SQL, Bash, Java or most mainstream languages and get a line-by-line explanation, bug check and improvement tips."
         canonical="https://www.xoneai.in/tools/code-explainer"
       />
 
@@ -59,7 +59,7 @@ const ToolCodeExplainer: React.FC = () => {
               AI Code Explainer for Beginners
             </h1>
             <p className="text-slate-600 dark:text-slate-400">
-              Paste any code and our AI explains exactly how it works, step-by-step — plus flags bugs and suggests improvements. Free, no signup.
+              Paste any code and our AI explains how it works step by step — and flags likely bugs or improvements. Free, no signup.
             </p>
           </div>
 
@@ -106,7 +106,7 @@ const ToolCodeExplainer: React.FC = () => {
           )}
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Example: Before & After</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Example 1: Recursive Function</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-2">You paste</p>
@@ -116,7 +116,7 @@ const ToolCodeExplainer: React.FC = () => {
               </div>
               <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4">
                 <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-2">AI explains</p>
-                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{`Line 1: def fib(n): — defines
+                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{`Line 1: def fib(n): defines
 a function that computes the
 nth Fibonacci number.
 
@@ -127,9 +127,44 @@ Line 3: recursive call. Adds
 the two previous Fibonacci
 numbers.
 
-⚠️ Bug risk: this is O(2^n).
-Use @lru_cache or an
-iterative approach for n > 30.`}</pre>
+[Note] This is O(2^n). Use
+@lru_cache or an iterative
+approach for n > 30.`}</pre>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Example 2: Async JavaScript</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-2">You paste</p>
+                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap">{`async function fetchUser(id) {
+  const res = await fetch(
+    \`/api/users/\${id}\`
+  );
+  if (!res.ok) throw new Error('Not found');
+  return res.json();
+}`}</pre>
+              </div>
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-2">AI explains</p>
+                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{`async function returns a Promise.
+await fetch pauses until the
+HTTP request completes.
+
+!res.ok checks for 4xx/5xx
+status codes.
+
+throw rejects the Promise
+with an error.
+
+res.json() also returns a
+Promise — the caller must
+await it.
+
+[Note] Wrap calls in try/catch
+to handle network errors.`}</pre>
               </div>
             </div>
           </section>
@@ -140,7 +175,7 @@ iterative approach for n > 30.`}</pre>
               The AI Code Explainer reads any code snippet you paste and produces a line-by-line explanation in plain English. It's built for two audiences: developers who inherited unfamiliar code (legacy files, open-source pulls, teammate handoffs), and beginners learning a new language who can't fully parse what they're reading yet.
             </p>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              Unlike raw AI chats, this tool is tuned to also flag bugs, highlight performance risks, suggest cleaner alternatives, and call out non-obvious edge cases. It works on entire files or single functions, in any language, without requiring you to sign up or install anything.
+              Unlike raw AI chats, this tool also flags likely bugs, highlights performance risks, and suggests cleaner alternatives. It works best on mainstream languages — Python, JavaScript, TypeScript, Java, C++, C#, Go, SQL, Bash — and always recommends you verify edge cases in your own environment.
             </p>
           </section>
 
@@ -149,11 +184,11 @@ iterative approach for n > 30.`}</pre>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Python, JavaScript, TypeScript</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Understand complex functions, decorators, async code, generators, closures.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Complex functions, decorators, async code, generators, closures.</p>
               </div>
               <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Java, C++, Go, Rust</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Explain algorithms, memory layout, concurrency patterns, and idiomatic patterns.</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Java, C++, Go, SQL, Bash</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Algorithms, memory layout, concurrency patterns, queries, shell scripts.</p>
               </div>
               <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Legacy & inherited code</h3>
@@ -170,7 +205,7 @@ iterative approach for n > 30.`}</pre>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">How to Use the Code Explainer</h2>
             <ol className="space-y-3 text-slate-700 dark:text-slate-300 list-decimal pl-6">
               <li><strong className="text-slate-900 dark:text-white">Paste your code</strong> — a function, a file, or a snippet that confuses you.</li>
-              <li><strong className="text-slate-900 dark:text-white">Click Explain Code</strong> — the AI walks through it line-by-line in plain English.</li>
+              <li><strong className="text-slate-900 dark:text-white">Click Explain Code</strong> — the AI walks through it step by step.</li>
               <li><strong className="text-slate-900 dark:text-white">Read the bug/improvement notes</strong> — the AI also flags issues you didn't spot.</li>
             </ol>
           </section>
@@ -180,23 +215,23 @@ iterative approach for n > 30.`}</pre>
             <div className="space-y-6">
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Can AI explain code line by line?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. For most snippets the AI produces a numbered or bulleted walkthrough — each line or logical block is explained in plain English.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. For most snippets, the AI produces a numbered or bulleted walkthrough — each line or logical block is explained in plain English.</p>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Does it work for any programming language?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. The AI understands Python, JavaScript, TypeScript, Java, C, C++, C#, Go, Rust, Ruby, PHP, Swift, Kotlin, Bash, SQL, and more. If a language uses mainstream syntax, the AI will read it.</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Which languages work best?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Python, JavaScript, TypeScript, Java, C++, C#, Go, SQL, and Bash produce the best explanations. Esoteric languages or very new syntax may need extra context in your prompt.</p>
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Will it also find bugs and suggest improvements?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. Besides the explanation, the AI calls out potential bugs (null dereferences, off-by-one errors, performance issues) and suggests cleaner patterns when relevant.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. Besides the explanation, the AI flags potential bugs (null dereferences, off-by-one errors, performance issues) and suggests cleaner patterns when relevant.</p>
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Is my code stored?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Guest explanations are processed in memory and never stored. Sign up if you want your history saved in your account.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Guest explanations are processed in memory and not stored. Sign up if you want your history saved in your account.</p>
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">What's the character limit?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">12,000 characters per paste — enough for most full files and all individual functions. Guests get 30 explanations per day.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">12,000 characters per paste — enough for most files and all individual functions. Guests get 30 explanations per day.</p>
               </div>
             </div>
           </section>

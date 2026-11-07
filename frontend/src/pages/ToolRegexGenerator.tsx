@@ -44,7 +44,7 @@ const ToolRegexGenerator: React.FC = () => {
     <>
       <SEO
         title="AI Regex Generator — Create Regex from Plain English (Free)"
-        description="Free AI regex generator. Describe what you want to match in plain English and get a working regex pattern for email, phone, URL, password, dates and more. No signup."
+        description="Free AI regex generator. Describe what you want to match in plain English and get a regex pattern for email, phone, URL, password, dates and more. No signup."
         canonical="https://www.xoneai.in/tools/regex-generator"
       />
 
@@ -66,7 +66,7 @@ const ToolRegexGenerator: React.FC = () => {
               AI Regex Generator from Plain English
             </h1>
             <p className="text-slate-600 dark:text-slate-400">
-              Describe what you want to match in plain English. Our AI writes a tested regex pattern and explains how it works. Free, no signup.
+              Describe what you want to match in plain English. Our AI proposes a regex pattern and explains how it works. Always test on regex101 before using in production.
             </p>
           </div>
 
@@ -74,7 +74,7 @@ const ToolRegexGenerator: React.FC = () => {
             <textarea
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
-              placeholder="Example: Match all valid email addresses, or Find dates in DD/MM/YYYY format"
+              placeholder="Example: Match valid email addresses, or Find dates in DD/MM/YYYY format"
               className="w-full h-32 p-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-medium text-sm resize-none focus:outline-none focus:border-emerald-500 mb-4"
               maxLength={2000}
               required
@@ -116,6 +116,9 @@ const ToolRegexGenerator: React.FC = () => {
               <div className="p-6 text-slate-700 dark:text-slate-300 whitespace-pre-wrap text-sm leading-relaxed font-mono">
                 {result}
               </div>
+              <p className="px-6 pb-4 text-xs text-slate-500 dark:text-slate-500 border-t border-slate-200 dark:border-slate-800 pt-4">
+                Test the pattern on regex101.com before using it in production. AI suggestions may miss edge cases.
+              </p>
             </div>
           )}
 
@@ -124,19 +127,20 @@ const ToolRegexGenerator: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-400 uppercase mb-2">You write</p>
-                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{`Match valid email addresses,
-but only Gmail and Outlook,
-and allow dots before the @.`}</pre>
+                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{`Match standard email addresses:
+letters, digits, dots, + tags,
+and a valid 2+ letter TLD.`}</pre>
               </div>
               <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4">
-                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-2">AI gives you</p>
-                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap">{`^(?!.*\\.\\.)[a-zA-Z0-9._]+
-@(gmail|outlook)\\.(com|in)$
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-2">AI suggests</p>
+                <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap">{`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$
 
 Explanation: allows letters,
-digits, dots, underscores;
-disallows consecutive dots;
-matches gmail/outlook only.`}</pre>
+digits, dots, underscores,
+%, +, - before @; domain with
+letters/digits/hyphens; TLD 2+
+letters. This is a permissive
+pattern — test on regex101.`}</pre>
               </div>
             </div>
           </section>
@@ -144,15 +148,15 @@ matches gmail/outlook only.`}</pre>
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">What is the AI Regex Generator?</h2>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-              The AI Regex Generator converts plain English into working regular expressions. Regex is powerful but notoriously hard to write from scratch — one misplaced <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-600 dark:text-emerald-400">*</code> or a missing <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-600 dark:text-emerald-400">\</code> can break the whole pattern. This tool lets you describe what you want in a normal sentence and returns a tested pattern you can paste directly into JavaScript, Python, PHP, Java, Go, or any language that supports regex.
+              The AI Regex Generator converts plain English into a regex pattern. Regex is powerful but easy to get wrong — one misplaced <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-600 dark:text-emerald-400">*</code> or a missing <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-sm font-mono text-emerald-600 dark:text-emerald-400">\</code> can break the whole pattern. Describe what you want in a normal sentence and get a pattern you can refine in JavaScript, Python, PHP, Java, Go, or any language that supports regex.
             </p>
             <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-              Every output includes a plain-English explanation of how the pattern works — so you learn regex as you use it. No login, no rate limits for guests, no hidden character caps.
+              Each output also includes a plain-English explanation of how the pattern works. Because AI suggestions can miss edge cases, always test the pattern on regex101.com before using it in production.
             </p>
           </section>
 
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Popular Regex Patterns You Can Generate</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Popular Regex Patterns</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Email validation</h3>
@@ -171,12 +175,12 @@ matches gmail/outlook only.`}</pre>
                 <p className="text-sm text-slate-600 dark:text-slate-400">"Require uppercase, lowercase, a digit, and a special character, min 8 chars."</p>
               </div>
               <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Date formats</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">"Match dates in DD/MM/YYYY and YYYY-MM-DD in one regex."</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Indian phone & PIN code</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">"Match Indian mobile numbers (+91 format) and 6-digit PIN codes."</p>
               </div>
               <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-lg">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">IP address</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">"Match IPv4 addresses, ignoring loopback and private ranges."</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Date formats</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">"Match dates in DD/MM/YYYY and YYYY-MM-DD in one regex."</p>
               </div>
             </div>
           </section>
@@ -185,8 +189,8 @@ matches gmail/outlook only.`}</pre>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">How to Use the Regex Generator</h2>
             <ol className="space-y-3 text-slate-700 dark:text-slate-300 list-decimal pl-6">
               <li><strong className="text-slate-900 dark:text-white">Describe what you want to match</strong> — in plain English, like "find dates in DD/MM/YYYY".</li>
-              <li><strong className="text-slate-900 dark:text-white">Click Generate Regex</strong> — the AI returns a pattern plus an explanation.</li>
-              <li><strong className="text-slate-900 dark:text-white">Copy and test</strong> — paste into your code or regex101.com to double-check.</li>
+              <li><strong className="text-slate-900 dark:text-white">Click Generate Regex</strong> — the AI proposes a pattern plus an explanation.</li>
+              <li><strong className="text-slate-900 dark:text-white">Test on regex101.com</strong> — verify with real examples before pasting into your code.</li>
             </ol>
           </section>
 
@@ -194,24 +198,24 @@ matches gmail/outlook only.`}</pre>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Frequently Asked Questions</h2>
             <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Can AI really write a regex from plain English?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. AI models trained on code understand regex syntax fluently. They can produce patterns for common cases (email, phone, URL) and complex edge cases (nested groups, lookaheads, backreferences).</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Can AI write a regex from plain English?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">For most common patterns — email, phone, URL, password, dates — yes. For complex edge cases (nested groups, lookaheads, backreferences), always test on regex101.com before production use.</p>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Which regex flavour does it support?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">JavaScript, Python, PHP, Java, Go, Ruby, .NET, Rust — practically every major flavour. Just mention the language in your prompt if you want dialect-specific features.</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Which regex flavours are supported?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">JavaScript, Python, PHP, Java, Go, Ruby, .NET, Rust — practically every major flavour. Mention the language in your prompt for dialect-specific features.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Does it support lookaheads and backreferences?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">JavaScript, Python, PHP, Java, and .NET support lookaheads and backreferences. Go's RE2 and Rust's regex crate do not — mention your language so the AI skips unsupported features.</p>
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Is my prompt stored?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Guest prompts are processed in memory and never saved. Sign up if you want to save your generated patterns in your account.</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Does it handle lookaheads and backreferences?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Yes. If you mention "negative lookahead", "backreference", or a specific pattern, the AI uses the appropriate constructs for the target language.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Guest prompts are processed in memory and not stored. Sign up if you want to save your generated patterns in your account.</p>
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">What's the limit per prompt?</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">2,000 characters — far more than you need for a single regex description. Guests get 30 generations per day.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">2,000 characters per prompt. Guests get 30 generations per day, no login required.</p>
               </div>
             </div>
           </section>
