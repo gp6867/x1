@@ -213,6 +213,39 @@ the suggested fix before applying.`}</pre>
           </section>
 
           <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Fix a specific Python error</h2>
+            <div className="grid md:grid-cols-2 gap-3">
+              <button onClick={() => navigate('/python-errors/typeerror-can-only-concatenate-str-not-int-to-str')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">TypeError: can only concatenate str</p>
+                <p className="text-xs text-slate-500 mt-1">Mixing string and int with +</p>
+              </button>
+              <button onClick={() => navigate('/python-errors/modulenotfounderror-no-module-named')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">ModuleNotFoundError: No module named</p>
+                <p className="text-xs text-slate-500 mt-1">Package not installed or wrong venv</p>
+              </button>
+              <button onClick={() => navigate('/python-errors/attributeerror-nonetype-object-has-no-attribute')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">AttributeError: 'NoneType' object</p>
+                <p className="text-xs text-slate-500 mt-1">Method called on a None value</p>
+              </button>
+              <button onClick={() => navigate('/python-errors/nameerror-name-is-not-defined')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">NameError: name is not defined</p>
+                <p className="text-xs text-slate-500 mt-1">Typo or variable used before definition</p>
+              </button>
+              <button onClick={() => navigate('/python-errors/indentationerror-unexpected-indent')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">IndentationError: unexpected indent</p>
+                <p className="text-xs text-slate-500 mt-1">Mixed tabs and spaces</p>
+              </button>
+              <button onClick={() => navigate('/python-errors/indexerror-list-index-out-of-range')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">IndexError: list index out of range</p>
+                <p className="text-xs text-slate-500 mt-1">Accessed element past end of list</p>
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-4">
+              See all errors at <button onClick={() => navigate('/python-errors/keyerror')} className="text-emerald-600 hover:underline">/python-errors</button> — including KeyError, ImportError, ValueError, SyntaxError, FileNotFoundError, and ZeroDivisionError.
+            </p>
+          </section>
+
+          <section className="mb-12">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Related Free Tools</h2>
             <div className="flex flex-wrap gap-3">
               <button onClick={() => navigate('/tools/code-explainer')} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition text-sm font-medium">
