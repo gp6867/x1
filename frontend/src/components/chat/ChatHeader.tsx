@@ -31,19 +31,20 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   return (
     <div className="header">
-      <div className="header-left flex items-center gap-1">
-        <button className="mobile-menu-btn" onClick={onMenuClick}>
+      {/* flex-shrink-0 aur gap-2 lagaya taaki button dabey nahi */}
+      <div className="header-left flex items-center gap-2 shrink-0">
+        <button className="mobile-menu-btn flex items-center justify-center" onClick={onMenuClick}>
           <Menu size={20} />
         </button>
         
-        {/* Guest ke liye Home Button - Changed CSS class to normal tailwind */}
+        {/* Guest ke liye Home Button - Size aur alignment fix kiya */}
         {showHomeButton && (
           <button 
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300 ml-1" 
+            className="flex items-center justify-center w-10 h-10 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200 ml-1" 
             onClick={() => navigate('/home')}
             title="Go to Home Page"
           >
-            <Home size={20} />
+            <Home size={22} />
           </button>
         )}
       </div>
@@ -69,7 +70,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
       
       <div className="header-right">
-        <button className="theme-toggle" onClick={onThemeToggle}>
+        <button className="theme-toggle flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" onClick={onThemeToggle}>
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
       </div>
