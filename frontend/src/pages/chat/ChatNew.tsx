@@ -85,6 +85,7 @@ const ChatNew: React.FC = () => {
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           onThemeToggle={toggleTheme}
           isDarkMode={isDarkMode}
+          showHomeButton={!token}
         />
         
         <div className="messages-container">

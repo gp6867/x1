@@ -1,26 +1,28 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';  // 👈 Add this
-import { Menu, Sun, Moon, Crown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, Sun, Moon, Crown, Home } from 'lucide-react';
 
 interface ChatHeaderProps {
   onMenuClick: () => void;
   onThemeToggle: () => void;
   isDarkMode: boolean;
   userName?: string;
+  showHomeButton?: boolean; // Naya prop add kiya
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ 
   onMenuClick, 
   onThemeToggle, 
   isDarkMode,
-  userName 
+  userName,
+  showHomeButton // Destructure kiya
 }) => {
   const [showUpgradeMenu, setShowUpgradeMenu] = useState(false);
-  const navigate = useNavigate();  // 👈 Add this
+  const navigate = useNavigate();
 
   const handleUpgrade = () => {
     setShowUpgradeMenu(false);
-    navigate('/pricing');  // 👈 Go to pricing page
+    navigate('/pricing');
   };
 
   const handleBrandClick = () => {
@@ -29,10 +31,21 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   return (
     <div className="header">
-      <div className="header-left">
+      <div className="header-left flex items-center">
         <button className="mobile-menu-btn" onClick={onMenuClick}>
           <Menu size={20} />
         </button>
+        
+        {/* Guest ke liye Home Button (Left side) */}
+        {showHomeButton && (
+          <button 
+            className="mobile-menu-btn ml-2" 
+            onClick={() => navigate('/home')}
+            title="Go to Home Page"
+          >
+            <Home size={20} />
+          </button>
+        )}
       </div>
       
       <div className="header-center">
@@ -40,7 +53,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           className="brand-container cursor-pointer hover:opacity-80 transition"
           onClick={handleBrandClick}
         >
-          <span className="brand-name">Xone AI</span>  {/* 👈 Name changed */}
+          <span className="brand-name">Xone AI</span>
           <Crown size={16} className="crown-icon" />
         </div>
         

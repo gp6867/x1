@@ -244,7 +244,7 @@ const Chat: React.FC = () => {
       <div className={`app ${isDarkMode ? 'dark' : ''}`}>
         <Sidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
         <div className="main-content">
-          <ChatHeader onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} onThemeToggle={toggleTheme} isDarkMode={isDarkMode} userName={user?.name} />
+          <ChatHeader onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} onThemeToggle={toggleTheme} isDarkMode={isDarkMode} userName={user?.name} showHomeButton={!token} />
           <div className="messages-container">
             {messages.length === 0 && !isLoading && (
               <MessageBubble content="Hello! How can I help you today?" role="assistant" timestamp={new Date()} chatId={null} messageIndex={undefined} initialFeedback={null} />
