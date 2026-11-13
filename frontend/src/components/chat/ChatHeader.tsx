@@ -30,30 +30,35 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   };
 
   return (
-    <div className="header">
+    <div className="header" style={{ position: 'relative', zIndex: 10 }}>
       <div className="header-left flex items-center gap-2 shrink-0">
         <button className="mobile-menu-btn" onClick={onMenuClick}>
           <Menu size={20} />
         </button>
         
-        {/* Guest ke liye Home Button - Inline styles to force visibility */}
+        {/* Guest ke liye Home Button - Solid Green Background */}
         {showHomeButton && (
           <button 
-            className="rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200" 
             style={{ 
               width: '40px', 
               height: '40px', 
-              display: 'inline-flex', 
+              display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
-              padding: 0, 
-              marginLeft: '8px',
-              flexShrink: 0
+              backgroundColor: '#10b981', // Green background
+              color: '#ffffff', // White icon
+              borderRadius: '8px',
+              marginLeft: '12px',
+              border: 'none',
+              cursor: 'pointer',
+              zIndex: 999, // Taaki kisi ke piche na chhupe
+              position: 'relative',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
             }}
             onClick={() => navigate('/home')}
             title="Go to Home Page"
           >
-            <Home size={24} style={{ width: '24px', height: '24px' }} />
+            <Home size={22} />
           </button>
         )}
       </div>
