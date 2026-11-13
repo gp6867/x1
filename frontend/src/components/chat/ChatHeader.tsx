@@ -7,7 +7,7 @@ interface ChatHeaderProps {
   onThemeToggle: () => void;
   isDarkMode: boolean;
   userName?: string;
-  showHomeButton?: boolean; // Naya prop add kiya
+  showHomeButton?: boolean;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ 
@@ -15,7 +15,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onThemeToggle, 
   isDarkMode,
   userName,
-  showHomeButton // Destructure kiya
+  showHomeButton
 }) => {
   const [showUpgradeMenu, setShowUpgradeMenu] = useState(false);
   const navigate = useNavigate();
@@ -31,15 +31,15 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   return (
     <div className="header">
-      <div className="header-left flex items-center">
+      <div className="header-left flex items-center gap-1">
         <button className="mobile-menu-btn" onClick={onMenuClick}>
           <Menu size={20} />
         </button>
         
-        {/* Guest ke liye Home Button (Left side) */}
+        {/* Guest ke liye Home Button - Changed CSS class to normal tailwind */}
         {showHomeButton && (
           <button 
-            className="mobile-menu-btn ml-2" 
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300 ml-1" 
             onClick={() => navigate('/home')}
             title="Go to Home Page"
           >
