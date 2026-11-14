@@ -186,4 +186,52 @@
       <changefreq>monthly</changefreq>
       <priority>0.9</priority>
    </url>
+   <url>
+      <loc>https://www.xoneai.in/js-errors/typeerror-cannot-read-properties-of-undefined</loc>
+      <lastmod>2026-11-14</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://www.xoneai.in/js-errors/referenceerror-x-is-not-defined</loc>
+      <lastmod>2026-11-14</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://www.xoneai.in/js-errors/typeerror-x-is-not-a-function</loc>
+      <lastmod>2026-11-14</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://www.xoneai.in/js-errors/cannot-read-property-length-of-null</loc>
+      <lastmod>2026-11-14</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://www.xoneai.in/js-errors/unexpected-token-in-json</loc>
+      <lastmod>2026-11-14</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://www.xoneai.in/js-errors/cors-policy-error</loc>
+      <lastmod>2026-11-14</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://www.xoneai.in/js-errors/maximum-call-stack-size-exceeded</loc>
+      <lastmod>2026-11-14</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   <url>
+      <loc>https://www.xoneai.in/js-errors/invalid-hook-call-react</loc>
+      <lastmod>2026-11-14</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
 </urlset>
