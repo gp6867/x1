@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Code, ArrowRight, Loader, Shield, Zap } from 'lucide-react';
+import { ArrowLeft, Code, ArrowRight, Loader, Shield, Zap, Check, Copy } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
 import axios from 'axios';
@@ -12,6 +12,7 @@ const ToolCodeExplainer: React.FC = () => {
   const [codeText, setCodeText] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleExplain = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +32,12 @@ const ToolCodeExplainer: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -99,9 +106,14 @@ const ToolCodeExplainer: React.FC = () => {
           </div>
 
           {result && (
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
-              <h3 className="font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-slate-800 pb-2">Explanation</h3>
-              <div className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap text-sm leading-relaxed">{result}</div>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-8">
+              <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                <h3 className="font-bold text-slate-900 dark:text-white">Explanation</h3>
+                <button onClick={copyToClipboard} className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5">
+                  {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+              <div className="p-6 text-slate-700 dark:text-slate-300 whitespace-pre-wrap text-sm leading-relaxed">{result}</div>
             </div>
           )}
 
@@ -208,6 +220,26 @@ to handle network errors.`}</pre>
               <li><strong className="text-slate-900 dark:text-white">Click Explain Code</strong> — the AI walks through it step by step.</li>
               <li><strong className="text-slate-900 dark:text-white">Read the bug/improvement notes</strong> — the AI also flags issues you didn't spot.</li>
             </ol>
+          </section>
+
+          {/* ✅ NAYA SECTION: Internal Linking to Error Pages */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Facing a specific error in your code?</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">We have dedicated pages to fix the most common Python and JavaScript errors.</p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <button onClick={() => navigate('/python-errors/typeerror-can-only-concatenate-str-not-int-to-str')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Python: TypeError: can only concatenate str</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/typeerror-cannot-read-properties-of-undefined')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: Cannot read properties of undefined</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/cors-policy-error')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: CORS Policy Error</p>
+              </button>
+              <button onClick={() => navigate('/python-errors/modulenotfounderror-no-module-named')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Python: ModuleNotFoundError</p>
+              </button>
+            </div>
           </section>
 
           <section className="mb-12">
