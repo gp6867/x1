@@ -25,6 +25,7 @@ const ToolRegexGenerator = lazy(() => import('./pages/ToolRegexGenerator'));
 const ToolCodeExplainer = lazy(() => import('./pages/ToolCodeExplainer'));
 const PythonErrorPage = lazy(() => import('./pages/PythonErrorPage'));
 const JsErrorPage = lazy(() => import('./pages/JsErrorPage'));
+const RegexExamplePage = lazy(() => import('./pages/RegexExamplePage'));
 const ErrorFixerPage = lazy(() => import('./pages/ErrorFixerPage')); // ✅ New Tool
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const OAuthCallback = lazy(() => import('./pages/oauth/Callback'));
@@ -71,6 +72,7 @@ function App() {
           <Route path="/tools/code-explainer" element={<ToolCodeExplainer />} />
           <Route path="/python-errors/:slug" element={<PythonErrorPage />} />
           <Route path="/js-errors/:slug" element={<JsErrorPage />} />
+          <Route path="/regex-examples/:slug" element={<RegexExamplePage />} />
           <Route path="/fix/:errorSlug" element={<ErrorFixerPage />} /> {/* ✅ New Route */}
 
           <Route path="/login" element={<Login />} />
