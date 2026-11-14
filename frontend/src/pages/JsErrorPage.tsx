@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertTriangle, ArrowRight, Loader, Shield } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ArrowRight, Loader, Shield, Search } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
 import axios from 'axios';
@@ -169,6 +169,20 @@ const JsErrorPage: React.FC = () => {
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">{faq.q}</h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400">{faq.a}</p>
                 </div>
+              ))}
+            </div>
+          </section>
+
+          {/* NEW: Search Keywords Section */}
+          <section className="mb-10">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+              <Search size={18} /> Related Search Terms
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {error.searchKeywords.map((keyword, i) => (
+                <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg text-xs">
+                  {keyword}
+                </span>
               ))}
             </div>
           </section>
