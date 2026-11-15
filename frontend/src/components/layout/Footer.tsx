@@ -31,6 +31,8 @@ const Footer: React.FC = () => {
               <li><Link to="/tools/python-error-fixer" className="hover:text-emerald-600 transition">Python Fixer</Link></li>
               <li><Link to="/tools/regex-generator" className="hover:text-emerald-600 transition">Regex Generator</Link></li>
               <li><Link to="/tools/code-explainer" className="hover:text-emerald-600 transition">Code Explainer</Link></li>
+              <li><Link to="/login" className="hover:text-emerald-600 transition">Log in</Link></li>
+              <li><Link to="/register" className="hover:text-emerald-600 transition">Sign Up</Link></li>
             </ul>
           </div>
 
