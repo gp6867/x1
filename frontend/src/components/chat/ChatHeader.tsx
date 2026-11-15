@@ -32,11 +32,15 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   return (
     <div className="header" style={{ position: 'relative', zIndex: 10 }}>
       <div className="header-left flex items-center gap-2 shrink-0">
-        <button className="mobile-menu-btn" onClick={onMenuClick}>
-          <Menu size={20} />
-        </button>
         
-        {/* Guest ke liye Home Button - Solid Green Background */}
+        {/* ✅ Menu button sirf logged-in users ke liye (Guest ke liye hide) */}
+        {!showHomeButton && (
+          <button className="mobile-menu-btn" onClick={onMenuClick}>
+            <Menu size={20} />
+          </button>
+        )}
+        
+        {/* ✅ Guest ke liye Home Button - Solid Green Background */}
         {showHomeButton && (
           <button 
             style={{ 
@@ -48,7 +52,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               backgroundColor: '#10b981', // Green background
               color: '#ffffff', // White icon
               borderRadius: '8px',
-              marginLeft: '12px',
+              marginLeft: '8px',
               border: 'none',
               cursor: 'pointer',
               zIndex: 999, // Taaki kisi ke piche na chhupe
