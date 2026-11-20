@@ -60,6 +60,29 @@ const Home: React.FC = () => {
   ];
 
   // Expanded skills
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is MonsterX AI?',
+        acceptedAnswer: { '@type': 'Answer', text: 'MonsterX AI is an advanced AI assistant with persistent memory, a coding agent, and tools for debugging Python errors and generating regex.' }
+      },
+      {
+        '@type': 'Question',
+        name: 'Is MonsterX AI free to use?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Yes, MonsterX AI offers a free tier with 30 messages per day. No credit card is required.' }
+      },
+      {
+        '@type': 'Question',
+        name: 'How is this different from ChatGPT?',
+        acceptedAnswer: { '@type': 'Answer', text: 'MonsterX AI has persistent memory across conversations, meaning it remembers your project context. ChatGPT forgets unless you re-paste context.' }
+      }
+    ]
+  };
+
   const skills = [
     {
       icon: Brain,
@@ -100,6 +123,7 @@ const Home: React.FC = () => {
         description="MonsterX AI is a free AI assistant with real memory, coding agent, web design, writing, and image vision. Built by an indie developer. No credit card required."
         canonical="https://www.xoneai.in/home"
         keywords="AI chat, coding agent, AI memory, free AI, MonsterX AI, Xone AI, AI writing, web design AI"
+        schema={faqSchema}
       />
 
       <div className="h-screen overflow-y-auto bg-white dark:bg-slate-950">
@@ -476,6 +500,30 @@ const Home: React.FC = () => {
             >
               Start Chatting Free <ArrowRight size={20} />
             </button>
+          </div>
+        </section>
+
+
+        {/* Long-form SEO Content to fix Low Word Count */}
+        <section className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+          <div className="max-w-4xl mx-auto px-6 py-16 md:py-20">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-6 text-center">
+              The Complete AI Workspace for Modern Developers
+            </h2>
+            <div className="space-y-6 text-slate-600 dark:text-slate-400 leading-relaxed text-lg">
+              <p>
+                In today's fast-paced development environment, developers are constantly switching between multiple tools. You might use <a href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">ChatGPT</a> for brainstorming, a code editor for writing, and <a href="https://stackoverflow.com" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">Stack Overflow</a> for debugging. MonsterX AI was built to eliminate this context-switching. 
+              </p>
+              <p>
+                Whether you are working with <a href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">Python</a>, <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">React</a>, or building complex databases, our AI understands your tech stack. Unlike traditional chatbots that treat every conversation as a blank slate, MonsterX AI utilizes a persistent memory layer. This means it remembers your coding style, your past errors, and your project architecture.
+              </p>
+              <p>
+                We also understand that sometimes you don't want to sign up for a full account just to get a quick answer. That is why we built standalone, free tools. If you are dealing with a Python traceback, our <strong>Python Error Fixer</strong> can read the stack trace and suggest a working fix. If you need to validate data, our <strong>AI Regex Generator</strong> translates plain English into complex regular expressions.
+              </p>
+              <p>
+                By combining a powerful conversational AI with dedicated developer utilities, we aim to create a central hub for your daily engineering tasks. And the best part? The core features are completely free.
+              </p>
+            </div>
           </div>
         </section>
 

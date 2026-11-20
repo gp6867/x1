@@ -15,6 +15,7 @@ const ROUTE_MAP = {
   '/blog/best-free-ai-tools-for-students': '/blog/best-free-ai-tools-for-students',
   '/blog/best-free-ai-tools-for-developers-2027': '/blog/best-free-ai-tools-for-developers-2027',
   '/blog/best-ai-tools-for-college-students-usa': '/blog/best-ai-tools-for-college-students-usa',
+  '/blog/how-i-built-my-own-ai-coding-assistant': '/blog/how-i-built-my-own-ai-coding-assistant',
   '/tools/python-error-fixer': '/tools/python-error-fixer',
   '/tools/regex-generator': '/tools/regex-generator',
   '/tools/code-explainer': '/tools/code-explainer',

@@ -294,4 +294,10 @@
       <changefreq>monthly</changefreq>
       <priority>0.9</priority>
    </url>
+   <url>
+      <loc>https://www.xoneai.in/blog/how-i-built-my-own-ai-coding-assistant</loc>
+      <lastmod>2026-11-20</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.9</priority>
+   </url>
 </urlset>

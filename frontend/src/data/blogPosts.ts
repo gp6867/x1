@@ -11,6 +11,71 @@ export interface BlogPost {
 }
 
 export const blogPosts: BlogPost[] = [
+
+  {
+    slug: 'how-i-built-my-own-ai-coding-assistant',
+    title: 'How I Built My Own AI Coding Assistant (And Why I Left ChatGPT)',
+    excerpt: 'The story behind MonsterX AI. Why I got tired of paying $20/month for tools that forget context, and how I built a memory-powered AI using FastAPI and React.',
+    date: '2026-11-20',
+    category: 'Indie Hacking',
+    readTime: '8 min read',
+    featured: true,
+    author: 'Samrat',
+    content: `
+# How I Built My Own AI Coding Assistant (And Why I Left ChatGPT)
+
+**Quotable Summary:** As of November 2026, indie developers are moving away from $20/month AI subscriptions towards custom, memory-powered coding assistants. Building your own using FastAPI and React reduces costs and solves the context-loss problem.
+
+When ChatGPT first launched, it felt like magic. I could paste my Python code, ask it why it was throwing a \`TypeError\`, and get an instant fix. But as my projects grew, the magic started to fade. 
+
+I found myself constantly re-pasting the same context: *"I am building a React app with a FastAPI backend. Here is my folder structure. Here is the database schema..."*
+
+Every new chat meant starting from zero. And paying $20 a month for an AI that forgets who I am? That didn't sit right with me. So, I decided to build my own: **MonsterX AI**.
+
+## The Problem: Context Windows are Not Memory
+
+Most AI models have a "context window" (e.g., 128k tokens). This means they can read a lot of text at once, but once you start a new chat, the window closes. The AI forgets everything. 
+
+For a developer, this is a nightmare. If I am debugging a bug in a specific file, I don't want to explain my entire tech stack every single time. I want an AI that remembers my project.
+
+## The Tech Stack: FastAPI + React
+
+I wanted to keep the stack simple, fast, and scalable. Here is what I used:
+
+### 1. The Backend (FastAPI)
+Python is the language of AI, so FastAPI was a no-brainer. It is incredibly fast, has automatic Swagger docs, and handles async requests beautifully. I used Groq's API for lightning-fast LLM inference (using Llama 3.3 70B), and I implemented a custom JWT authentication system for user sessions.
+
+### 2. The Frontend (React + Vite)
+For the UI, I used React with Vite. It gives a blazing-fast developer experience. For the styling, I used Tailwind CSS to make it look clean and modern. Since I wanted a ChatGPT-like interface, I used \`react-markdown\` for rendering code blocks and \`lucide-react\` for icons.
+
+## The Biggest Challenge: Building Real Memory
+
+The hardest part was not generating text; it was building the **memory system**. 
+
+I didn't want to just store a long array of past messages (which hits token limits quickly). Instead, I built a semantic memory layer. When a user sends a message, the system checks their past conversations and retrieves the most relevant context. 
+
+For example, if you are working on a Python script, the AI will automatically recall your Python setup from last week, but it won't confuse it with your React code. 
+
+## Why I Built Custom Tools Instead of Just a Chatbot
+
+As I used the tool, I realized that developers don't always want to "chat." Sometimes, they just want to **fix an error** or **generate a regex**. 
+
+That is why I built dedicated, no-login tools:
+*   **Python Error Fixer:** Paste a traceback, get a working fix.
+*   **AI Regex Generator:** Describe a pattern in English, get the code.
+*   **AI Code Explainer:** Paste legacy code and understand it line-by-line.
+
+These tools are free because I remember how frustrating it was as a student to hit paywalls just to debug a simple error.
+
+## The Result: MonsterX AI
+
+Building MonsterX AI has been an incredible learning experience. It taught me about LLM routing, prompt engineering, and building resilient APIs. 
+
+But more importantly, it gave me an AI that actually works the way I do. It remembers my codebase, it doesn't charge me $20/month for basic features, and it is built by an indie developer who cares.
+
+If you are a developer tired of re-explaining your code to your AI, give it a try. It's free, no credit card required.
+    `
+  },
   // ===== TIER 2: BEST AI + 2027 =====
   {
     slug: 'best-free-ai-tools-for-developers-2027',
