@@ -92,7 +92,7 @@ const PythonErrorPage: React.FC = () => {
 
         <main className="max-w-3xl mx-auto px-6 py-12">
           <nav className="mb-6 text-xs text-slate-500 dark:text-slate-500">
-            <span>Home</span> / <span>Python Errors</span> / <span className="text-slate-900 dark:text-white">{error.slug}</span>
+            <span>Home</span> / <button onClick={() => navigate('/python-errors')} className="hover:underline">Python Errors</button> / <span className="text-slate-900 dark:text-white">{error.slug}</span>
           </nav>
 
           <div className="mb-8">
@@ -102,10 +102,23 @@ const PythonErrorPage: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-4 leading-tight">
               {error.title}
             </h1>
+            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-500 mb-4">
+              <span>By <strong className="text-slate-700 dark:text-slate-300">Samrat</strong></span>
+              <span>•</span>
+              <span>Last updated: Nov 2026</span>
+            </div>
+
             <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl p-4 mb-4">
               <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase mb-2">Exact message</p>
               <pre className="text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap">{error.exactMessage}</pre>
             </div>
+          </div>
+
+          <div className="mb-6 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">Want AI to fix this error for you instantly?</p>
+            <button onClick={() => navigate('/tools/python-error-fixer')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition shrink-0">
+              Paste Traceback in Python Error Fixer →
+            </button>
           </div>
 
           <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4 mb-8">

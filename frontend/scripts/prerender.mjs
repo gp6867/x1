@@ -19,6 +19,7 @@ const ROUTE_MAP = {
   '/tools/python-error-fixer': '/tools/python-error-fixer',
   '/tools/regex-generator': '/tools/regex-generator',
   '/tools/code-explainer': '/tools/code-explainer',
+  '/python-errors': '/python-errors',
   '/python-errors/typeerror-can-only-concatenate-str-not-int-to-str': '/python-errors/typeerror-can-only-concatenate-str-not-int-to-str',
   '/python-errors/modulenotfounderror-no-module-named': '/python-errors/modulenotfounderror-no-module-named',
   '/python-errors/attributeerror-nonetype-object-has-no-attribute': '/python-errors/attributeerror-nonetype-object-has-no-attribute',

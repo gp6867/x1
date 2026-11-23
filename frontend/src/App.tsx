@@ -24,6 +24,7 @@ const ToolPythonFixer = lazy(() => import('./pages/ToolPythonFixer'));
 const ToolRegexGenerator = lazy(() => import('./pages/ToolRegexGenerator'));
 const ToolCodeExplainer = lazy(() => import('./pages/ToolCodeExplainer'));
 const PythonErrorPage = lazy(() => import('./pages/PythonErrorPage'));
+const PythonErrorsHub = lazy(() => import('./pages/PythonErrorsHub'));
 const JsErrorPage = lazy(() => import('./pages/JsErrorPage'));
 const RegexExamplePage = lazy(() => import('./pages/RegexExamplePage'));
 const ErrorFixerPage = lazy(() => import('./pages/ErrorFixerPage')); // ✅ New Tool
@@ -70,6 +71,7 @@ function App() {
           <Route path="/tools/python-error-fixer" element={<ToolPythonFixer />} />
           <Route path="/tools/regex-generator" element={<ToolRegexGenerator />} />
           <Route path="/tools/code-explainer" element={<ToolCodeExplainer />} />
+          <Route path="/python-errors" element={<PythonErrorsHub />} />
           <Route path="/python-errors/:slug" element={<PythonErrorPage />} />
           <Route path="/js-errors/:slug" element={<JsErrorPage />} />
           <Route path="/regex-examples/:slug" element={<RegexExamplePage />} />

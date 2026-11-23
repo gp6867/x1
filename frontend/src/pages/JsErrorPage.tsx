@@ -92,7 +92,7 @@ const JsErrorPage: React.FC = () => {
 
         <main className="max-w-3xl mx-auto px-6 py-12">
           <nav className="mb-6 text-xs text-slate-500 dark:text-slate-500">
-            <span>Home</span> / <span>JS Errors</span> / <span className="text-slate-900 dark:text-white">{error.slug}</span>
+            <span>Home</span> / <span className="text-slate-500">JS Errors</span> / <span className="text-slate-900 dark:text-white">{error.slug}</span>
           </nav>
 
           <div className="mb-8">
@@ -102,6 +102,12 @@ const JsErrorPage: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-4 leading-tight">
               {error.title}
             </h1>
+            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-500 mb-4">
+              <span>By <strong className="text-slate-700 dark:text-slate-300">Samrat</strong></span>
+              <span>•</span>
+              <span>Last updated: Nov 2026</span>
+            </div>
+
             <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl p-4 mb-4">
               <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase mb-2">Exact message</p>
               <pre className="text-sm font-mono text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap">{error.exactMessage}</pre>
