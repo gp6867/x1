@@ -31,6 +31,8 @@ const ROUTE_MAP = {
   '/python-errors/syntaxerror-invalid-syntax': '/python-errors/syntaxerror-invalid-syntax',
   '/python-errors/filenotfounderror-no-such-file-or-directory': '/python-errors/filenotfounderror-no-such-file-or-directory',
   '/python-errors/zerodivisionerror-division-by-zero': '/python-errors/zerodivisionerror-division-by-zero',
+  '/python-errors/valueerror-not-enough-values-to-unpack': '/python-errors/valueerror-not-enough-values-to-unpack',
+  '/python-errors/attributeerror-nonetype-object-has-no-attribute-group': '/python-errors/attributeerror-nonetype-object-has-no-attribute-group',
   '/js-errors/typeerror-cannot-read-properties-of-undefined': '/js-errors/typeerror-cannot-read-properties-of-undefined',
   '/js-errors/referenceerror-x-is-not-defined': '/js-errors/referenceerror-x-is-not-defined',
   '/js-errors/typeerror-x-is-not-a-function': '/js-errors/typeerror-x-is-not-a-function',

@@ -14,28 +14,45 @@ export interface PythonError {
 }
 
 export const pythonErrors: PythonError[] = [
-  {
+    {
     slug: 'typeerror-can-only-concatenate-str-not-int-to-str',
     title: "Fix: TypeError: can only concatenate str (not 'int') to str",
     exactMessage: `TypeError: can only concatenate str (not "int") to str`,
-    metaTitle: "Fix TypeError: can only concatenate str (not int) to str — Python",
-    metaDescription: "Fix 'TypeError: can only concatenate str (not \"int\") to str' in Python. Cause, working fix, and code examples. Free AI fixer, no signup.",
-    shortAnswer: "This TypeError occurs when you use the + operator between a string and an integer in Python. Python does not auto-convert types, so you must wrap the integer with str(), or use an f-string for implicit conversion.",
-    cause: "Python's + operator behaves differently for strings and integers: for strings it concatenates, for integers it adds. Mixing the two raises TypeError because Python refuses to guess whether you want '12' or 3 from '1' + 2. Unlike JavaScript, Python never silently coerces types.",
-    badCode: `total = "Total: " + 100\n# TypeError: can only concatenate str (not "int") to str`,
-    goodCode: `# Option 1: explicit str()\ntotal = "Total: " + str(100)\n\n# Option 2: f-string (recommended)\ntotal = f"Total: {100}"\n\n# Option 3: format()\ntotal = "Total: {}".format(100)`,
+    metaTitle: "Fix TypeError: can only concatenate str (not int/float) to str",
+    metaDescription: "Fix 'TypeError: can only concatenate str' in Python. Covers int, float, and list errors. Paste your traceback to get an instant AI fix.",
+    shortAnswer: "This TypeError occurs when you use the + operator between a string and a non-string (like an integer, float, or list). Python does not auto-convert types, so you must wrap the non-string with str(), or use an f-string.",
+    cause: "Python's + operator behaves differently for strings (concatenation) and numbers (addition). Mixing a string with an integer, float, or list raises a TypeError because Python refuses to guess your intent.",
+    badCode: `# Example 1: String + Integer
+total = "Total: " + 100
+
+# Example 2: String + Float
+price = "Cost: " + 99.99
+
+# Example 3: String + List
+items = "Items: " + ["apple", "banana"]`,
+    goodCode: `# Fix for Integer
+print("Total: " + str(100))
+# or use f-string:
+print(f"Total: {100}")
+
+# Fix for Float
+print(f"Cost: {99.99}")
+
+# Fix for List (join items)
+print("Items: " + ", ".join(["apple", "banana"]))`,
     steps: [
-      "Find the line where a string is added to a non-string with +",
-      "Wrap the non-string value with str() or convert it inside an f-string",
-      "If you are sure you wanted numeric addition, remove the quotes from the string",
-      "Test with print(type(...)) before the + to verify both operands are strings"
+      "Find the line causing the error in your traceback",
+      "Check the variable types using print(type(variable_name))",
+      "If adding an int or float to a string, use an f-string (e.g., f'Total: {value}')",
+      "If adding a list to a string, use the .join() method to convert the list to a string first"
     ],
     faqs: [
-      { q: "Why does Python not auto-convert int to str?", a: "Python is strongly typed by design. Auto-conversion hides bugs, so Python forces you to be explicit with str() or f-strings." },
-      { q: "What is the fastest way to fix this error?", a: "Use an f-string: f\"Total: {100}\". It is faster than str() and more readable." },
-      { q: "Does the same error occur with floats?", a: "Yes. Any non-str type (int, float, bool, list) mixed with a string using + raises this TypeError." }
+      { q: "Why does Python not auto-convert int to str?", a: "Python is strongly typed by design. Auto-conversion hides bugs, so Python forces you to be explicit." },
+      { q: "How do I fix 'not float to str'?", a: "Exactly the same way as int. Use str(99.99) or f'Cost: {99.99}'." },
+      { q: "How do I fix 'not list to str'?", a: "You cannot add a list directly to a string. Use '.join(list_name)' if it contains strings, or convert the list using str(list_name)." }
     ],
-    related: ['nameerror-name-is-not-defined', 'attributeerror-nonetype-object-has-no-attribute']
+    related: ['nameerror-name-is-not-defined', 'attributeerror-nonetype-object-has-no-attribute'],
+    searchKeywords: ["can only concatenate str not int", "can only concatenate str not float", "can only concatenate str not list", "typeerror python fix"]
   },
   {
     slug: 'modulenotfounderror-no-module-named',
@@ -129,28 +146,39 @@ export const pythonErrors: PythonError[] = [
     ],
     related: ['syntaxerror-invalid-syntax', 'nameerror-name-is-not-defined']
   },
-  {
+    {
     slug: 'indexerror-list-index-out-of-range',
     title: "Fix: IndexError: list index out of range",
     exactMessage: `IndexError: list index out of range`,
     metaTitle: "Fix IndexError: list index out of range — Python",
-    metaDescription: "Fix IndexError: list index out of range in Python. Cause, off-by-one bugs, and how to safely access lists. Free AI Python fixer.",
-    shortAnswer: "IndexError: list index out of range means you accessed an element at a position that does not exist. Lists are 0-indexed, so a list with 3 elements has valid indices 0, 1, and 2 — accessing index 3 or higher raises IndexError.",
-    cause: "When you write my_list[i], Python checks that 0 <= i < len(my_list). If i is equal to or greater than the list length (or negative beyond -len), it raises IndexError. The most common scenario is a loop that uses <= len(my_list) instead of < len(my_list), or an API that returned fewer items than expected.",
-    badCode: `items = [10, 20, 30]\nprint(items[3])\n# IndexError: list index out of range`,
-    goodCode: `items = [10, 20, 30]\n\n# Check before accessing\nif len(items) > 3:\n    print(items[3])\n\n# Or use safe access with default\ndef safe_get(lst, i, default=None):\n    return lst[i] if 0 <= i < len(lst) else default\n\n# Or catch the exception\ntry:\n    print(items[3])\nexcept IndexError:\n    print("not enough items")`,
+    metaDescription: "Fix IndexError: list index out of range in Python. Covers list, string, tuple, and Pandas index errors.",
+    shortAnswer: "IndexError: list index out of range means you accessed an element at a position that does not exist. Lists are 0-indexed, so a list with 3 elements has valid indices 0, 1, and 2 — accessing index 3 raises IndexError.",
+    cause: "When you write my_list[i], Python checks that 0 <= i < len(my_list). If i is equal to or greater than the list length, it raises IndexError. In Pandas, 'single positional indexer is out-of-bounds' is a similar error.",
+    badCode: `items = [10, 20, 30]
+print(items[3])
+# IndexError: list index out of range`,
+    goodCode: `items = [10, 20, 30]
+
+# Check before accessing
+if len(items) > 3:
+    print(items[3])
+
+# Or use safe access
+def safe_get(lst, i, default=None):
+    return lst[i] if 0 <= i < len(lst) else default`,
     steps: [
       "Print len(your_list) right before the failing line to see the real size",
-      "Check your loop bounds — range(len(lst)) is safer than manual indexing",
-      "If the list comes from an API or file, verify the count first",
+      "For Pandas, use .iloc[] for positional indexing and .loc[] for label indexing",
+      "If the list comes from an API, verify the count first",
       "For 'last element' access, use my_list[-1] which is safe when the list is non-empty"
     ],
     faqs: [
-      { q: "Does negative indexing ever raise IndexError?", a: "Yes, if the index is too negative. On a 3-element list, my_list[-3] is valid (first item) but my_list[-4] raises IndexError." },
-      { q: "How do I iterate safely?", a: "Prefer for item in my_list instead of for i in range(len(my_list)): my_list[i]. This avoids the index entirely." },
-      { q: "What about NumPy arrays?", a: "NumPy raises the same IndexError but with extra context. Use arr.shape to confirm dimensions before indexing." }
+      { q: "What is 'string index out of range'?", a: "Same concept. A string of length 3 has indices 0, 1, 2. Accessing index 3 raises IndexError." },
+      { q: "What is 'tuple index out of range'?", a: "Tuples are immutable lists. The same 0-indexing rules apply." },
+      { q: "What is 'single positional indexer is out-of-bounds'?", a: "This is a Pandas error. You are likely using .iloc[] with an index that is larger than the DataFrame." }
     ],
-    related: ['keyerror', 'attributeerror-nonetype-object-has-no-attribute']
+    related: ['keyerror', 'attributeerror-nonetype-object-has-no-attribute'],
+    searchKeywords: ["indexerror list index out of range", "list assignment index out of range", "string index out of range", "single positional indexer is out-of-bounds"]
   },
   {
     slug: 'keyerror',
@@ -175,39 +203,53 @@ export const pythonErrors: PythonError[] = [
     ],
     related: ['indexerror-list-index-out-of-range', 'attributeerror-nonetype-object-has-no-attribute']
   },
-  {
+    {
     slug: 'importerror-cannot-import-name',
     title: "Fix: ImportError: cannot import name 'X' from 'Y'",
-    exactMessage: `ImportError: cannot import name 'foo' from 'mymodule'`,
-    metaTitle: "Fix ImportError: cannot import name — Python",
-    metaDescription: "Fix ImportError: cannot import name in Python. Cause, circular imports, and step-by-step resolution. Free AI Python fixer.",
-    shortAnswer: "ImportError: cannot import name X means Python found the module Y but could not find the name X inside it. The usual causes are a typo in the name, a circular import between two modules, or X is actually defined in a submodule.",
-    cause: "Python first locates the module Y on sys.path, then looks up X as an attribute of that module. If X is missing — because of a typo, a different case, a circular import that prevents full initialization, or X lives in a submodule — it raises ImportError.",
-    badCode: `from mymodule import foo\n# ImportError: cannot import name 'foo' from 'mymodule'`,
-    goodCode: `# Check: is foo actually defined in mymodule?\n# mymodule.py\n# def foo(): ...\n\n# Or if it is in a submodule:\nfrom mymodule.utils import foo\n\n# Or use the module-qualified form to catch missing attrs:\nimport mymodule\nmymodule.foo()`,
+    exactMessage: `ImportError: cannot import name 'ParameterSource' from 'click.core'`,
+    metaTitle: "Fix ImportError: cannot import name from module — Python",
+    metaDescription: "Fix ImportError: cannot import name in Python. Covers circular imports, click library version issues, and step-by-step resolution.",
+    shortAnswer: "ImportError: cannot import name X means Python found the module Y but could not find the name X inside it. The usual causes are a typo, a circular import, or a library version mismatch.",
+    cause: "Python first locates the module Y, then looks up X as an attribute. If X is missing — because of a typo, a circular import, or X lives in a submodule — it raises ImportError. Example: 'ParameterSource' from click.core often happens due to a version mismatch between click and Flask.",
+    badCode: `from click.core import ParameterSource
+# ImportError: cannot import name 'ParameterSource'`,
+    goodCode: `# Check: is it a version mismatch?
+# pip install --upgrade click
+
+# Or if it is in a submodule:
+from mymodule.utils import foo`,
     steps: [
-      "Open the target module and confirm the name is spelled and cased exactly the same",
-      "Check whether the name is defined in a submodule — then import from that submodule",
+      "Open the target module and confirm the name is spelled exactly the same",
+      "If you get 'cannot import name X from click.core', try updating the library (pip install --upgrade click)",
       "Look for circular imports: module A imports from B, and B imports from A",
       "Print the module's dir() at import time to see what is available"
     ],
     faqs: [
-      { q: "How do I fix circular imports?", a: "Move the shared code to a third module both can import, or defer the import inside a function so it happens at runtime instead of at module load." },
-      { q: "Why does it work in one file but not another?", a: "sys.path differs between files. A file in a subdirectory may not see the same top-level packages. Use absolute imports from the project root." },
-      { q: "Does case matter?", a: "Yes, on Linux and macOS case-sensitive filesystems. 'Foo' and 'foo' are different modules on Linux, unlike Windows." }
+      { q: "How do I fix circular imports?", a: "Move the shared code to a third module both can import, or defer the import inside a function." },
+      { q: "Why does it work in one file but not another?", a: "sys.path differs between files. Use absolute imports from the project root." }
     ],
-    related: ['modulenotfounderror-no-module-named', 'nameerror-name-is-not-defined']
+    related: ['modulenotfounderror-no-module-named', 'nameerror-name-is-not-defined'],
+    searchKeywords: ["importerror cannot import name", "cannot import name parametersource from click core", "python circular import", "click version error"]
   },
-  {
+    {
     slug: 'valueerror-too-many-values-to-unpack',
     title: "Fix: ValueError: too many values to unpack",
     exactMessage: `ValueError: too many values to unpack (expected 2)`,
-    metaTitle: "Fix ValueError: too many values to unpack — Python",
-    metaDescription: "Fix ValueError: too many values to unpack in Python. Cause, star expressions, and working code examples. Free AI Python fixer.",
+    metaTitle: "Fix ValueError: too many values to unpack (expected 2) — Python",
+    metaDescription: "Fix ValueError: too many values to unpack in Python. Covers star expressions, expected 2, and not enough values errors.",
     shortAnswer: "ValueError: too many values to unpack occurs when the right side of an unpacking assignment yields more items than the left side expects. Fix by adjusting the number of targets, using *rest to capture extras, or indexing the iterable directly.",
-    cause: "Python's tuple unpacking is strict: a, b = iterable requires exactly two values. If iterable has three or more items, it raises this ValueError. The error often appears when unpacking a list of dicts (each dict is one item, not its keys) or after refactoring a function to return more values.",
-    badCode: `a, b = (1, 2, 3)\n# ValueError: too many values to unpack (expected 2)`,
-    goodCode: `# Option 1: match the count\na, b, c = (1, 2, 3)\n\n# Option 2: star to capture extras\na, b, *rest = (1, 2, 3, 4, 5)\n\n# Option 3: index the items you want\nitems = (1, 2, 3)\na, b = items[0], items[1]`,
+    cause: "Python's tuple unpacking is strict: a, b = iterable requires exactly two values. If iterable has three or more items, it raises this ValueError.",
+    badCode: `a, b = (1, 2, 3)
+# ValueError: too many values to unpack (expected 2)`,
+    goodCode: `# Option 1: match the count
+a, b, c = (1, 2, 3)
+
+# Option 2: star to capture extras
+a, b, *rest = (1, 2, 3, 4, 5)
+
+# Option 3: index the items you want
+items = (1, 2, 3)
+a, b = items[0], items[1]`,
     steps: [
       "Print the right side's length or type before the assignment",
       "If a function returns more items than expected, either unpack all of them or index one",
@@ -215,45 +257,55 @@ export const pythonErrors: PythonError[] = [
       "If iterating a list of dicts, remember the dict itself is one item, not each key"
     ],
     faqs: [
-      { q: "What does *rest do?", a: "*rest captures the remaining items as a list. a, *rest = [1,2,3,4] gives a=1, rest=[2,3,4]. Only one starred target is allowed." },
-      { q: "Why does for k, v in dict fail?", a: "Iterating a dict yields keys, not pairs. Use dict.items() to iterate over (key, value) pairs." },
-      { q: "What is 'not enough values to unpack'?", a: "The opposite error — the iterable has fewer items than the targets expect. Same fixes apply in reverse." }
+      { q: "What does *rest do?", a: "*rest captures the remaining items as a list. a, *rest = [1,2,3,4] gives a=1, rest=[2,3,4]." },
+      { q: "What is 'not enough values to unpack'?", a: "The opposite error — the iterable has fewer items than the targets expect." }
     ],
-    related: ['indexerror-list-index-out-of-range', 'typeerror-can-only-concatenate-str-not-int-to-str']
+    related: ['indexerror-list-index-out-of-range', 'typeerror-can-only-concatenate-str-not-int-to-str'],
+    searchKeywords: ["too many values to unpack", "expected 2", "not enough values to unpack", "unpack python error"]
   },
-  {
+    {
     slug: 'syntaxerror-invalid-syntax',
     title: "Fix: SyntaxError: invalid syntax",
     exactMessage: `SyntaxError: invalid syntax`,
-    metaTitle: "Fix SyntaxError: invalid syntax in Python",
-    metaDescription: "Fix SyntaxError: invalid syntax in Python. Common causes: missing colon, mismatched parentheses, and keyword typos. Free AI Python fixer.",
-    shortAnswer: "SyntaxError: invalid syntax means Python could not parse your code at all. The most common causes are a missing colon after if/for/def/class, mismatched brackets, using = instead of == for comparison, or a Python 2 print statement in Python 3.",
-    cause: "Unlike runtime errors, SyntaxError happens before any code runs — Python's parser fails on the raw text. The error message often points to the line after the real problem because the parser gets stuck when it hits something unexpected.",
-    badCode: `if x > 0\n    print("positive")\n# SyntaxError: invalid syntax`,
-    goodCode: `if x > 0:\n    print("positive")`,
+    metaTitle: "Fix SyntaxError: invalid syntax in Python (Line -1)",
+    metaDescription: "Fix SyntaxError: invalid syntax in Python. Covers missing colons, mismatched parentheses, and syntaxerror on line -1.",
+    shortAnswer: "SyntaxError: invalid syntax means Python could not parse your code at all. The most common causes are a missing colon after if/for/def/class, mismatched brackets, or using = instead of == for comparison.",
+    cause: "Unlike runtime errors, SyntaxError happens before any code runs. The error message often points to the line after the real problem. If you see 'syntaxerror on line -1', it usually means an unclosed bracket or quote.",
+    badCode: `if x > 0
+    print("positive")
+# SyntaxError: invalid syntax`,
+    goodCode: `if x > 0:
+    print("positive")`,
     steps: [
-      "Read the line number in the error — the real problem is often one or two lines above",
-      "Check for missing colons after if, else, for, while, def, class, try, except, finally, with",
+      "Read the line number in the error — the real problem is often one line above",
+      "Check for missing colons after if, else, for, while, def, class, try, except",
       "Verify matching brackets: (), [], {} — count each pair",
-      "In Python 3, use print(x) not print x"
+      "If you see 'line -1', search for an unclosed string or parenthesis"
     ],
     faqs: [
-      { q: "Why does the error point to the wrong line?", a: "Python's parser fails when it sees something unexpected, which is often one line after the real mistake. Always check the line before the reported one." },
-      { q: "What is IndentationError vs SyntaxError?", a: "IndentationError is a subtype of SyntaxError specific to indentation. It's a special case worth handling separately." },
-      { q: "How do I find the exact problem?", a: "Run python -m py_compile file.py — the parser will point precisely. Or use an IDE like VS Code which highlights syntax live." }
+      { q: "Why does the error point to the wrong line?", a: "Python's parser fails when it sees something unexpected, which is often one line after the real mistake." },
+      { q: "What does 'syntaxerror on line -1' mean?", a: "It usually means a bracket or quote was opened but never closed, so the parser reached the end of the file while expecting more." }
     ],
-    related: ['indentationerror-unexpected-indent', 'nameerror-name-is-not-defined']
+    related: ['indentationerror-unexpected-indent', 'nameerror-name-is-not-defined'],
+    searchKeywords: ["syntaxerror invalid syntax", "syntaxerror on line -1", "invalid syntax python", "python missing colon"]
   },
-  {
+    {
     slug: 'filenotfounderror-no-such-file-or-directory',
     title: "Fix: FileNotFoundError: No such file or directory",
     exactMessage: `FileNotFoundError: [Errno 2] No such file or directory: 'data.csv'`,
     metaTitle: "Fix FileNotFoundError: No such file or directory — Python",
-    metaDescription: "Fix FileNotFoundError: No such file or directory in Python. Cause, working directory gotcha, and code fixes. Free AI Python fixer.",
-    shortAnswer: "FileNotFoundError means Python's open() could not find the file at the path you specified. The most common cause is a relative path that resolves against the current working directory, which is rarely the script's folder.",
-    cause: "open('data.csv') resolves against os.getcwd(), not the location of the script. So a file next to your script still fails if you run the script from another directory. Absolute paths or pathlib.Path(__file__).parent both avoid this trap.",
-    badCode: `with open('data.csv') as f:\n    print(f.read())\n# FileNotFoundError: [Errno 2] ... 'data.csv'`,
-    goodCode: `from pathlib import Path\n\n# Resolve relative to the script, not the working directory\nhere = Path(__file__).parent\nwith open(here / 'data.csv') as f:\n    print(f.read())`,
+    metaDescription: "Fix FileNotFoundError in Python. Covers relative vs absolute paths, os.getcwd(), pathlib, and Windows backslash issues. Free AI fixer.",
+    shortAnswer: "FileNotFoundError means Python's open() could not find the file at the path you specified. The most common cause is a relative path that resolves against the current working directory, not the script's folder.",
+    cause: "open('data.csv') resolves against os.getcwd(). So a file next to your script still fails if you run the script from another directory. Absolute paths or pathlib.Path(__file__).parent both avoid this trap.",
+    badCode: `with open('data.csv') as f:
+    print(f.read())
+# FileNotFoundError: [Errno 2] ... 'data.csv'`,
+    goodCode: `from pathlib import Path
+
+# Resolve relative to the script, not the working directory
+here = Path(__file__).parent
+with open(here / 'data.csv') as f:
+    print(f.read())`,
     steps: [
       "Print os.getcwd() to see the actual working directory",
       "Print os.listdir() to confirm the file's location",
@@ -261,11 +313,12 @@ export const pythonErrors: PythonError[] = [
       "Avoid hardcoded paths; use environment variables or config files for portability"
     ],
     faqs: [
-      { q: "Why does it work in terminal but not in an IDE?", a: "The terminal and the IDE set different working directories. The file path is relative, so it resolves differently. Use absolute paths or pathlib to fix." },
-      { q: "How do I fix this in Docker?", a: "Copy the data file into the image with COPY in the Dockerfile. The container's working directory has no access to your host filesystem." },
-      { q: "Should I use os.path or pathlib?", a: "pathlib. It is more readable, cross-platform, and available since Python 3.4. The / operator builds paths safely." }
+      { q: "Why does it work in terminal but not in an IDE?", a: "The terminal and the IDE set different working directories. Use absolute paths or pathlib to fix." },
+      { q: "How do I fix this in Docker?", a: "Copy the data file into the image with COPY in the Dockerfile." },
+      { q: "Should I use os.path or pathlib?", a: "pathlib. It is more readable, cross-platform, and available since Python 3.4." }
     ],
-    related: ['modulenotfounderror-no-module-named', 'importerror-cannot-import-name']
+    related: ['modulenotfounderror-no-module-named', 'importerror-cannot-import-name'],
+    searchKeywords: ["filenotfounderror", "no such file or directory python", "python file not found", "open file python error"]
   },
   {
     slug: 'zerodivisionerror-division-by-zero',
@@ -290,4 +343,51 @@ export const pythonErrors: PythonError[] = [
     ],
     related: ['valueerror-too-many-values-to-unpack', 'typeerror-can-only-concatenate-str-not-int-to-str']
   },
+,
+{
+    slug: 'valueerror-not-enough-values-to-unpack',
+    title: "Fix: ValueError: not enough values to unpack",
+    exactMessage: `ValueError: not enough values to unpack (expected 2, got 1)`,
+    metaTitle: "Fix ValueError: not enough values to unpack in Python",
+    metaDescription: "Fix 'ValueError: not enough values to unpack' in Python. Learn why this happens and how to fix it with code examples.",
+    shortAnswer: "This error occurs when you try to assign fewer values from an iterable (like a list or tuple) to more variables than it contains. For example, trying to unpack a list with 1 item into 2 variables.",
+    cause: "Python requires the number of variables on the left side of the = sign to exactly match the number of items in the iterable on the right side. If the iterable returns fewer items than expected (e.g., a function returns 1 item instead of 2), this error is raised.",
+    badCode: `my_list = [1]\na, b = my_list\n# ValueError: not enough values to unpack (expected 2, got 1)`,
+    goodCode: `my_list = [1, 2]\na, b = my_list\n\n# Or, if the list size varies, use a default or check length:\nif len(my_list) == 2:\n    a, b = my_list`,
+    steps: [
+      "Check the length of the iterable before unpacking it using len().",
+      "Ensure the function returning the data is actually returning the number of items you expect.",
+      "If unpacking a string, remember that spaces count as characters.",
+      "If you are unpacking a dictionary, use .items() to get keys and values together."
+    ],
+    faqs: [
+      { q: "Why does this happen with a string?", a: "Strings are iterables. If you do a, b = 'hello', Python tries to unpack 5 characters into 2 variables, which fails." },
+      { q: "What if the list has more items than variables?", a: "You will get 'too many values to unpack'. You can use the * (star) operator to catch the rest: a, *b = [1, 2, 3]." }
+    ],
+    related: ['valueerror-too-many-values-to-unpack', 'indexerror-list-index-out-of-range'],
+    searchKeywords: ["not enough values to unpack", "not enough values to unpack expected 2", "python unpack error"]
+  },
+  {
+    slug: 'attributeerror-nonetype-object-has-no-attribute-group',
+    title: "Fix: AttributeError: 'NoneType' object has no attribute 'group'",
+    exactMessage: `AttributeError: 'NoneType' object has no attribute 'group'`,
+    metaTitle: "Fix 'NoneType' object has no attribute 'group' — Python Regex",
+    metaDescription: "Fix AttributeError: 'NoneType' object has no attribute 'group'. This common Python Regex error happens when re.match() or re.search() returns None.",
+    shortAnswer: "This error happens when you use the .group() method on a Regular Expression match object, but the pattern didn't actually match anything. When re.search() or re.match() fail, they return None, and None has no .group() method.",
+    cause: "The re.search() function scans through a string looking for the first location where the regex pattern produces a match. If it doesn't find a match, it returns None. Trying to call .group() on None throws this AttributeError.",
+    badCode: `import re\ntext = "The price is $50"\nmatch = re.search(r'€(\d+)', text) # Looking for Euro sign\nprint(match.group(1))\n# AttributeError: 'NoneType' object has no attribute 'group'`,
+    goodCode: `import re\ntext = "The price is $50"\nmatch = re.search(r'€(\d+)', text)\n\n# Always check if match is not None before calling .group()\nif match:\n    print(match.group(1))\nelse:\n    print("No match found")`,
+    steps: [
+      "Check if the regex pattern is actually present in the string you are searching.",
+      "Add an if statement to verify the match object is not None before calling .group().",
+      "Test your regex pattern on a site like regex101.com to ensure it matches correctly.",
+      "Make sure you are using the right function: re.search() looks anywhere in the string, while re.match() only looks at the beginning."
+    ],
+    faqs: [
+      { q: "What does re.search() return if there is no match?", a: "It returns None. That is why you must always wrap it in an if-statement." },
+      { q: "How do I fix this quickly?", a: "Instead of match.group(), use match.group() if match else None." }
+    ],
+    related: ['attributeerror-nonetype-object-has-no-attribute', 'indexerror-list-index-out-of-range'],
+    searchKeywords: ["nonetype object has no attribute group", "python regex match none", "re.search group error"]
+  }
 ];
