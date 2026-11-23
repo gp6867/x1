@@ -90,6 +90,13 @@ const RegexExamplePage: React.FC = () => {
             </div>
           </div>
 
+          <div className="mb-8 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">Need a custom regex pattern for your specific use case?</p>
+            <button onClick={() => navigate('/tools/regex-generator')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition shrink-0">
+              Generate Custom Regex with AI →
+            </button>
+          </div>
+
           <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 mb-8">
             <p className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase mb-2">Quick answer</p>
             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{example.shortAnswer}</p>

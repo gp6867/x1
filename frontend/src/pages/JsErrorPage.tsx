@@ -113,6 +113,13 @@ const JsErrorPage: React.FC = () => {
             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{error.shortAnswer}</p>
           </div>
 
+          <div className="mb-6 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">Want to understand how this JavaScript error happened?</p>
+            <button onClick={() => navigate('/tools/code-explainer')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition shrink-0">
+              Explain Your Code with AI →
+            </button>
+          </div>
+
           <div className="mb-8">
             <button
               onClick={handleGetFix}
