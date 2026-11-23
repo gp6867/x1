@@ -227,6 +227,15 @@ const JsErrorPage: React.FC = () => {
             </div>
           </div>
 
+
+          <div className="mb-8 p-6 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-2">Need to debug your actual JavaScript code?</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Paste your code and our AI will explain it line-by-line.</p>
+            <button onClick={() => navigate('/tools/code-explainer')} className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-bold transition">
+              Try AI Code Explainer →
+            </button>
+          </div>
+
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-center text-white">
             <h3 className="font-bold mb-2">Want an AI with memory for your project?</h3>
             <p className="text-emerald-50 text-sm mb-4">MonsterX AI remembers your codebase across chats.</p>
