@@ -11,10 +11,11 @@ export interface PythonError {
   steps: string[];
   faqs: { q: string; a: string }[];
   related: string[];
+  searchKeywords?: string[]; // <-- Added this to fix TypeScript error
 }
 
 export const pythonErrors: PythonError[] = [
-    {
+  {
     slug: 'typeerror-can-only-concatenate-str-not-int-to-str',
     title: "Fix: TypeError: can only concatenate str (not 'int') to str",
     exactMessage: `TypeError: can only concatenate str (not "int") to str`,
@@ -22,24 +23,8 @@ export const pythonErrors: PythonError[] = [
     metaDescription: "Fix 'TypeError: can only concatenate str' in Python. Covers int, float, and list errors. Paste your traceback to get an instant AI fix.",
     shortAnswer: "This TypeError occurs when you use the + operator between a string and a non-string (like an integer, float, or list). Python does not auto-convert types, so you must wrap the non-string with str(), or use an f-string.",
     cause: "Python's + operator behaves differently for strings (concatenation) and numbers (addition). Mixing a string with an integer, float, or list raises a TypeError because Python refuses to guess your intent.",
-    badCode: `# Example 1: String + Integer
-total = "Total: " + 100
-
-# Example 2: String + Float
-price = "Cost: " + 99.99
-
-# Example 3: String + List
-items = "Items: " + ["apple", "banana"]`,
-    goodCode: `# Fix for Integer
-print("Total: " + str(100))
-# or use f-string:
-print(f"Total: {100}")
-
-# Fix for Float
-print(f"Cost: {99.99}")
-
-# Fix for List (join items)
-print("Items: " + ", ".join(["apple", "banana"]))`,
+    badCode: `# Example 1: String + Integer\ntotal = "Total: " + 100\n\n# Example 2: String + Float\nprice = "Cost: " + 99.99\n\n# Example 3: String + List\nitems = "Items: " + ["apple", "banana"]`,
+    goodCode: `# Fix for Integer\nprint("Total: " + str(100))\n# or use f-string:\nprint(f"Total: {100}")\n\n# Fix for Float\nprint(f"Cost: {99.99}")\n\n# Fix for List (join items)\nprint("Items: " + ", ".join(["apple", "banana"]))`,
     steps: [
       "Find the line causing the error in your traceback",
       "Check the variable types using print(type(variable_name))",
@@ -146,7 +131,7 @@ print("Items: " + ", ".join(["apple", "banana"]))`,
     ],
     related: ['syntaxerror-invalid-syntax', 'nameerror-name-is-not-defined']
   },
-    {
+  {
     slug: 'indexerror-list-index-out-of-range',
     title: "Fix: IndexError: list index out of range",
     exactMessage: `IndexError: list index out of range`,
@@ -154,18 +139,8 @@ print("Items: " + ", ".join(["apple", "banana"]))`,
     metaDescription: "Fix IndexError: list index out of range in Python. Covers list, string, tuple, and Pandas index errors.",
     shortAnswer: "IndexError: list index out of range means you accessed an element at a position that does not exist. Lists are 0-indexed, so a list with 3 elements has valid indices 0, 1, and 2 — accessing index 3 raises IndexError.",
     cause: "When you write my_list[i], Python checks that 0 <= i < len(my_list). If i is equal to or greater than the list length, it raises IndexError. In Pandas, 'single positional indexer is out-of-bounds' is a similar error.",
-    badCode: `items = [10, 20, 30]
-print(items[3])
-# IndexError: list index out of range`,
-    goodCode: `items = [10, 20, 30]
-
-# Check before accessing
-if len(items) > 3:
-    print(items[3])
-
-# Or use safe access
-def safe_get(lst, i, default=None):
-    return lst[i] if 0 <= i < len(lst) else default`,
+    badCode: `items = [10, 20, 30]\nprint(items[3])\n# IndexError: list index out of range`,
+    goodCode: `items = [10, 20, 30]\n\n# Check before accessing\nif len(items) > 3:\n    print(items[3])\n\n# Or use safe access\ndef safe_get(lst, i, default=None):\n    return lst[i] if 0 <= i < len(lst) else default`,
     steps: [
       "Print len(your_list) right before the failing line to see the real size",
       "For Pandas, use .iloc[] for positional indexing and .loc[] for label indexing",
@@ -203,7 +178,7 @@ def safe_get(lst, i, default=None):
     ],
     related: ['indexerror-list-index-out-of-range', 'attributeerror-nonetype-object-has-no-attribute']
   },
-    {
+  {
     slug: 'importerror-cannot-import-name',
     title: "Fix: ImportError: cannot import name 'X' from 'Y'",
     exactMessage: `ImportError: cannot import name 'ParameterSource' from 'click.core'`,
@@ -211,13 +186,8 @@ def safe_get(lst, i, default=None):
     metaDescription: "Fix ImportError: cannot import name in Python. Covers circular imports, click library version issues, and step-by-step resolution.",
     shortAnswer: "ImportError: cannot import name X means Python found the module Y but could not find the name X inside it. The usual causes are a typo, a circular import, or a library version mismatch.",
     cause: "Python first locates the module Y, then looks up X as an attribute. If X is missing — because of a typo, a circular import, or X lives in a submodule — it raises ImportError. Example: 'ParameterSource' from click.core often happens due to a version mismatch between click and Flask.",
-    badCode: `from click.core import ParameterSource
-# ImportError: cannot import name 'ParameterSource'`,
-    goodCode: `# Check: is it a version mismatch?
-# pip install --upgrade click
-
-# Or if it is in a submodule:
-from mymodule.utils import foo`,
+    badCode: `from click.core import ParameterSource\n# ImportError: cannot import name 'ParameterSource'`,
+    goodCode: `# Check: is it a version mismatch?\n# pip install --upgrade click\n\n# Or if it is in a submodule:\nfrom mymodule.utils import foo`,
     steps: [
       "Open the target module and confirm the name is spelled exactly the same",
       "If you get 'cannot import name X from click.core', try updating the library (pip install --upgrade click)",
@@ -231,7 +201,7 @@ from mymodule.utils import foo`,
     related: ['modulenotfounderror-no-module-named', 'nameerror-name-is-not-defined'],
     searchKeywords: ["importerror cannot import name", "cannot import name parametersource from click core", "python circular import", "click version error"]
   },
-    {
+  {
     slug: 'valueerror-too-many-values-to-unpack',
     title: "Fix: ValueError: too many values to unpack",
     exactMessage: `ValueError: too many values to unpack (expected 2)`,
@@ -239,17 +209,8 @@ from mymodule.utils import foo`,
     metaDescription: "Fix ValueError: too many values to unpack in Python. Covers star expressions, expected 2, and not enough values errors.",
     shortAnswer: "ValueError: too many values to unpack occurs when the right side of an unpacking assignment yields more items than the left side expects. Fix by adjusting the number of targets, using *rest to capture extras, or indexing the iterable directly.",
     cause: "Python's tuple unpacking is strict: a, b = iterable requires exactly two values. If iterable has three or more items, it raises this ValueError.",
-    badCode: `a, b = (1, 2, 3)
-# ValueError: too many values to unpack (expected 2)`,
-    goodCode: `# Option 1: match the count
-a, b, c = (1, 2, 3)
-
-# Option 2: star to capture extras
-a, b, *rest = (1, 2, 3, 4, 5)
-
-# Option 3: index the items you want
-items = (1, 2, 3)
-a, b = items[0], items[1]`,
+    badCode: `a, b = (1, 2, 3)\n# ValueError: too many values to unpack (expected 2)`,
+    goodCode: `# Option 1: match the count\na, b, c = (1, 2, 3)\n\n# Option 2: star to capture extras\na, b, *rest = (1, 2, 3, 4, 5)\n\n# Option 3: index the items you want\nitems = (1, 2, 3)\na, b = items[0], items[1]`,
     steps: [
       "Print the right side's length or type before the assignment",
       "If a function returns more items than expected, either unpack all of them or index one",
@@ -263,7 +224,7 @@ a, b = items[0], items[1]`,
     related: ['indexerror-list-index-out-of-range', 'typeerror-can-only-concatenate-str-not-int-to-str'],
     searchKeywords: ["too many values to unpack", "expected 2", "not enough values to unpack", "unpack python error"]
   },
-    {
+  {
     slug: 'syntaxerror-invalid-syntax',
     title: "Fix: SyntaxError: invalid syntax",
     exactMessage: `SyntaxError: invalid syntax`,
@@ -271,11 +232,8 @@ a, b = items[0], items[1]`,
     metaDescription: "Fix SyntaxError: invalid syntax in Python. Covers missing colons, mismatched parentheses, and syntaxerror on line -1.",
     shortAnswer: "SyntaxError: invalid syntax means Python could not parse your code at all. The most common causes are a missing colon after if/for/def/class, mismatched brackets, or using = instead of == for comparison.",
     cause: "Unlike runtime errors, SyntaxError happens before any code runs. The error message often points to the line after the real problem. If you see 'syntaxerror on line -1', it usually means an unclosed bracket or quote.",
-    badCode: `if x > 0
-    print("positive")
-# SyntaxError: invalid syntax`,
-    goodCode: `if x > 0:
-    print("positive")`,
+    badCode: `if x > 0\n    print("positive")\n# SyntaxError: invalid syntax`,
+    goodCode: `if x > 0:\n    print("positive")`,
     steps: [
       "Read the line number in the error — the real problem is often one line above",
       "Check for missing colons after if, else, for, while, def, class, try, except",
@@ -289,7 +247,7 @@ a, b = items[0], items[1]`,
     related: ['indentationerror-unexpected-indent', 'nameerror-name-is-not-defined'],
     searchKeywords: ["syntaxerror invalid syntax", "syntaxerror on line -1", "invalid syntax python", "python missing colon"]
   },
-    {
+  {
     slug: 'filenotfounderror-no-such-file-or-directory',
     title: "Fix: FileNotFoundError: No such file or directory",
     exactMessage: `FileNotFoundError: [Errno 2] No such file or directory: 'data.csv'`,
@@ -297,15 +255,8 @@ a, b = items[0], items[1]`,
     metaDescription: "Fix FileNotFoundError in Python. Covers relative vs absolute paths, os.getcwd(), pathlib, and Windows backslash issues. Free AI fixer.",
     shortAnswer: "FileNotFoundError means Python's open() could not find the file at the path you specified. The most common cause is a relative path that resolves against the current working directory, not the script's folder.",
     cause: "open('data.csv') resolves against os.getcwd(). So a file next to your script still fails if you run the script from another directory. Absolute paths or pathlib.Path(__file__).parent both avoid this trap.",
-    badCode: `with open('data.csv') as f:
-    print(f.read())
-# FileNotFoundError: [Errno 2] ... 'data.csv'`,
-    goodCode: `from pathlib import Path
-
-# Resolve relative to the script, not the working directory
-here = Path(__file__).parent
-with open(here / 'data.csv') as f:
-    print(f.read())`,
+    badCode: `with open('data.csv') as f:\n    print(f.read())\n# FileNotFoundError: [Errno 2] ... 'data.csv'`,
+    goodCode: `from pathlib import Path\n\n# Resolve relative to the script, not the working directory\nhere = Path(__file__).parent\nwith open(here / 'data.csv') as f:\n    print(f.read())`,
     steps: [
       "Print os.getcwd() to see the actual working directory",
       "Print os.listdir() to confirm the file's location",
@@ -343,8 +294,7 @@ with open(here / 'data.csv') as f:
     ],
     related: ['valueerror-too-many-values-to-unpack', 'typeerror-can-only-concatenate-str-not-int-to-str']
   },
-,
-{
+  {
     slug: 'valueerror-not-enough-values-to-unpack',
     title: "Fix: ValueError: not enough values to unpack",
     exactMessage: `ValueError: not enough values to unpack (expected 2, got 1)`,
