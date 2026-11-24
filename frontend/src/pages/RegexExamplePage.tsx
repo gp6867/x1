@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Copy, Check, Code2, Shield, Search } from 'lucid
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
 import { regexExamples } from '../data/regexExamples';
+import InlineErrorFixer from '../components/InlineErrorFixer';
 
 const RegexExamplePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -65,7 +66,7 @@ const RegexExamplePage: React.FC = () => {
 
         <main className="max-w-3xl mx-auto px-6 py-12">
           <nav className="mb-6 text-xs text-slate-500 dark:text-slate-500">
-            <span>Home</span> / <span>Regex Examples</span> / <span className="text-slate-900 dark:text-white">{example.slug}</span>
+            <span>Home</span> / <button onClick={() => navigate('/regex-examples')} className="hover:underline">Regex Examples</button> / <span className="text-slate-900 dark:text-white">{example.slug}</span>
           </nav>
 
           <div className="mb-8">
@@ -75,6 +76,12 @@ const RegexExamplePage: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-4 leading-tight">
               {example.title}
             </h1>
+            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-500 mb-4">
+              <span>By <strong className="text-slate-700 dark:text-slate-300">Samrat</strong></span>
+              <span>•</span>
+              <span>Last updated: Nov 2026</span>
+            </div>
+
             
             {/* Pattern Box */}
             <div className="bg-slate-900 rounded-xl overflow-hidden mb-4 border border-slate-700">
@@ -90,12 +97,15 @@ const RegexExamplePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-8 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">Need a custom regex pattern for your specific use case?</p>
-            <button onClick={() => navigate('/tools/regex-generator')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition shrink-0">
-              Generate Custom Regex with AI →
-            </button>
-          </div>
+          <InlineErrorFixer 
+            initialText={example.pattern}
+            toolType="regex"
+            toolName="AI Regex Generator"
+            toolLink="/tools/regex-generator"
+            promptPrefix="Explain this regex pattern and give me a use case:"
+            description="Need to modify this pattern or generate a new one? Edit the regex below and let our AI help."
+            placeholder="Describe what you want to match..."
+          />
 
           <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-xl p-4 mb-8">
             <p className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase mb-2">Quick answer</p>

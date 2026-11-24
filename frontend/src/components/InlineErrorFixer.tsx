@@ -11,13 +11,17 @@ interface InlineErrorFixerProps {
   toolName: string;
   toolLink: string;
   promptPrefix: string;
+  description?: string;
+  placeholder?: string;
 }
 
 const InlineErrorFixer: React.FC<InlineErrorFixerProps> = ({ 
   initialText, 
   toolName, 
   toolLink, 
-  promptPrefix 
+  promptPrefix,
+  description = 'Edit the traceback below if needed, then let our AI suggest a fix without leaving this page.',
+  placeholder = 'Paste your code or error here...'
 }) => {
   const [text, setText] = useState(initialText);
   const [result, setResult] = useState('');
@@ -59,14 +63,14 @@ const InlineErrorFixer: React.FC<InlineErrorFixerProps> = ({
         </h3>
       </div>
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-        Edit the traceback below if needed, then let our AI suggest a fix without leaving this page.
+        {description}
       </p>
 
       <form onSubmit={handleFix}>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Paste your code or error here..."
+          placeholder={placeholder}
           className="w-full h-32 p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-mono text-sm resize-none focus:outline-none focus:border-emerald-500 mb-3"
           required
         />

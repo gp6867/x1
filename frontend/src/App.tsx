@@ -27,6 +27,7 @@ const PythonErrorPage = lazy(() => import('./pages/PythonErrorPage'));
 const PythonErrorsHub = lazy(() => import('./pages/PythonErrorsHub'));
 const JsErrorPage = lazy(() => import('./pages/JsErrorPage'));
 const RegexExamplePage = lazy(() => import('./pages/RegexExamplePage'));
+const RegexExamplesHub = lazy(() => import('./pages/RegexExamplesHub'));
 const ErrorFixerPage = lazy(() => import('./pages/ErrorFixerPage')); // ✅ New Tool
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const OAuthCallback = lazy(() => import('./pages/oauth/Callback'));
@@ -74,6 +75,7 @@ function App() {
           <Route path="/python-errors" element={<PythonErrorsHub />} />
           <Route path="/python-errors/:slug" element={<PythonErrorPage />} />
           <Route path="/js-errors/:slug" element={<JsErrorPage />} />
+          <Route path="/regex-examples" element={<RegexExamplesHub />} />
           <Route path="/regex-examples/:slug" element={<RegexExamplePage />} />
           <Route path="/fix/:errorSlug" element={<ErrorFixerPage />} /> {/* ✅ New Route */}
 
