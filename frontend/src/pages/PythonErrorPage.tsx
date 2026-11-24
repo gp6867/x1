@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
 import axios from 'axios';
 import { pythonErrors } from '../data/pythonErrors';
+import InlineErrorFixer from '../components/InlineErrorFixer';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -114,12 +115,13 @@ const PythonErrorPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-6 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">Want AI to fix this error for you instantly?</p>
-            <button onClick={() => navigate('/tools/python-error-fixer')} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition shrink-0">
-              Paste Traceback in Python Error Fixer →
-            </button>
-          </div>
+          <InlineErrorFixer 
+            initialText={error.exactMessage}
+            toolType="python"
+            toolName="Python Error Fixer"
+            toolLink="/tools/python-error-fixer"
+            promptPrefix="Fix this Python error and explain briefly:"
+          />
 
           <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-4 mb-8">
             <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-2">Quick answer</p>
