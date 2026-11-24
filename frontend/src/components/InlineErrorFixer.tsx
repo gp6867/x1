@@ -70,11 +70,11 @@ const InlineErrorFixer: React.FC<InlineErrorFixerProps> = ({
           className="w-full h-32 p-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-mono text-sm resize-none focus:outline-none focus:border-emerald-500 mb-3"
           required
         />
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-2.5 px-6 rounded-xl transition flex items-center justify-center gap-2"
+            className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-2.5 px-6 rounded-xl transition flex items-center justify-center gap-2"
           >
             {loading ? <Loader className="animate-spin" size={18} /> : 'Get AI Fix'} <ArrowRight size={18} />
           </button>
@@ -82,7 +82,7 @@ const InlineErrorFixer: React.FC<InlineErrorFixerProps> = ({
           <button 
             type="button" 
             onClick={() => navigate(toolLink)}
-            className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition"
+            className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl transition flex items-center justify-center gap-2"
           >
             Open full {toolName} →
           </button>
