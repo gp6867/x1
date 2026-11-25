@@ -54,6 +54,18 @@ const ROUTE_MAP = {
   '/contact': '/contact',
   '/privacy': '/privacy',
   '/terms': '/terms',
+
+  '/regex-examples': '/regex-examples',
+  '/regex-examples/email-validation': '/regex-examples/email-validation',
+  '/regex-examples/password-validation': '/regex-examples/password-validation',
+  '/regex-examples/phone-number-us': '/regex-examples/phone-number-us',
+  '/regex-examples/url-validation': '/regex-examples/url-validation',
+  '/regex-examples/username-validation': '/regex-examples/username-validation',
+  '/regex-examples/date-format-yyyy-mm-dd': '/regex-examples/date-format-yyyy-mm-dd',
+  '/regex-examples/ipv4-address': '/regex-examples/ipv4-address',
+  '/regex-examples/html-tag-stripper': '/regex-examples/html-tag-stripper',
+  '/regex-examples/whitespace-removal': '/regex-examples/whitespace-removal',
+  '/regex-examples/hex-color-code': '/regex-examples/hex-color-code',
 };
 
 const PORT = 4173;
@@ -118,7 +130,7 @@ async function main() {
         timeout: 30000,
       });
 
-      await new Promise((r) => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 800));
 
       const html = await page.content();
 
@@ -168,7 +180,7 @@ async function main() {
 const watchdog = setTimeout(() => {
   console.warn('\n⚠️  Timeout — deploy continues.');
   process.exit(0);
-}, 90_000);
+}, 300_000);
 watchdog.unref();
 
 main().catch((err) => {
