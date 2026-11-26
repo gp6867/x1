@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { Check, X, Mail } from 'lucide-react';
+import { Check, Loader } from 'lucide-react';
 import SEO from '../components/SEO';
 import Footer from '../components/layout/Footer';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Pricing: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
-
-  const [waitlistPlan, setWaitlistPlan] = useState<string | null>(null);
-  const [waitlistEmail, setWaitlistEmail] = useState('');
-  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const { user, token } = useAuthStore();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const plans = [
     {
@@ -19,15 +19,14 @@ const Pricing: React.FC = () => {
       name: 'Free',
       priceLabel: '$0',
       usdHint: 'Free forever',
-      available: true,
-      features: ['30 messages / day', 'Groq AI model', 'Basic memory', 'Image vision (limited)'],
+      popular: false,
+      features: ['30 messages / day', 'Groq AI model (Llama 3)', 'Basic memory', 'Image vision (limited)'],
     },
     {
       id: 'starter',
       name: 'Starter',
       priceLabel: '$19',
       usdHint: 'billed monthly',
-      available: false,
       popular: true,
       features: ['60 messages / day', 'GPT-4o-mini + DeepSeek', 'Full memory system', 'Priority processing'],
     },
@@ -36,52 +35,59 @@ const Pricing: React.FC = () => {
       name: 'Pro',
       priceLabel: '$29',
       usdHint: 'billed monthly',
-      available: false,
-      features: ['80 messages / day', '+ Gemini 3.8 Flash', 'Deep research mode', 'Priority speed'],
+      popular: false,
+      features: ['80 messages / day', '+ Gemini 1.5 Flash', 'Deep research mode', 'Priority speed'],
     },
     {
       id: 'ultra',
       name: 'Ultra',
       priceLabel: '$39',
       usdHint: 'billed monthly',
-      available: false,
+      popular: false,
       features: ['120 messages / day', '+ Claude 3.5 Sonnet', 'Early access features', 'Best for professionals'],
     },
   ];
 
-  const handlePlanClick = (plan: any) => {
+  const handlePlanClick = async (plan: any) => {
+    // 1. Free Plan Logic
     if (plan.id === 'free') {
-      navigate('/chat');
+      if (token) navigate('/chat');
+      else navigate('/register');
       return;
     }
-    const stored = localStorage.getItem(`waitlist_${plan.id}`);
-    if (stored) {
-      alert(`You're already on the ${plan.name} waitlist! We'll notify you at ${stored}.`);
-      return;
-    }
-    setWaitlistPlan(plan.name);
-    setWaitlistEmail(user?.email || '');
-    setWaitlistSubmitted(false);
-  };
 
-  const handleWaitlistSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!waitlistEmail.trim() || !waitlistEmail.includes('@')) return;
-    const planId = plans.find(p => p.name === waitlistPlan)?.id;
-    if (planId) localStorage.setItem(`waitlist_${planId}`, waitlistEmail);
-    setWaitlistSubmitted(true);
-    setTimeout(() => {
-      setWaitlistPlan(null);
-      setWaitlistEmail('');
-      setWaitlistSubmitted(false);
-    }, 2500);
+    // 2. Paid Plan Logic (Requires Login)
+    if (!token) {
+      alert("Please log in to upgrade your plan.");
+      navigate('/login');
+      return;
+    }
+
+    // 3. Backend Checkout Call
+    setLoadingPlan(plan.id);
+    try {
+      // Yahan aap apna backend API endpoint dalenge (Razorpay/PhonePe)
+      // Example: const response = await axios.post(`${API_URL}/payment/create-checkout`, { plan: plan.id }, { headers: { Authorization: `Bearer ${token}` } });
+      
+      // Filhal hum ek alert dikha rahe hain kyunki backend connect baaki hai
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Fake loading
+      alert(`Backend integration pending. You clicked on ${plan.name} plan.`);
+      
+      // Agar Razorpay URL aata hai:
+      // window.location.href = response.data.payment_url;
+
+    } catch (err) {
+      alert("Payment gateway error. Please try again later.");
+    } finally {
+      setLoadingPlan(null);
+    }
   };
 
   return (
     <>
       <SEO
         title="Pricing — MonsterX AI"
-        description="Simple, honest pricing for MonsterX AI. Free forever plan with premium plans coming soon."
+        description="Simple, honest pricing for MonsterX AI. Start free, upgrade to Pro for more AI memory and advanced models."
         canonical="https://www.xoneai.in/pricing"
       />
 
@@ -100,7 +106,7 @@ const Pricing: React.FC = () => {
             Simple, honest pricing.
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400">
-            No hidden caps. Start free, upgrade when premium plans launch.
+            No hidden caps. Choose the plan that fits your workflow.
           </p>
         </section>
 
@@ -110,7 +116,7 @@ const Pricing: React.FC = () => {
               <div key={plan.id} className={`relative bg-white dark:bg-slate-900 rounded-2xl border p-6 flex flex-col ${plan.popular ? 'border-emerald-500 shadow-lg' : 'border-slate-200 dark:border-slate-800'}`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                    Recommended
+                    Most Popular
                   </div>
                 )}
                 
@@ -122,9 +128,18 @@ const Pricing: React.FC = () => {
 
                 <button
                   onClick={() => handlePlanClick(plan)}
-                  className={`w-full py-2.5 rounded-lg font-medium text-sm transition mb-6 ${plan.available ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'}`}
+                  disabled={loadingPlan === plan.id}
+                  className={`w-full py-2.5 rounded-lg font-medium text-sm transition mb-6 flex items-center justify-center gap-2 ${
+                    plan.id === 'free' 
+                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800' 
+                      : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  }`}
                 >
-                  {plan.available ? 'Start Free' : 'Join Waitlist'}
+                  {loadingPlan === plan.id ? (
+                    <Loader size={18} className="animate-spin" />
+                  ) : (
+                    plan.id === 'free' ? 'Start Free' : 'Upgrade Now'
+                  )}
                 </button>
 
                 <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400 flex-1">
@@ -145,8 +160,8 @@ const Pricing: React.FC = () => {
           <div className="space-y-4">
             {[
               { q: 'Is the Free plan really free?', a: 'Yes — 30 messages per day, forever, no credit card required.' },
-              { q: 'When will paid plans launch?', a: 'Soon. Join the waitlist and we will email you the moment they are live.' },
-              { q: 'Will you remove the free plan?', a: 'No. The Free plan stays forever. Paid plans are for users who need more.' },
+              { q: 'Can I cancel my subscription anytime?', a: 'Yes. You can cancel your subscription from your account settings at any time.' },
+              { q: 'What payment methods do you accept?', a: 'We accept UPI, Credit/Debit Cards, and Net Banking via our secure payment partner.' },
             ].map((faq, i) => (
               <details key={i} className="group border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
                 <summary className="cursor-pointer px-5 py-4 font-medium text-slate-900 dark:text-white flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
@@ -161,39 +176,6 @@ const Pricing: React.FC = () => {
 
         <Footer />
       </div>
-
-      {waitlistPlan && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => !waitlistSubmitted && setWaitlistPlan(null)}>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 relative border border-slate-200 dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
-            {!waitlistSubmitted && (
-              <button onClick={() => setWaitlistPlan(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <X size={20} />
-              </button>
-            )}
-            {!waitlistSubmitted ? (
-              <>
-                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                  <Mail className="text-slate-700 dark:text-slate-300" size={24} />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Join {waitlistPlan} Waitlist</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-5">We'll email you when it launches.</p>
-                <form onSubmit={handleWaitlistSubmit}>
-                  <input type="email" value={waitlistEmail} onChange={(e) => setWaitlistEmail(e.target.value)} placeholder="you@example.com" required className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent mb-3 text-sm focus:outline-none focus:border-emerald-500" />
-                  <button type="submit" className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-2.5 rounded-lg font-medium text-sm hover:bg-slate-800 transition">Notify Me</button>
-                </form>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
-                  <Check size={24} />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">You're on the list!</h3>
-                <p className="text-sm text-slate-500">We'll email you at {waitlistEmail}.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </>
   );
 };
