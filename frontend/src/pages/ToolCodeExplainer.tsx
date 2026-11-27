@@ -223,24 +223,7 @@ to handle network errors.`}</pre>
           </section>
 
           {/* ✅ NAYA SECTION: Internal Linking to Error Pages */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Facing a specific error in your code?</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">We have dedicated pages to fix the most common Python and JavaScript errors.</p>
-            <div className="grid md:grid-cols-2 gap-3">
-              <button onClick={() => navigate('/python-errors/typeerror-can-only-concatenate-str-not-int-to-str')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Python: TypeError: can only concatenate str</p>
-              </button>
-              <button onClick={() => navigate('/js-errors/typeerror-cannot-read-properties-of-undefined')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: Cannot read properties of undefined</p>
-              </button>
-              <button onClick={() => navigate('/js-errors/cors-policy-error')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: CORS Policy Error</p>
-              </button>
-              <button onClick={() => navigate('/python-errors/modulenotfounderror-no-module-named')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Python: ModuleNotFoundError</p>
-              </button>
-            </div>
-          </section>
+          
 
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Frequently Asked Questions</h2>
@@ -265,6 +248,30 @@ to handle network errors.`}</pre>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-2">What's the character limit?</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">12,000 characters per paste — enough for most files and all individual functions. Guests get 30 explanations per day.</p>
               </div>
+            </div>
+          </section>
+
+
+          {/* NEW: Internal Linking to Error Pages & Hubs */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Facing a specific error in your code?</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">We have dedicated pages to fix the most common Python and JavaScript errors.</p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <button onClick={() => navigate('/python-errors')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Browse All Python Errors Hub →</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/typeerror-cannot-read-properties-of-undefined')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: Cannot read properties of undefined</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/cors-policy-error')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: CORS Policy Error</p>
+              </button>
+              <button onClick={() => navigate('/python-errors/modulenotfounderror-no-module-named')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Python: ModuleNotFoundError</p>
+              </button>
+              <button onClick={() => navigate('/regex-examples')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Regex Examples Hub →</p>
+              </button>
             </div>
           </section>
 

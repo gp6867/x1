@@ -220,6 +220,30 @@ pattern — test on regex101.`}</pre>
             </div>
           </section>
 
+
+          {/* NEW: Internal Linking to Regex Examples & Errors */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Need a ready-made pattern or having an error?</h2>
+            <div className="grid md:grid-cols-2 gap-3">
+              <button onClick={() => navigate('/regex-examples')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Browse Regex Examples Hub →</p>
+                <p className="text-xs text-slate-500 mt-1">Find patterns for email, password, URL, and more.</p>
+              </button>
+              <button onClick={() => navigate('/regex-examples/email-validation')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Email Validation Regex →</p>
+                <p className="text-xs text-slate-500 mt-1">The most popular regex pattern.</p>
+              </button>
+              <button onClick={() => navigate('/regex-examples/password-validation')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Strong Password Regex →</p>
+                <p className="text-xs text-slate-500 mt-1">Require uppercase, lowercase, and numbers.</p>
+              </button>
+              <button onClick={() => navigate('/python-errors/attributeerror-nonetype-object-has-no-attribute-group')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Fix: 'NoneType' has no attribute 'group' →</p>
+                <p className="text-xs text-slate-500 mt-1">Common error when a regex match fails.</p>
+              </button>
+            </div>
+          </section>
+
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Related Free Tools</h2>
             <div className="flex flex-wrap gap-3">
