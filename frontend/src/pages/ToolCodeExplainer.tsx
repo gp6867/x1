@@ -253,24 +253,43 @@ to handle network errors.`}</pre>
 
 
           {/* NEW: Internal Linking to Error Pages & Hubs */}
+          
+
+
+          {/* NEW: Internal Linking to Error Pages */}
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Facing a specific error in your code?</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">We have dedicated pages to fix the most common Python and JavaScript errors.</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">We have dedicated pages to fix the most common JavaScript and Python errors.</p>
             <div className="grid md:grid-cols-2 gap-3">
-              <button onClick={() => navigate('/python-errors')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Browse All Python Errors Hub →</p>
-              </button>
               <button onClick={() => navigate('/js-errors/typeerror-cannot-read-properties-of-undefined')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: Cannot read properties of undefined</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/typeerror-x-is-not-a-function')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: x is not a function</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/unexpected-token-in-json')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: Unexpected token in JSON</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/invalid-hook-call-react')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">React: Invalid hook call</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/maximum-call-stack-size-exceeded')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: Maximum call stack size exceeded</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/cannot-read-property-length-of-null')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: Cannot read property 'length' of null</p>
+              </button>
+              <button onClick={() => navigate('/js-errors/referenceerror-x-is-not-defined')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: ReferenceError x is not defined</p>
               </button>
               <button onClick={() => navigate('/js-errors/cors-policy-error')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">JS: CORS Policy Error</p>
               </button>
-              <button onClick={() => navigate('/python-errors/modulenotfounderror-no-module-named')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Python: ModuleNotFoundError</p>
+              <button onClick={() => navigate('/python-errors')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition bg-emerald-50/50 dark:bg-emerald-900/10">
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Browse All Python Errors Hub →</p>
               </button>
-              <button onClick={() => navigate('/regex-examples')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Regex Examples Hub →</p>
+              <button onClick={() => navigate('/regex-examples')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition bg-blue-50/50 dark:bg-blue-900/10">
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">Browse Regex Examples Hub →</p>
               </button>
             </div>
           </section>

@@ -222,24 +222,36 @@ pattern — test on regex101.`}</pre>
 
 
           {/* NEW: Internal Linking to Regex Examples & Errors */}
+          
+
+
+          {/* NEW: Internal Linking to Regex Examples & Errors */}
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Need a ready-made pattern or having an error?</h2>
             <div className="grid md:grid-cols-2 gap-3">
-              <button onClick={() => navigate('/regex-examples')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Browse Regex Examples Hub →</p>
-                <p className="text-xs text-slate-500 mt-1">Find patterns for email, password, URL, and more.</p>
+              <button onClick={() => navigate('/regex-examples/phone-number-us')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">US Phone Number Regex →</p>
               </button>
-              <button onClick={() => navigate('/regex-examples/email-validation')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Email Validation Regex →</p>
-                <p className="text-xs text-slate-500 mt-1">The most popular regex pattern.</p>
+              <button onClick={() => navigate('/regex-examples/url-validation')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">URL Validation Regex →</p>
               </button>
-              <button onClick={() => navigate('/regex-examples/password-validation')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Strong Password Regex →</p>
-                <p className="text-xs text-slate-500 mt-1">Require uppercase, lowercase, and numbers.</p>
+              <button onClick={() => navigate('/regex-examples/username-validation')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Username Validation Regex →</p>
+              </button>
+              <button onClick={() => navigate('/regex-examples/date-format-yyyy-mm-dd')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Date Format (YYYY-MM-DD) Regex →</p>
+              </button>
+              <button onClick={() => navigate('/regex-examples/ipv4-address')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">IPv4 Address Regex →</p>
+              </button>
+              <button onClick={() => navigate('/regex-examples/html-tag-stripper')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Remove HTML Tags Regex →</p>
               </button>
               <button onClick={() => navigate('/python-errors/attributeerror-nonetype-object-has-no-attribute-group')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition">
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">Fix: 'NoneType' has no attribute 'group' →</p>
-                <p className="text-xs text-slate-500 mt-1">Common error when a regex match fails.</p>
+              </button>
+              <button onClick={() => navigate('/regex-examples')} className="text-left p-3 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition bg-blue-50/50 dark:bg-blue-900/10">
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">Browse All Regex Examples Hub →</p>
               </button>
             </div>
           </section>
