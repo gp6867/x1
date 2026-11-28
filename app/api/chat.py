@@ -67,6 +67,11 @@ BASE_SYSTEM_PROMPT = """You are MonsterX AI, an elite AI assistant built by Xone
 
 4. **TRUTHFULNESS**:
    - If you don't know something, say "I'm not sure". Do not hallucinate.
+
+5. **LONG CODE HANDLING**:
+   - If the user asks for a very long code (like a full HTML/CSS/JS file), generate it cleanly. 
+   - If you sense the code will be too long, split it into logical parts.
+   - End your response with: "Type 'continue' to get the next part."
 """
 
 _CODE_KEYWORDS = [
@@ -77,7 +82,7 @@ _CODE_KEYWORDS = [
     "build a", "build the", "create a", "create the", "banao", "bana do",
     "banana hai", "likho", "likh do", "implement", "develop",
     "project", "website", "app banao", "site banao",
-    "next", "aage", "aage ka", "continue",
+    "next", "aage", "aage ka", "continue", "rest", "baaki", "baki"
 ]
 
 def is_code_request(msg: str) -> bool:
@@ -161,18 +166,21 @@ def generate_title(msg: str) -> str:
     t = msg.strip()[:30]
     return t + "..." if len(msg) > 30 else t
 
-def extract_content(resp) -> str:
+def extract_content(resp) -> tuple:
+    """Returns a tuple of (content_string, finish_reason)"""
     try:
         if resp and resp.choices and resp.choices[0].message:
             c = resp.choices[0].message.content
-            if c and isinstance(c, str): return c.strip()
+            finish_reason = resp.choices[0].finish_reason
+            if c and isinstance(c, str): 
+                return c.strip(), finish_reason
             if isinstance(c, list):
                 parts = []
                 for p in c:
                     if isinstance(p, dict) and p.get("type") == "text": parts.append(p.get("text", ""))
-                return " ".join(parts).strip()
+                return " ".join(parts).strip(), finish_reason
     except Exception: pass
-    return ""
+    return "", None
 
 def is_rate_limit(e: Exception) -> bool:
     s = str(e).lower()
@@ -182,7 +190,6 @@ def is_rate_limit(e: Exception) -> bool:
     return r is not None and getattr(r, "status_code", None) == 429
 
 def build_context(messages_history: list, system_prompt: str) -> list:
-    # Cap system prompt to 8000 chars to leave room for messages
     sys_prompt_capped = system_prompt[:8000]
     ctx = [{"role": "system", "content": sys_prompt_capped}]
     
@@ -195,7 +202,6 @@ def build_context(messages_history: list, system_prompt: str) -> list:
     recent = valid[-MAX_CONTEXT_MESSAGES:]
     total = len(sys_prompt_capped)
     
-    # Process NEWEST to OLDEST to guarantee latest message is kept
     selected = []
     for msg in reversed(recent):
         c = msg["content"]
@@ -227,7 +233,9 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
 
     code_mode = is_code_request(last_user_msg)
     sent_files = extract_sent_files(messages_history) if code_mode else []
-    max_out = 3500 if code_mode else 800
+    
+    # 🛠️ FIX 1: Increased max_out for code to 8000 (max allowed by Groq)
+    max_out = 8000 if code_mode else 800
 
     logging.info(f"🎯 Code mode: {code_mode}, max_tokens: {max_out}")
 
@@ -246,10 +254,17 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
         r = await groq_client.chat.completions.create(
             model=GROQ_MODEL, messages=ctx, max_tokens=max_out, temperature=0.65, top_p=0.95, frequency_penalty=0.3, presence_penalty=0.3
         )
-        t = extract_content(r)
+        
+        # 🛠️ FIX 2: Extract finish_reason to detect truncation
+        t, finish_reason = extract_content(r)
+        
         if t:
+            # 🛠️ FIX 3: Add a helpful message if AI hit the length limit
+            if finish_reason == "length":
+                t += "\n\n[⚠️ **Output limit reached.** The code was too long. Type **'continue'** to get the rest.]"
+                
             if code_mode: t = enforce_one_file_per_response(t, sent_files)
-            logging.info("✅ Groq responded")
+            logging.info(f"✅ Groq responded (Finish: {finish_reason})")
             return (t, "Groq")
         groq_reason = "empty"
     except Exception as e:
@@ -261,10 +276,14 @@ async def get_ai_response(messages_history: list, system_prompt: str) -> tuple:
         r = await gemini_client.chat.completions.create(
             model=GEMINI_MODEL, messages=ctx, max_tokens=max_out, temperature=0.65, top_p=0.95, frequency_penalty=0.3, presence_penalty=0.3
         )
-        t = extract_content(r)
+        t, finish_reason = extract_content(r)
+        
         if t:
+            if finish_reason == "length":
+                t += "\n\n[⚠️ **Output limit reached.** The code was too long. Type **'continue'** to get the rest.]"
+                
             if code_mode: t = enforce_one_file_per_response(t, sent_files)
-            logging.info("✅ Gemini responded")
+            logging.info(f"✅ Gemini responded (Finish: {finish_reason})")
             return (t, "Gemini")
         gemini_reason = "empty"
     except Exception as e:
@@ -288,11 +307,13 @@ async def get_gemini_vision_response(user_msg: str, image_url: str, chat_message
 
     async def try_gemini():
         r = await gemini_client.chat.completions.create(model=GEMINI_MODEL, messages=ctx, max_tokens=600, temperature=0.7, timeout=12.0)
-        return extract_content(r)
+        t, _ = extract_content(r)
+        return t
 
     async def try_groq():
         r = await groq_client.chat.completions.create(model="meta-llama/llama-4-scout-17b-16e-instruct", messages=ctx, max_tokens=600, temperature=0.7, timeout=12.0)
-        return extract_content(r)
+        t, _ = extract_content(r)
+        return t
 
     tasks = {asyncio.create_task(try_gemini()): "Gemini-Vision", asyncio.create_task(try_groq()): "Groq-Vision"}
     pending = set(tasks.keys())
@@ -463,14 +484,16 @@ async def forget_all(request: Request, db: Session = Depends(get_db)):
 async def test_groq():
     try:
         r = await groq_client.chat.completions.create(model=GROQ_MODEL, messages=[{"role": "user", "content": "Say 'Groq working' in 3 words"}], max_tokens=20, temperature=0.5)
-        return JSONResponse(content={"success": True, "provider": "Groq", "response": extract_content(r)})
+        t, _ = extract_content(r)
+        return JSONResponse(content={"success": True, "provider": "Groq", "response": t})
     except Exception as e: return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 @router.get("/test-gemini")
 async def test_gemini():
     try:
         r = await gemini_client.chat.completions.create(model=GEMINI_MODEL, messages=[{"role": "user", "content": "Say 'Gemini working' in 3 words"}], max_tokens=20, temperature=0.5)
-        return JSONResponse(content={"success": True, "provider": "Gemini", "response": extract_content(r)})
+        t, _ = extract_content(r)
+        return JSONResponse(content={"success": True, "provider": "Gemini", "response": t})
     except Exception as e: return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
 @router.get("/usage")
