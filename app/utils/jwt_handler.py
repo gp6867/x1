@@ -14,7 +14,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET", "your-super-secret-key-change-this-123456")
 REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET", "your-super-refresh-key-change-this-789012")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))  # 1 day
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 7200))  # 5 days
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))  # 7 days
 
 # Security scheme for token authentication

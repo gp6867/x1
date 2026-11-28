@@ -15,9 +15,10 @@ interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User, token: string) => void;
+  login: (user: User, token: string, refreshToken?: string) => void;
   logout: () => void;
   rehydrate: () => void; // Add rehydrate function
 }
@@ -27,10 +28,11 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
       isLoading: true, // Start with loading true
       
-      login: (user, token) => {
+      login: (user, token, refreshToken) => {
         console.log('🔐 Login called with:', { user, token });
         
         // Normalize user data
@@ -48,10 +50,12 @@ export const useAuthStore = create<AuthState>()(
         // Save to localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(normalizedUser));
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
         
         set({ 
           user: normalizedUser, 
           token, 
+          refreshToken: refreshToken || get().refreshToken,
           isAuthenticated: true,
           isLoading: false
         });
@@ -62,9 +66,11 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('refreshToken');
         set({ 
           user: null, 
           token: null, 
+          refreshToken: null,
           isAuthenticated: false,
           isLoading: false
         });
@@ -74,6 +80,7 @@ export const useAuthStore = create<AuthState>()(
         // Check localStorage directly
         const storedToken = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
+        const storedRefreshToken = localStorage.getItem('refreshToken');
         
         console.log('💧 Rehydrating - token:', storedToken, 'user:', storedUser);
         
@@ -83,6 +90,7 @@ export const useAuthStore = create<AuthState>()(
             set({
               user: parsedUser,
               token: storedToken,
+              refreshToken: storedRefreshToken,
               isAuthenticated: true,
               isLoading: false
             });
@@ -102,6 +110,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({ 
         user: state.user, 
         token: state.token, 
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated 
       }),
     }
